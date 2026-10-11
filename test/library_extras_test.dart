@@ -16,12 +16,6 @@ void main() {
     final folder = Directory('${root.path}/game1');
     await folder.create();
     final repository = GameRepository();
-    await repository.writeGameInfo(
-      folder,
-      id: 'game1',
-      title: 'Game 1',
-      author: 'Author',
-    );
 
     const game = LocalGame(
       id: 'game1',

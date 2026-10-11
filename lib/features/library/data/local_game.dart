@@ -10,6 +10,14 @@ class LocalGame {
   final bool isFavorite;
   final bool isFromRepo;
 
+  /// True when the app created this folder itself (import copy, archive
+  /// extraction, download, or a folder living inside the games directory).
+  ///
+  /// Only managed folders may be deleted from disk. A folder the user merely
+  /// pointed at stays untouched so removing a game never destroys files the
+  /// app never owned.
+  final bool isManaged;
+
   const LocalGame({
     required this.id,
     required this.title,
@@ -21,6 +29,7 @@ class LocalGame {
     this.fileSize = 0,
     this.isFavorite = false,
     this.isFromRepo = false,
+    this.isManaged = false,
   });
 
   LocalGame copyWith({
@@ -34,6 +43,7 @@ class LocalGame {
     int? fileSize,
     bool? isFavorite,
     bool? isFromRepo,
+    bool? isManaged,
   }) {
     return LocalGame(
       id: id ?? this.id,
@@ -46,6 +56,7 @@ class LocalGame {
       fileSize: fileSize ?? this.fileSize,
       isFavorite: isFavorite ?? this.isFavorite,
       isFromRepo: isFromRepo ?? this.isFromRepo,
+      isManaged: isManaged ?? this.isManaged,
     );
   }
 
@@ -60,6 +71,7 @@ class LocalGame {
         'fileSize': fileSize,
         'isFavorite': isFavorite,
         'isFromRepo': isFromRepo,
+        'isManaged': isManaged,
       };
 
   factory LocalGame.fromJson(Map<String, dynamic> json) => LocalGame(
@@ -73,6 +85,7 @@ class LocalGame {
         fileSize: json['fileSize'] as int? ?? 0,
         isFavorite: json['isFavorite'] as bool? ?? false,
         isFromRepo: json['isFromRepo'] as bool? ?? false,
+        isManaged: json['isManaged'] as bool? ?? json['isFromRepo'] as bool? ?? false,
       );
 
   factory LocalGame.fromRegistry(Map<String, dynamic> json) => LocalGame(
@@ -87,6 +100,9 @@ class LocalGame {
         fileSize: json['fileSize'] as int? ?? 0,
         isFavorite: json['isFavorite'] as bool? ?? false,
         isFromRepo: json['isFromRepo'] as bool? ?? false,
+        // Entries written before this flag existed fall back to the old repo
+        // check so previously downloaded games stay deletable.
+        isManaged: json['isManaged'] as bool? ?? json['isFromRepo'] as bool? ?? false,
       );
 
   Map<String, dynamic> toRegistry() => {
@@ -100,6 +116,7 @@ class LocalGame {
         'fileSize': fileSize,
         'isFavorite': isFavorite,
         'isFromRepo': isFromRepo,
+        'isManaged': isManaged,
         'importedAt': DateTime.now().toIso8601String(),
       };
 }

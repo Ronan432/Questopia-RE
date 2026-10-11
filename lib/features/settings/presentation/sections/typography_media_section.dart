@@ -50,11 +50,19 @@ class TypographySection extends StatelessWidget {
                 settings,
               ),
             ),
-            SettingsTiles.switchTile(
-              icon: Icons.text_fields_outlined,
-              title: l10n.useGameFont,
-              value: settings.isUseGameFont,
-              onChanged: notifier.setUseGameFont,
+            SettingsTiles.navTile(
+              context,
+              icon: Icons.contrast_rounded,
+              title: l10n.readingTheme,
+              value: SettingsPickerSheets.readingThemeLabel(
+                context,
+                settings.readingTheme,
+              ),
+              onTap: () => SettingsPickerSheets.showReadingThemePicker(
+                context,
+                notifier,
+                settings,
+              ),
             ),
             SettingsTiles.switchTile(
               icon: Icons.format_color_text_outlined,

@@ -134,18 +134,23 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             defaultTargetPlatform == TargetPlatform.macOS ||
             defaultTargetPlatform == TargetPlatform.linux);
 
+    // Search covers the author as well as the title, and the catalogue also
+    // matches on its description text.
+    final query = _searchQuery.trim().toLowerCase();
+
     final filteredLocalGames = state.localGames.where((game) {
-      final matchesSearch = _searchQuery.isEmpty ||
-          game.title.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesSearch = query.isEmpty ||
+          game.title.toLowerCase().contains(query) ||
+          game.author.toLowerCase().contains(query);
       final matchesFav = !_showFavoritesOnly || game.isFavorite;
       return matchesSearch && matchesFav;
     }).toList();
 
     final filteredRemoteGames = state.remoteGames.where((game) {
-      if (_searchQuery.isEmpty) return true;
-      return game.displayName
-          .toLowerCase()
-          .contains(_searchQuery.toLowerCase());
+      if (query.isEmpty) return true;
+      return game.displayName.toLowerCase().contains(query) ||
+          game.author.toLowerCase().contains(query) ||
+          game.descriptionText.toLowerCase().contains(query);
     }).toList();
 
     Widget mainContentFor(int tabIndex) {

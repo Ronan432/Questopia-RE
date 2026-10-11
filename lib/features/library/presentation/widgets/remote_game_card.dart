@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:material_segmented_list/material_segmented_list.dart';
 
+import '../../../../core/helpers/sheet_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/media/poster_menu_sheet.dart';
+import '../../../../core/providers/settings_provider.dart';
 import '../../data/remote_game.dart';
 import 'game_card_frame.dart';
 import 'game_poster.dart';
 
-class RemoteGameCard extends StatelessWidget {
+class RemoteGameCard extends ConsumerWidget {
   const RemoteGameCard({
     super.key,
     required this.game,
@@ -39,15 +43,100 @@ class RemoteGameCard extends StatelessWidget {
     return '${game.fileSize} B';
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+  /// Shows the catalogue metadata the app already downloads but never displayed.
+  void _showDetails(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    showQuestopiaSheet<void>(
+      context: context,
+      builder: (ctx) {
+        final colors = Theme.of(ctx).colorScheme;
+        final rows = <(IconData, String)>[
+          if (game.author.isNotEmpty) (Icons.person_outline, game.author),
+          if (game.portedBy.isNotEmpty) (Icons.swap_horiz_rounded, game.portedBy),
+          if (game.version.isNotEmpty) (Icons.sell_outlined, 'v${game.version}'),
+          if (game.lang.isNotEmpty)
+            (Icons.language_outlined, game.lang.toUpperCase()),
+          if (game.player.isNotEmpty)
+            (Icons.videogame_asset_outlined, game.player),
+          if (_sizeLabel.isNotEmpty) (Icons.sd_storage_outlined, _sizeLabel),
+          if (game.modDate.isNotEmpty)
+            (Icons.update_rounded, game.modDate),
+        ];
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              QuestopiaSheetHeaderPill(title: game.displayName),
+              if (rows.isNotEmpty)
+                SegmentedListSection(
+                  children: [
+                    for (final row in rows)
+                      SegmentedListTile(
+                        leading: Icon(row.$1, size: 22),
+                        title: Text(row.$2),
+                        minVerticalPadding: 10,
+                      ),
+                  ],
+                ),
+              if (game.descriptionText.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    game.descriptionText,
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 1.5,
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: M3EButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    if (isInstalled) {
+                      onPlay?.call();
+                    } else {
+                      onDownload();
+                    }
+                  },
+                  icon: Icon(
+                    isInstalled
+                        ? Icons.play_arrow_rounded
+                        : Icons.download_rounded,
+                    size: 20,
+                  ),
+                  label: Text(isInstalled ? l10n.play : l10n.download),
+                  style: M3EButtonStyle.filled,
+                  size: M3EButtonSize.lg,
+                  shape: M3EButtonShape.round,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = Theme.of(context).colorScheme;
+    final squarePosters = ref.watch(settingsProvider).isSquarePosters;
 
     return GameCardFrame(
       contentPadding: isCompact
           ? const EdgeInsets.fromLTRB(8, 6, 8, 6)
           : const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      onTap: () => _showDetails(context),
       onLongPress: game.posterUrl.isNotEmpty
           ? () => showPosterMenuSheet(
                 context: context,
@@ -58,6 +147,7 @@ class RemoteGameCard extends StatelessWidget {
         remoteUrl: game.posterUrl,
         isLocal: false,
         height: isCompact ? 84 : 112,
+        square: squarePosters,
       ),
       titleWidget: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,7 +193,7 @@ class RemoteGameCard extends StatelessWidget {
               if (game.author.isNotEmpty)
                 Expanded(
                   child: Text(
-                    'Author: ${game.author}',
+                    game.author,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: colors.onSurfaceVariant,
                         ),
@@ -125,7 +215,7 @@ class RemoteGameCard extends StatelessWidget {
           if (_sizeLabel.isNotEmpty) ...[
             const SizedBox(height: 2),
             Text(
-              'Size: $_sizeLabel',
+              _sizeLabel,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: colors.outline,
                   ),
@@ -144,7 +234,7 @@ class RemoteGameCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     progress == null
-                        ? l10n.downloading
+                        ? AppLocalizations.of(context)!.downloading
                         : '${(progress! * 100).toStringAsFixed(0)}%',
                     style: Theme.of(context).textTheme.labelSmall,
                   ),
@@ -156,7 +246,7 @@ class RemoteGameCard extends StatelessWidget {
                     icon: Icon(Icons.play_arrow_rounded,
                         size: isCompact ? 16 : 18),
                     label: Text(
-                      l10n.play,
+                      AppLocalizations.of(context)!.play,
                       style: TextStyle(fontSize: isCompact ? 11.5 : 13),
                     ),
                     style: M3EButtonStyle.filled,
@@ -168,7 +258,7 @@ class RemoteGameCard extends StatelessWidget {
                     icon:
                         Icon(Icons.download_rounded, size: isCompact ? 16 : 18),
                     label: Text(
-                      l10n.download,
+                      AppLocalizations.of(context)!.download,
                       style: TextStyle(fontSize: isCompact ? 11.5 : 13),
                     ),
                     style: M3EButtonStyle.filled,

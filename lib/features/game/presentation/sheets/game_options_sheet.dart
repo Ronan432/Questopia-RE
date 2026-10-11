@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
 
 import '../../../../core/helpers/sheet_helper.dart';
+import '../../../../core/providers/settings_provider.dart';
 import '../../providers/game_engine_provider.dart';
 import 'cheat_modes_sheet.dart';
 import 'save_slots_sheet.dart';
@@ -13,6 +14,9 @@ class GameOptionsSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).colorScheme;
+    // The cheat engine and the console are gated by their settings, which used
+    // to be stored but never checked.
+    final settings = ref.watch(settingsProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
@@ -36,18 +40,21 @@ class GameOptionsSheet extends ConsumerWidget {
                   );
                 },
               ),
-              SegmentedListTile(
-                leading: const Icon(Icons.tune_rounded, size: 22),
-                title: const Text('Cheat Engine', style: TextStyle(fontSize: 16)),
-                trailing: Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
-                onTap: () {
-                  Navigator.pop(context);
-                  showQuestopiaSheet<void>(
-                    context: context,
-                    builder: (_) => const CheatModesSheet(),
-                  );
-                },
-              ),
+              if (settings.isCheatsEnabled)
+                SegmentedListTile(
+                  leading: const Icon(Icons.tune_rounded, size: 22),
+                  title:
+                      const Text('Cheat Engine', style: TextStyle(fontSize: 16)),
+                  trailing:
+                      Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
+                  onTap: () {
+                    Navigator.pop(context);
+                    showQuestopiaSheet<void>(
+                      context: context,
+                      builder: (_) => const CheatModesSheet(),
+                    );
+                  },
+                ),
               SegmentedListTile(
                 leading: const Icon(Icons.restart_alt_rounded, size: 22),
                 title: const Text('Restart Game', style: TextStyle(fontSize: 16)),
@@ -57,15 +64,18 @@ class GameOptionsSheet extends ConsumerWidget {
                   ref.read(gameEngineProvider.notifier).showRestartConfirmation();
                 },
               ),
-              SegmentedListTile(
-                leading: const Icon(Icons.terminal_rounded, size: 22),
-                title: const Text('QSP Console', style: TextStyle(fontSize: 16)),
-                trailing: Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
-                onTap: () {
-                  Navigator.pop(context);
-                  ref.read(gameEngineProvider.notifier).showExecutor();
-                },
-              ),
+              if (settings.isExecStringEnabled)
+                SegmentedListTile(
+                  leading: const Icon(Icons.terminal_rounded, size: 22),
+                  title:
+                      const Text('QSP Console', style: TextStyle(fontSize: 16)),
+                  trailing:
+                      Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
+                  onTap: () {
+                    Navigator.pop(context);
+                    ref.read(gameEngineProvider.notifier).showExecutor();
+                  },
+                ),
               SegmentedListTile(
                 leading: const Icon(Icons.file_open_outlined, size: 22),
                 title: const Text('Open Save File', style: TextStyle(fontSize: 16)),

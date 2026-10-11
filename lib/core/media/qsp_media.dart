@@ -16,6 +16,7 @@ class QspMedia extends StatelessWidget {
     this.autoplay = true,
     this.loop = true,
     this.muted = false,
+    this.allowedRoots = const [],
   });
 
   final String src;
@@ -27,6 +28,9 @@ class QspMedia extends StatelessWidget {
   final bool loop;
   final bool muted;
 
+  /// Game folders the loopback OGV media server may read from.
+  final List<String> allowedRoots;
+
   /// The platform decoder has no Theora support, so Ogg video must fall back
   /// to the bundled WebAssembly decoder instead.
   static bool _needsWebAssemblyDecoder(String source) {
@@ -34,7 +38,7 @@ class QspMedia extends StatelessWidget {
     final withoutQuery = lower.split('?')[0].split('#')[0];
     final isOgg = withoutQuery.endsWith('.ogv') || withoutQuery.endsWith('.ogg');
     if (isOgg) {
-      debugPrint('[QspMedia] OGV yonlendirmesi: $source');
+      debugPrint('[QspMedia] routing Ogg video to the WebAssembly decoder: $source');
     }
     return isOgg;
   }
@@ -60,6 +64,7 @@ class QspMedia extends StatelessWidget {
             muted: muted,
             width: width,
             height: height,
+            allowedRoots: allowedRoots,
           );
         } else {
           child = QspVideo(
@@ -114,6 +119,7 @@ class QspMedia extends StatelessWidget {
             muted: muted,
             width: width,
             height: height,
+            allowedRoots: allowedRoots,
           );
         } else {
           child = QspVideo(

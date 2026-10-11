@@ -931,6 +931,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete all installed games from your library? This action cannot be undone.'**
   String get deleteAllGamesMessage;
+
+  /// In en, this message translates to:
+  /// **'Reading theme'**
+  String get readingTheme;
+
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get readingThemeDefault;
+
+  /// In en, this message translates to:
+  /// **'Sepia'**
+  String get readingThemeSepia;
+
+  /// In en, this message translates to:
+  /// **'Night'**
+  String get readingThemeNight;
+
+  /// In en, this message translates to:
+  /// **'High contrast'**
+  String get readingThemeHighContrast;
+
+  /// In en, this message translates to:
+  /// **'Storage usage'**
+  String get storageUsage;
+
+  /// In en, this message translates to:
+  /// **'Total used'**
+  String get storageTotal;
+
+  /// In en, this message translates to:
+  /// **'Clean up unused files'**
+  String get storageCleanup;
+
+  /// In en, this message translates to:
+  /// **'Removes leftover folders that contain no game file.'**
+  String get storageCleanupHint;
+
+  /// In en, this message translates to:
+  /// **'Reclaimed {size}'**
+  String storageCleanupFreed(String size);
+
+  /// In en, this message translates to:
+  /// **'Nothing to clean up'**
+  String get storageNothingToClean;
+
+  /// In en, this message translates to:
+  /// **'Calculating...'**
+  String get storageCalculating;
 }
 
 class _AppLocalizationsDelegate

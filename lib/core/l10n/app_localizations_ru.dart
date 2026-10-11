@@ -440,4 +440,43 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get deleteAllGamesMessage =>
       'Вы уверены, что хотите удалить все установленные игры из библиотеки? Это действие необратимо.';
+
+  @override
+  String get readingTheme => 'Тема чтения';
+
+  @override
+  String get readingThemeDefault => 'По умолчанию';
+
+  @override
+  String get readingThemeSepia => 'Сепия';
+
+  @override
+  String get readingThemeNight => 'Ночь';
+
+  @override
+  String get readingThemeHighContrast => 'Высокий контраст';
+
+  @override
+  String get storageUsage => 'Использование памяти';
+
+  @override
+  String get storageTotal => 'Всего занято';
+
+  @override
+  String get storageCleanup => 'Очистить неиспользуемые файлы';
+
+  @override
+  String get storageCleanupHint =>
+      'Удаляет оставшиеся папки без игрового файла.';
+
+  @override
+  String storageCleanupFreed(String size) {
+    return 'Освобождено $size';
+  }
+
+  @override
+  String get storageNothingToClean => 'Нечего очищать';
+
+  @override
+  String get storageCalculating => 'Подсчёт...';
 }

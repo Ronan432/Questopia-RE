@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
@@ -7,11 +8,12 @@ import 'package:material_segmented_list/material_segmented_list.dart';
 import '../../../../core/helpers/dialog_helper.dart';
 import '../../../../core/helpers/sheet_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/providers/settings_provider.dart';
 import '../../data/local_game.dart';
 import 'game_card_frame.dart';
 import 'game_poster.dart';
 
-class LocalGameCard extends StatelessWidget {
+class LocalGameCard extends ConsumerWidget {
   const LocalGameCard({
     super.key,
     required this.game,
@@ -183,9 +185,10 @@ class LocalGameCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    final squarePosters = ref.watch(settingsProvider).isSquarePosters;
 
     return GameCardFrame(
       contentPadding: isCompact
@@ -196,6 +199,7 @@ class LocalGameCard extends StatelessWidget {
         localPath: game.posterPath,
         isLocal: true,
         height: isCompact ? 86 : 116,
+        square: squarePosters,
       ),
       titleWidget: Text(
         game.title,

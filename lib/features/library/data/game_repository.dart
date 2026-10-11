@@ -14,6 +14,7 @@ import '../../../core/native/rust_runtime.dart';
 import 'game_registry.dart';
 import 'local_game.dart';
 import 'remote_game.dart';
+import 'storage_stats.dart';
 
 class RepositoryException implements Exception {
   RepositoryException(this.message);
@@ -272,6 +273,7 @@ class GameRepository {
                   gameFilePath: gameFile,
                   posterPath: poster?.path ?? '',
                   fileSize: len,
+                  isManaged: true,
                 );
                 games.add(g);
                 seenGameFiles.add(normFile);
@@ -300,6 +302,9 @@ class GameRepository {
                   folderPath: dir.path,
                   gameFilePath: entity.path,
                   fileSize: len,
+                  // A loose file lives directly in the games directory, so only
+                  // the file itself may be removed, never the shared folder.
+                  isManaged: false,
                 );
                 games.add(g);
                 seenGameFiles.add(normFile);
@@ -339,28 +344,151 @@ class GameRepository {
     return updated;
   }
 
-  /// Hides/removes [game] from the internal registry and adds it to the ignored set.
-  Future<void> hideGame(LocalGame game) async {
-    final registry = await GameRegistry.open();
-    await registry.remove(game.id);
-    await registry.remove(game.folderPath);
-  }
-
-  /// Permanently deletes [game] folder and removes it from registry if it is from repo.
+  /// Permanently deletes [game] from the registry and, when the app owns the
+  /// folder, removes its files from disk as well.
+  ///
+  /// A folder the user pointed at directly is only unlinked from the library:
+  /// the app never created it, so removing a game must not destroy it.
   Future<void> deleteGame(LocalGame game) async {
     final registry = await GameRegistry.open();
     await registry.remove(game.id);
     await registry.remove(game.folderPath);
-    if (game.isFromRepo) {
-      try {
-        final dir = Directory(game.folderPath);
-        if (await dir.exists()) {
-          await dir.delete(recursive: true);
+    if (!game.isManaged) {
+      // A loose .qsp or .gam file sitting directly in the games directory is
+      // the app's to remove; the shared folder around it is not.
+      if (!await _deleteLooseGameFile(game)) {
+        debugPrint(
+            '[GameRepository] Unlinked non managed game "${game.title}" (files kept)');
+      }
+      return;
+    }
+    try {
+      final dir = Directory(game.folderPath);
+      if (await dir.exists()) {
+        await dir.delete(recursive: true);
+        debugPrint('[GameRepository] Deleted game folder "${game.folderPath}"');
+      }
+    } catch (e) {
+      debugPrint('[GameRepository] Error deleting game folder: $e');
+    }
+  }
+
+  /// Removes a single game file that sits directly inside the games directory.
+  Future<bool> _deleteLooseGameFile(LocalGame game) async {
+    if (game.gameFilePath.isEmpty) return false;
+    try {
+      final root = await getGamesDirectory();
+      if (!await root.exists()) return false;
+      final fileDir =
+          p.normalize(p.absolute(p.dirname(game.gameFilePath))).toLowerCase();
+      final rootDir = p.normalize(p.absolute(root.path)).toLowerCase();
+      if (fileDir != rootDir) return false;
+      final file = File(game.gameFilePath);
+      if (!await file.exists()) return false;
+      await file.delete();
+      debugPrint(
+          '[GameRepository] Deleted loose game file "${game.gameFilePath}"');
+      return true;
+    } catch (e) {
+      debugPrint('[GameRepository] Could not delete loose game file: $e');
+      return false;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Storage accounting and cleanup
+  // ---------------------------------------------------------------------------
+
+  /// Walks every game folder off the UI thread and reports the bytes on disk.
+  Future<StorageStats> computeStorageStats(List<LocalGame> games) async {
+    final folders = <String>[
+      for (final game in games)
+        if (game.folderPath.isNotEmpty) game.folderPath,
+    ];
+    if (folders.isEmpty) return const StorageStats.empty();
+    try {
+      final sizes = await Isolate.run(() {
+        final result = <String, int>{};
+        for (final folder in folders) {
+          result[folder] = _directorySizeSync(Directory(folder));
         }
+        return result;
+      });
+      return StorageStats(perGameBytes: sizes);
+    } catch (e) {
+      debugPrint('[GameRepository] Storage stats failed: $e');
+      return const StorageStats.empty();
+    }
+  }
+
+  /// Removes leftover folders inside the games directory that hold no game file
+  /// and are not referenced by the registry.
+  ///
+  /// This is where partial extractions and abandoned copies pile up. Folders
+  /// holding a game file are always kept, so a game the user dropped in by hand
+  /// is never removed.
+  Future<int> cleanupOrphanFolders(
+    List<LocalGame> games, {
+    String? customDir,
+  }) async {
+    final root = await getGamesDirectory(customDir);
+    if (!await root.exists()) return 0;
+
+    final known = games
+        .map((game) => p.normalize(p.absolute(game.folderPath)).toLowerCase())
+        .toSet();
+    final registry = await GameRegistry.open();
+    final ignored = await registry.readIgnored();
+
+    List<FileSystemEntity> entries;
+    try {
+      entries = await root.list(followLinks: false).toList();
+    } catch (_) {
+      return 0;
+    }
+
+    var freed = 0;
+    for (final entity in entries) {
+      if (entity is! Directory) continue;
+      final norm = p.normalize(p.absolute(entity.path)).toLowerCase();
+      final baseName = p.basename(norm);
+      if (baseName.startsWith('.')) continue;
+      if (known.contains(norm)) continue;
+      if (ignored.contains(baseName) ||
+          ignored.contains(entity.path) ||
+          ignored.contains(norm)) {
+        continue;
+      }
+      final hasGame =
+          await findGameFile(entity.path, maxDepth: _maxGameFileDepth);
+      if (hasGame != null) continue;
+
+      final path = entity.path;
+      final size = await Isolate.run(() => _directorySizeSync(Directory(path)));
+      try {
+        await entity.delete(recursive: true);
+        freed += size;
+        debugPrint('[GameRepository] Removed orphan folder "$path"');
       } catch (e) {
-        debugPrint('[GameRepository] Error deleting game folder: $e');
+        debugPrint('[GameRepository] Could not remove orphan "$path": $e');
       }
     }
+    return freed;
+  }
+
+  static int _directorySizeSync(Directory dir) {
+    var total = 0;
+    try {
+      if (!dir.existsSync()) return 0;
+      for (final entity in dir.listSync(recursive: true, followLinks: false)) {
+        if (entity is File) {
+          try {
+            total += entity.lengthSync();
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+    return total;
   }
 
   // ---------------------------------------------------------------------------
@@ -427,6 +555,7 @@ class GameRepository {
           gameFilePath: gameFile,
           posterPath: poster?.path ?? '',
           fileSize: len,
+          isManaged: true,
         );
         await registry.upsert(game.toRegistry());
         await _createMarkerFiles(target);
@@ -476,6 +605,8 @@ class GameRepository {
         gameFilePath: gameFile,
         posterPath: poster?.path ?? '',
         fileSize: len,
+        // A Tier B copy belongs to the app; a Tier A folder is only referenced.
+        isManaged: isCopied,
       );
 
       await registry.upsert(game.toRegistry());
@@ -512,6 +643,7 @@ class GameRepository {
           folderPath: target.path,
           gameFilePath: destGameFile.path,
           fileSize: len,
+          isManaged: true,
         );
         await registry.upsert(game.toRegistry());
         await _createMarkerFiles(target);
@@ -554,6 +686,7 @@ class GameRepository {
           gameFilePath: gameFile,
           posterPath: poster?.path ?? '',
           fileSize: len,
+          isManaged: true,
         );
         await registry.upsert(game.toRegistry());
         await _createMarkerFiles(target);
@@ -1021,6 +1154,7 @@ class GameRepository {
       posterPath: poster?.path ?? '',
       fileSize: fileSize,
       isFromRepo: true,
+      isManaged: true,
     );
 
     final registry = await GameRegistry.open();
@@ -1029,43 +1163,6 @@ class GameRepository {
 
     onProgress?.call(1.0);
     return game;
-  }
-
-  /// Legacy compatibility helper for writing metadata.
-  Future<void> writeGameInfo(
-    Directory folder, {
-    required String id,
-    required String title,
-    String author = '',
-    String version = '',
-    String fileUrl = '',
-    int fileSize = 0,
-    String fileExt = '',
-    String descUrl = '',
-    String gameFilePath = '',
-    String posterPath = '',
-    bool isFavorite = false,
-    bool isHidden = false,
-  }) async {
-    try {
-      final infoFile = File(p.join(folder.path, '.gameInfo'));
-      const encoder = JsonEncoder.withIndent('  ');
-      await infoFile.writeAsString(encoder.convert({
-        'id': id,
-        'listId': 0,
-        'author': author,
-        'version': version,
-        'title': title,
-        'fileUrl': fileUrl,
-        'fileSize': fileSize,
-        'fileExt': fileExt,
-        'descUrl': descUrl,
-        'gameFilePath': gameFilePath,
-        'posterPath': posterPath,
-        'isFavorite': isFavorite,
-        'isHidden': isHidden,
-      }));
-    } catch (_) {}
   }
 
   Future<void> _downloadFileDirect(
@@ -1116,16 +1213,26 @@ class GameRepository {
       var receivedBytes = 0;
 
       final sink = destinationFile.openWrite();
-      await finalResponse.stream.listen((chunk) {
-        sink.add(chunk);
-        receivedBytes += chunk.length;
-        if (totalBytes > 0 && onProgress != null) {
-          onProgress((receivedBytes / totalBytes).clamp(0.0, 1.0));
-        }
-      }).asFuture();
+      var failed = false;
+      try {
+        await finalResponse.stream.listen((chunk) {
+          sink.add(chunk);
+          receivedBytes += chunk.length;
+          if (totalBytes > 0 && onProgress != null) {
+            onProgress((receivedBytes / totalBytes).clamp(0.0, 1.0));
+          }
+        }).asFuture();
 
-      await sink.flush();
-      await sink.close();
+        await sink.flush();
+      } catch (error) {
+        failed = true;
+        rethrow;
+      } finally {
+        // The handle must always be released: a failed transfer used to leave
+        // the file open and the partial download on disk.
+        await sink.close();
+        if (failed) await _deleteQuietly(destinationFile);
+      }
     } finally {
       client.close();
     }

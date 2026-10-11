@@ -440,4 +440,43 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deleteAllGamesMessage =>
       'Are you sure you want to delete all installed games from your library? This action cannot be undone.';
+
+  @override
+  String get readingTheme => 'Reading theme';
+
+  @override
+  String get readingThemeDefault => 'Default';
+
+  @override
+  String get readingThemeSepia => 'Sepia';
+
+  @override
+  String get readingThemeNight => 'Night';
+
+  @override
+  String get readingThemeHighContrast => 'High contrast';
+
+  @override
+  String get storageUsage => 'Storage usage';
+
+  @override
+  String get storageTotal => 'Total used';
+
+  @override
+  String get storageCleanup => 'Clean up unused files';
+
+  @override
+  String get storageCleanupHint =>
+      'Removes leftover folders that contain no game file.';
+
+  @override
+  String storageCleanupFreed(String size) {
+    return 'Reclaimed $size';
+  }
+
+  @override
+  String get storageNothingToClean => 'Nothing to clean up';
+
+  @override
+  String get storageCalculating => 'Calculating...';
 }

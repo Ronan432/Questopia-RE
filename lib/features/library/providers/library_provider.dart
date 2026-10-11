@@ -5,6 +5,7 @@ import '../../../core/providers/settings_provider.dart';
 import '../data/game_repository.dart';
 import '../data/local_game.dart';
 import '../data/remote_game.dart';
+import '../data/storage_stats.dart';
 
 enum CatalogSortOption {
   comments('comments', 'Comments'),
@@ -34,6 +35,8 @@ class LibraryState {
   final bool catalogFeaturedOnly;
   final int currentPage;
   final int totalPages;
+  final StorageStats storageStats;
+  final bool isLoadingStorage;
 
   const LibraryState({
     this.localGames = const [],
@@ -49,6 +52,8 @@ class LibraryState {
     this.catalogFeaturedOnly = false,
     this.currentPage = 1,
     this.totalPages = 1,
+    this.storageStats = const StorageStats.empty(),
+    this.isLoadingStorage = false,
   });
 
   LibraryState copyWith({
@@ -65,6 +70,8 @@ class LibraryState {
     bool? catalogFeaturedOnly,
     int? currentPage,
     int? totalPages,
+    StorageStats? storageStats,
+    bool? isLoadingStorage,
     bool clearDownloading = false,
     bool clearProgress = false,
     bool clearError = false,
@@ -86,16 +93,21 @@ class LibraryState {
       catalogFeaturedOnly: catalogFeaturedOnly ?? this.catalogFeaturedOnly,
       currentPage: currentPage ?? this.currentPage,
       totalPages: totalPages ?? this.totalPages,
+      storageStats: storageStats ?? this.storageStats,
+      isLoadingStorage: isLoadingStorage ?? this.isLoadingStorage,
     );
   }
 }
 
 class LibraryNotifier extends StateNotifier<LibraryState> {
-  LibraryNotifier(this._repository, this._customDir)
+  LibraryNotifier(this._repository, this._readCustomDir)
       : super(const LibraryState());
 
   final GameRepository _repository;
-  final String _customDir;
+
+  /// Reads the games folder on demand, so changing it in Settings takes effect
+  /// without rebuilding the provider or restarting the app.
+  final String Function() _readCustomDir;
   int _generation = 0;
 
   Future<void> refreshLocalGames({bool force = false}) async {
@@ -106,7 +118,7 @@ class LibraryNotifier extends StateNotifier<LibraryState> {
       state = state.copyWith(isLoadingLocal: true);
     }
     try {
-      final games = await _repository.scanLocalGames(_customDir);
+      final games = await _repository.scanLocalGames(_readCustomDir());
       if (!mounted || currentGen != _generation) return;
       state = state.copyWith(localGames: games, isLoadingLocal: false);
     } catch (_) {
@@ -114,6 +126,29 @@ class LibraryNotifier extends StateNotifier<LibraryState> {
       state =
           state.copyWith(localGames: state.localGames, isLoadingLocal: false);
     }
+  }
+
+  /// Measures how much space the installed games occupy on disk.
+  Future<void> refreshStorageStats() async {
+    if (!mounted) return;
+    state = state.copyWith(isLoadingStorage: true);
+    final stats = await _repository.computeStorageStats(state.localGames);
+    if (!mounted) return;
+    state = state.copyWith(storageStats: stats, isLoadingStorage: false);
+  }
+
+  /// Removes leftover folders inside the games directory and reports how many
+  /// bytes were reclaimed.
+  Future<int> cleanupOrphanFolders() async {
+    if (!mounted) return 0;
+    final freed = await _repository.cleanupOrphanFolders(
+      state.localGames,
+      customDir: _readCustomDir(),
+    );
+    if (!mounted) return freed;
+    await refreshLocalGames(force: true);
+    await refreshStorageStats();
+    return freed;
   }
 
   Future<void> refreshRemoteCatalog({bool force = false}) async {
@@ -186,7 +221,7 @@ class LibraryNotifier extends StateNotifier<LibraryState> {
     try {
       final game = await _repository.downloadAndExtractGame(
         remoteGame,
-        customDir: _customDir,
+        customDir: _readCustomDir(),
         onProgress: (value) {
           if (mounted) state = state.copyWith(downloadProgress: value);
         },
@@ -225,7 +260,7 @@ class LibraryNotifier extends StateNotifier<LibraryState> {
     try {
       final game = await _repository.importGameFolder(
         sourcePath,
-        customDir: _customDir,
+        customDir: _readCustomDir(),
         onProgress: (value) {
           if (mounted) state = state.copyWith(downloadProgress: value);
         },
@@ -271,6 +306,7 @@ class LibraryNotifier extends StateNotifier<LibraryState> {
   Future<void> removeGameFromLibrary(LocalGame game) async {
     if (!mounted) return;
     await _repository.deleteGame(game);
+    if (!mounted) return;
     state = state.copyWith(
       localGames: state.localGames
           .where((entry) => entry.folderPath != game.folderPath)
@@ -283,6 +319,7 @@ class LibraryNotifier extends StateNotifier<LibraryState> {
     for (final game in List.of(state.localGames)) {
       await _repository.deleteGame(game);
     }
+    if (!mounted) return;
     state = state.copyWith(localGames: []);
   }
 }
@@ -292,6 +329,5 @@ final gameRepositoryProvider = Provider((ref) => GameRepository());
 final libraryProvider =
     StateNotifierProvider<LibraryNotifier, LibraryState>((ref) {
   final repo = ref.read(gameRepositoryProvider);
-  final gamesDir = ref.read(settingsProvider).gamesDirectory;
-  return LibraryNotifier(repo, gamesDir);
+  return LibraryNotifier(repo, () => ref.read(settingsProvider).gamesDirectory);
 });

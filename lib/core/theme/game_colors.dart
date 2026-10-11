@@ -23,3 +23,65 @@ class GameColors {
   static Color foreground(Brightness brightness) =>
       brightness == Brightness.dark ? _darkForeground : _lightForeground;
 }
+
+/// Reading surface presets selectable from the Typography settings.
+///
+/// Each preset defines a background, a text color and a link color so a long
+/// story stays comfortable in different lighting. The `default` preset keeps the
+/// original black or white surface so nothing changes for users who never open
+/// the setting.
+class ReadingThemeColors {
+  const ReadingThemeColors._();
+
+  static const Color _sepiaBackground = Color(0xFFF4ECD8);
+  static const Color _sepiaForeground = Color(0xFF3B2F1E);
+  static const Color _sepiaLink = Color(0xFF8A5A16);
+
+  static const Color _nightBackground = Color(0xFF10131A);
+  static const Color _nightForeground = Color(0xFFC7CEDA);
+  static const Color _nightLink = Color(0xFF8AB4F8);
+
+  /// Reading surface behind the game text.
+  static Color background(String themeId, Brightness brightness) {
+    switch (themeId) {
+      case 'sepia':
+        return _sepiaBackground;
+      case 'night':
+        return _nightBackground;
+      case 'contrast':
+        return brightness == Brightness.dark
+            ? const Color(0xFF000000)
+            : const Color(0xFFFFFFFF);
+      default:
+        return GameColors.background(brightness);
+    }
+  }
+
+  /// Text color paired with [background].
+  static Color foreground(String themeId, Brightness brightness) {
+    switch (themeId) {
+      case 'sepia':
+        return _sepiaForeground;
+      case 'night':
+        return _nightForeground;
+      case 'contrast':
+        return brightness == Brightness.dark
+            ? const Color(0xFFFFFFFF)
+            : const Color(0xFF000000);
+      default:
+        return GameColors.foreground(brightness);
+    }
+  }
+
+  /// Link color used inside the story text.
+  static Color link(String themeId, Brightness brightness, Color fallback) {
+    switch (themeId) {
+      case 'sepia':
+        return _sepiaLink;
+      case 'night':
+        return _nightLink;
+      default:
+        return fallback;
+    }
+  }
+}

@@ -20,6 +20,7 @@ class GamePoster extends StatelessWidget {
     this.width = double.infinity,
     this.borderRadius,
     this.isLocal = false,
+    this.square = false,
   });
 
   final String? localPath;
@@ -28,6 +29,9 @@ class GamePoster extends StatelessWidget {
   final double width;
   final BorderRadius? borderRadius;
   final bool isLocal;
+
+  /// Constrains the artwork to a square inside the same box.
+  final bool square;
 
   bool _isSvg(String uri) {
     final lower = uri.toLowerCase().trim();
@@ -131,11 +135,26 @@ class GamePoster extends StatelessWidget {
     if (borderRadius != null) {
       return ClipRRect(
         borderRadius: borderRadius!,
-        child: SizedBox(height: height, width: width, child: content),
+        child: _box(content),
       );
     }
 
-    return SizedBox(height: height, width: width, child: content);
+    return _box(content);
+  }
+
+  /// Applies the configured size, optionally constraining the art to a square.
+  ///
+  /// A square poster is centred inside the same box, so turning the option on
+  /// never changes the surrounding card layout.
+  Widget _box(Widget content) {
+    if (!square) return SizedBox(height: height, width: width, child: content);
+    return SizedBox(
+      height: height,
+      width: width,
+      child: Center(
+        child: AspectRatio(aspectRatio: 1, child: content),
+      ),
+    );
   }
 
   Widget _buildLoading(ColorScheme colors) {

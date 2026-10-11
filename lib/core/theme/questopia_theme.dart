@@ -2,12 +2,65 @@ import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 
 abstract final class QuestopiaTheme {
-  /// Typeface shared by the app theme and the in-game text renderer.
-  static const String fontFamily = 'Netflix Sans';
+  // The app intentionally ships without a bundled typeface: no font files are
+  // declared in pubspec.yaml, so naming one here would only fall back to the
+  // platform default. The in-game text is the only surface with a font choice,
+  // and it resolves through [fontFamilyFor].
 
   /// Lower and upper bounds applied to the in-game font size setting.
   static const double minGameFontSize = 12.0;
   static const double maxGameFontSize = 28.0;
+
+  /// In-game typeface options resolved to real font families per platform.
+  ///
+  /// Index 0 means "Default system" and resolves to null so the renderer keeps
+  /// the platform default font. The remaining entries line up with the labels
+  /// exposed by `SettingsPickerSheets.typefaceNames`.
+  static const List<String> _androidFontFamilies = <String>[
+    '', // 0 - Default system
+    'sans-serif', // 1 - Sans-serif
+    'serif', // 2 - Serif
+    'monospace', // 3 - Monospace
+    'sans-serif-medium', // 4 - Medium
+    'cursive', // 5 - Cursive
+    'sans-serif-light', // 6 - Light
+    'sans-serif-condensed', // 7 - Condensed
+    'sans-serif-black', // 8 - Black
+    'sans-serif-thin', // 9 - Thin
+    'casual', // 10 - Casual
+    'serif-monospace', // 11 - Serif monospace
+  ];
+
+  static const List<String> _desktopFontFamilies = <String>[
+    '', // 0 - Default system
+    'Segoe UI', // 1 - Sans-serif
+    'Georgia', // 2 - Serif
+    'Consolas', // 3 - Monospace
+    'Segoe UI Semibold', // 4 - Medium
+    'Segoe Script', // 5 - Cursive
+    'Segoe UI Light', // 6 - Light
+    'Bahnschrift Condensed', // 7 - Condensed
+    'Segoe UI Black', // 8 - Black
+    'Segoe UI Light', // 9 - Thin
+    'Comic Sans MS', // 10 - Casual
+    'Consolas', // 11 - Serif monospace
+  ];
+
+  /// Resolves the in-game typeface index to a platform font family.
+  ///
+  /// Returns null for index 0 and any out-of-range index so the game text
+  /// falls back to the platform default font.
+  static String? fontFamilyFor(int index) {
+    final families = switch (defaultTargetPlatform) {
+      TargetPlatform.windows ||
+      TargetPlatform.macOS ||
+      TargetPlatform.linux =>
+        _desktopFontFamilies,
+      _ => _androidFontFamilies,
+    };
+    if (index <= 0 || index >= families.length) return null;
+    return families[index];
+  }
 
   /// Accent seeds for the legacy "Color Accent" preference.
   static const Map<String, Color> _accentSeeds = {
@@ -203,7 +256,6 @@ abstract final class QuestopiaTheme {
   static ThemeData _themeWithScheme(Brightness brightness, ColorScheme scheme) {
     return ThemeData(
       useMaterial3: true,
-      fontFamily: fontFamily,
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
       appBarTheme: AppBarTheme(

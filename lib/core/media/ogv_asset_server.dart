@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:path/path.dart' as p;
 
 import 'ogv_player_page.dart';
 
@@ -19,6 +20,16 @@ class OgvAssetServer {
   OgvAssetServer._(this._server);
 
   final HttpServer _server;
+
+  /// Directories the media endpoint may read from.
+  ///
+  /// A loopback server is reachable by every process on the device, so it must
+  /// never serve an arbitrary path. Only the roots announced by the player page
+  /// are accepted, which keeps the endpoint scoped to the active game folder.
+  final Set<String> _allowedRoots = <String>{};
+
+  static String _normalize(String path) =>
+      p.normalize(p.absolute(path)).toLowerCase();
 
   static OgvAssetServer? _active;
 
@@ -76,7 +87,7 @@ class OgvAssetServer {
         await _close(request, HttpStatus.notFound);
       }
     } catch (error) {
-      debugPrint('[OgvServer] HATA $error');
+      debugPrint('[OgvServer] request failed: $error');
       await _close(request, HttpStatus.internalServerError);
     }
   }
@@ -97,7 +108,7 @@ class OgvAssetServer {
     try {
       final data = await rootBundle.load('assets/ogv/$safe');
       final bytes = data.buffer.asUint8List();
-      debugPrint('[OgvServer] asset $safe -> ${bytes.length} bayt');
+      debugPrint('[OgvServer] asset $safe -> ${bytes.length} bytes');
       request.response
         ..statusCode = HttpStatus.ok
         ..headers.contentType = ContentType.parse(_mimeFor(safe))
@@ -106,7 +117,7 @@ class OgvAssetServer {
         ..add(bytes);
       await request.response.close();
     } catch (_) {
-      debugPrint('[OgvServer] asset bulunamadi: $safe');
+      debugPrint('[OgvServer] asset not found: $safe');
       await _close(request, HttpStatus.notFound);
     }
   }
@@ -120,6 +131,14 @@ class OgvAssetServer {
     final muted = request.uri.queryParameters['muted'] == '1';
     final loop = request.uri.queryParameters['loop'] == '1';
     final autoplay = request.uri.queryParameters['autoplay'] != '0';
+
+    // The player page is the only trusted caller, so this is where the game
+    // folders the media endpoint may read from get registered.
+    for (final root
+        in request.uri.queryParametersAll['root'] ?? const <String>[]) {
+      final trimmed = root.trim();
+      if (trimmed.isNotEmpty) _allowedRoots.add(_normalize(trimmed));
+    }
 
     final html = OgvPlayerPage.build(
       mediaUrl: '/media?path=${Uri.encodeQueryComponent(source)}',
@@ -136,6 +155,18 @@ class OgvAssetServer {
     await request.response.close();
   }
 
+  /// Returns true when [path] sits inside one of the registered game folders.
+  bool _isAllowed(String path) {
+    if (_allowedRoots.isEmpty) return false;
+    final target = _normalize(path);
+    for (final root in _allowedRoots) {
+      if (target == root || target.startsWith('$root${p.separator}')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   Future<void> _serveMedia(HttpRequest request) async {
     final raw = request.uri.queryParameters['path'] ?? '';
     if (raw.isEmpty) {
@@ -143,16 +174,22 @@ class OgvAssetServer {
       return;
     }
 
+    if (!_isAllowed(raw)) {
+      debugPrint('[OgvServer] media request outside allowed roots: $raw');
+      await _close(request, HttpStatus.forbidden);
+      return;
+    }
+
     final file = File(raw);
     if (!file.existsSync()) {
-      debugPrint('[OgvServer] medya bulunamadi: $raw');
+      debugPrint('[OgvServer] media not found: $raw');
       await _close(request, HttpStatus.notFound);
       return;
     }
 
     final length = await file.length();
     final rangeHeader = request.headers.value(HttpHeaders.rangeHeader);
-    debugPrint('[OgvServer] medya $raw (${length >> 10} KB) range=$rangeHeader');
+    debugPrint('[OgvServer] media $raw (${length >> 10} KB) range=$rangeHeader');
 
     if (rangeHeader == null) {
       final response = request.response
@@ -230,6 +267,7 @@ class OgvAssetServer {
   Future<void> stop() async {
     if (!identical(_active, this)) return;
     _active = null;
+    _allowedRoots.clear();
     try {
       await _server.close(force: true);
     } catch (_) {

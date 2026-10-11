@@ -96,6 +96,9 @@ class SettingsTiles {
     int? divisions,
   }) {
     return SegmentedListTile(
+      // Top alignment keeps the leading icon level with the label instead of
+      // floating in the middle of the taller slider row.
+      titleAlignment: ListTileTitleAlignment.top,
       leading: Padding(
         padding: const EdgeInsets.only(top: 2),
         child: Icon(icon, size: 24),
@@ -105,41 +108,51 @@ class SettingsTiles {
           final colors = Theme.of(context).colorScheme;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 label,
                 style: const TextStyle(fontSize: 16),
               ),
-              const SizedBox(height: 8),
-              SliderTheme(
-                data: SliderThemeData(
-                  trackHeight: 10.0,
-                  trackShape: const RoundedRectSliderTrackShape(),
-                  thumbShape: const RoundSliderThumbShape(
-                    enabledThumbRadius: 10.0,
-                    elevation: 3.0,
-                    pressedElevation: 6.0,
+              // The default Slider reserves extra vertical space for a large
+              // thumb overlay, which left a wide gap under the label. A fixed
+              // height and a smaller overlay close that gap and keep the row
+              // tidy. Tick marks are hidden so the track reads as one clean
+              // bar while the value still snaps to the divisions.
+              SizedBox(
+                height: 28,
+                child: SliderTheme(
+                  data: SliderThemeData(
+                    trackHeight: 6.0,
+                    trackShape: const RoundedRectSliderTrackShape(),
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: 8.0,
+                      elevation: 2.0,
+                      pressedElevation: 4.0,
+                    ),
+                    overlayShape:
+                        const RoundSliderOverlayShape(overlayRadius: 14.0),
+                    activeTrackColor: colors.primary,
+                    inactiveTrackColor: colors.surfaceContainerHighest,
+                    thumbColor: colors.primary,
+                    activeTickMarkColor: Colors.transparent,
+                    inactiveTickMarkColor: Colors.transparent,
+                    trackGap: 2.0,
                   ),
-                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 20.0),
-                  activeTrackColor: colors.primary,
-                  inactiveTrackColor: colors.surfaceContainerHighest,
-                  thumbColor: colors.primary,
-                  activeTickMarkColor: colors.onPrimary,
-                  inactiveTickMarkColor: colors.outline,
-                ),
-                child: Slider(
-                  value: value.clamp(min, max).toDouble(),
-                  min: min,
-                  max: max,
-                  divisions: divisions,
-                  onChanged: onChanged,
+                  child: Slider(
+                    value: value.clamp(min, max).toDouble(),
+                    min: min,
+                    max: max,
+                    divisions: divisions,
+                    onChanged: onChanged,
+                  ),
                 ),
               ),
             ],
           );
         },
       ),
-      minVerticalPadding: 16,
+      minVerticalPadding: 12,
     );
   }
 }

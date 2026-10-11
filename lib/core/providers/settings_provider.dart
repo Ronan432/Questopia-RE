@@ -3,6 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum ThemeModeOption { system, light, dark, amoled }
 
+/// Identifiers for the reading surface presets used by the game text panes.
+const kReadingThemeIds = <String>['default', 'sepia', 'night', 'contrast'];
+
 /// Accent color options matching the legacy Android/KMP theme palette.
 const kThemeColorOptions = <String>[
   'dynamic',
@@ -19,9 +22,9 @@ const kThemeColorOptions = <String>[
 class SettingsState {
   final ThemeModeOption themeMode;
   final String themeColor;
+  final String readingTheme;
   final double fontSize;
   final int typefaceIndex;
-  final bool isUseGameFont;
   final bool isUseAutoscroll;
   final bool isUseSeparator;
   final bool isSquarePosters;
@@ -58,9 +61,9 @@ class SettingsState {
   const SettingsState({
     this.themeMode = ThemeModeOption.system,
     this.themeColor = 'dynamic',
+    this.readingTheme = 'default',
     this.fontSize = 16.0,
     this.typefaceIndex = 0,
-    this.isUseGameFont = false,
     this.isUseAutoscroll = true,
     this.isUseSeparator = false,
     this.isSquarePosters = false,
@@ -76,7 +79,7 @@ class SettingsState {
     this.language = 'system',
     this.gamesDirectory = '',
     this.isImmersiveMode = false,
-    this.isImagesInDialogEnabled = false,
+    this.isImagesInDialogEnabled = true,
     this.useGameTextColor = false,
     this.gameTextColor = 0xFF000000,
     this.useGameBackgroundColor = false,
@@ -96,9 +99,9 @@ class SettingsState {
   SettingsState copyWith({
     ThemeModeOption? themeMode,
     String? themeColor,
+    String? readingTheme,
     double? fontSize,
     int? typefaceIndex,
-    bool? isUseGameFont,
     bool? isUseAutoscroll,
     bool? isUseSeparator,
     bool? isSquarePosters,
@@ -133,9 +136,9 @@ class SettingsState {
     return SettingsState(
       themeMode: themeMode ?? this.themeMode,
       themeColor: themeColor ?? this.themeColor,
+      readingTheme: readingTheme ?? this.readingTheme,
       fontSize: fontSize ?? this.fontSize,
       typefaceIndex: typefaceIndex ?? this.typefaceIndex,
-      isUseGameFont: isUseGameFont ?? this.isUseGameFont,
       isUseAutoscroll: isUseAutoscroll ?? this.isUseAutoscroll,
       isUseSeparator: isUseSeparator ?? this.isUseSeparator,
       isSquarePosters: isSquarePosters ?? this.isSquarePosters,
@@ -179,9 +182,9 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
   static const _kThemeMode = 'pref_theme_mode';
   static const _kThemeColor = 'pref_theme_color';
+  static const _kReadingTheme = 'pref_reading_theme';
   static const _kFontSize = 'pref_font_size';
   static const _kTypeface = 'pref_typeface';
-  static const _kUseGameFont = 'pref_use_game_font';
   static const _kAutoscroll = 'pref_autoscroll';
   static const _kSeparator = 'pref_separator';
   static const _kSquarePosters = 'pref_square_posters';
@@ -236,6 +239,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       themeColor: prefs.getString(_kThemeColor) ??
           _legacyString(prefs, 'themeColor') ??
           'dynamic',
+      readingTheme: prefs.getString(_kReadingTheme) ?? 'default',
       fontSize: prefs.getDouble(_kFontSize) ??
           double.tryParse(_legacyString(prefs, 'fontSize') ?? '') ??
           16.0,
@@ -244,10 +248,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
               _legacyString(prefs, 'typeface') ??
               '') ??
           0,
-      isUseGameFont: prefs.getBool(_kUseGameFont) ??
-          _legacyBool(prefs, 'isUseGameFont') ??
-          _legacyBool(prefs, 'useGameFont') ??
-          false,
       isUseAutoscroll: prefs.getBool(_kAutoscroll) ??
           _legacyBool(prefs, 'autoscroll') ??
           true,
@@ -293,7 +293,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
           false,
       isImagesInDialogEnabled: prefs.getBool(_kImagesInDialog) ??
           _legacyBool(prefs, 'permImgDialog') ??
-          false,
+          true,
       useGameTextColor: prefs.getBool(_kUseGameTextColor) ??
           _legacyBool(prefs, 'useGameTextColor') ??
           false,
@@ -347,7 +347,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     await _migrateString(prefs, 'themeColor', _kThemeColor);
     await _migrateString(prefs, 'fontSize', _kFontSize);
     await _migrateString(prefs, 'fontStyle', _kTypeface);
-    await _migrateBool(prefs, 'isUseGameFont', _kUseGameFont);
     await _migrateBool(prefs, 'autoscroll', _kAutoscroll);
     await _migrateBool(prefs, 'separator', _kSeparator);
     await _migrateBool(prefs, 'squarePosters', _kSquarePosters);
@@ -459,6 +458,12 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     await _set(_kThemeColor, color);
   }
 
+  Future<void> setReadingTheme(String theme) async {
+    if (!kReadingThemeIds.contains(theme)) return;
+    state = state.copyWith(readingTheme: theme);
+    await _set(_kReadingTheme, theme);
+  }
+
   Future<void> setFontSize(double size) async {
     state = state.copyWith(fontSize: size);
     await _set(_kFontSize, size);
@@ -467,11 +472,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   Future<void> setTypefaceIndex(int index) async {
     state = state.copyWith(typefaceIndex: index);
     await _set(_kTypeface, index);
-  }
-
-  Future<void> setUseGameFont(bool value) async {
-    state = state.copyWith(isUseGameFont: value);
-    await _set(_kUseGameFont, value);
   }
 
   Future<void> setAutoscroll(bool value) async {

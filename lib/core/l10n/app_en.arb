@@ -183,5 +183,26 @@
   "exitGameMessage": "Are you sure you want to exit the game? Any unsaved progress will be lost.",
   "deleteAll": "Delete All",
   "deleteAllGamesTitle": "Delete All Installed Games",
-  "deleteAllGamesMessage": "Are you sure you want to delete all installed games from your library? This action cannot be undone."
+  "deleteAllGamesMessage": "Are you sure you want to delete all installed games from your library? This action cannot be undone.",
+
+  "readingTheme": "Reading theme",
+  "readingThemeDefault": "Default",
+  "readingThemeSepia": "Sepia",
+  "readingThemeNight": "Night",
+  "readingThemeHighContrast": "High contrast",
+
+  "storageUsage": "Storage usage",
+  "storageTotal": "Total used",
+  "storageCleanup": "Clean up unused files",
+  "storageCleanupHint": "Removes leftover folders that contain no game file.",
+  "storageCleanupFreed": "Reclaimed {size}",
+  "@storageCleanupFreed": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "storageNothingToClean": "Nothing to clean up",
+  "storageCalculating": "Calculating..."
 }

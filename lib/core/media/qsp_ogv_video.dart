@@ -24,6 +24,7 @@ class QspOgvVideo extends StatefulWidget {
     this.muted = true,
     this.width,
     this.height,
+    this.allowedRoots = const [],
   });
 
   final String path;
@@ -32,6 +33,9 @@ class QspOgvVideo extends StatefulWidget {
   final bool muted;
   final double? width;
   final double? height;
+
+  /// Game folders the loopback media server is allowed to read from.
+  final List<String> allowedRoots;
 
   @override
   State<QspOgvVideo> createState() => _QspOgvVideoState();
@@ -53,7 +57,11 @@ class _QspOgvVideoState extends State<QspOgvVideo> {
         .map((e) => '${Uri.encodeQueryComponent(e.key)}='
             '${Uri.encodeQueryComponent(e.value)}')
         .join('&');
-    return '$baseUrl/player?$encoded';
+    final roots = widget.allowedRoots
+        .where((root) => root.trim().isNotEmpty)
+        .map((root) => '&root=${Uri.encodeQueryComponent(root)}')
+        .join();
+    return '$baseUrl/player?$encoded$roots';
   }
 
   @override
@@ -66,7 +74,7 @@ class _QspOgvVideoState extends State<QspOgvVideo> {
     try {
       final server = await OgvAssetServer.ensureStarted();
       final url = _playerUrl(server.baseUrl);
-      debugPrint('[OgvVideo] baslatiliyor: $url');
+      debugPrint('[OgvVideo] starting: $url');
 
       final controller = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -79,7 +87,7 @@ class _QspOgvVideoState extends State<QspOgvVideo> {
         ..setNavigationDelegate(
           NavigationDelegate(
             onNavigationRequest: (request) {
-              debugPrint('[OgvVideo] gezinti: ${request.url}');
+              debugPrint('[OgvVideo] navigation: ${request.url}');
               // Only the local player page may load. Media is pulled over XHR
               // so no further navigation should ever be requested.
               return request.url.startsWith(server.baseUrl)
@@ -87,11 +95,11 @@ class _QspOgvVideoState extends State<QspOgvVideo> {
                   : NavigationDecision.prevent;
             },
             onPageFinished: (_) {
-              debugPrint('[OgvVideo] sayfa yuklendi');
+              debugPrint('[OgvVideo] page loaded');
               if (mounted) setState(() => _ready = true);
             },
             onWebResourceError: (error) {
-              debugPrint('[OgvVideo] kaynak hatasi: ${error.description}');
+              debugPrint('[OgvVideo] resource error: ${error.description}');
               // A failed subresource must not blank the whole widget, so the
               // error only takes effect when the page itself never loaded.
               if (!_ready && mounted) setState(() => _failed = true);
@@ -105,7 +113,7 @@ class _QspOgvVideoState extends State<QspOgvVideo> {
       if (!mounted) return;
       setState(() => _controller = controller);
     } catch (error) {
-      debugPrint('[OgvVideo] baslatma hatasi: $error');
+      debugPrint('[OgvVideo] initialisation failed: $error');
       if (mounted) setState(() => _failed = true);
     }
   }

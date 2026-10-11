@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -54,56 +53,56 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   bool _isHeaderVisible = true;
   Timer? _reappearTimer;
 
+  /// Suppresses scroll handling while the header animation runs.
+  ///
+  /// Collapsing the header changes the body height, which changes the scroll
+  /// extent, which fires another scroll notification. Without this guard the two
+  /// feed each other and the bar flickers in and out.
+  bool _suppressScrollEvents = false;
+  Timer? _suppressTimer;
+
+  /// Hides the header while reading downwards, restores it the moment the user
+  /// scrolls back up, and never forces it back while the story sits at its end.
   void _onScrollNotification(ScrollNotification notification) {
-    if (notification is UserScrollNotification) {
-      if (notification.direction == ScrollDirection.reverse) {
-        if (_isHeaderVisible) {
-          setState(() {
-            _isHeaderVisible = false;
-          });
-        }
-        _reappearTimer?.cancel();
-        _reappearTimer = Timer(const Duration(milliseconds: 1000), () {
-          if (mounted) {
-            if (!_isHeaderVisible) {
-              setState(() {
-                _isHeaderVisible = true;
-              });
-            }
-          }
-        });
-      } else if (notification.direction == ScrollDirection.forward) {
-        if (!_isHeaderVisible) {
-          setState(() {
-            _isHeaderVisible = true;
-          });
-        }
-        _reappearTimer?.cancel();
-      } else if (notification.direction == ScrollDirection.idle) {
-        _reappearTimer?.cancel();
-        _reappearTimer = Timer(const Duration(milliseconds: 250), () {
-          if (mounted) {
-            if (!_isHeaderVisible) {
-              setState(() {
-                _isHeaderVisible = true;
-              });
-            }
-          }
-        });
-      }
-    } else if (notification is ScrollEndNotification) {
+    // Inner scrollables, such as the action list, must not drive the header.
+    if (notification.depth != 0 || _suppressScrollEvents) return;
+    if (notification is! ScrollUpdateNotification) return;
+
+    final delta = notification.scrollDelta ?? 0;
+    if (delta > 0.5) {
+      _setHeaderVisible(false);
+      _scheduleReappear(notification.metrics);
+    } else if (delta < -0.5) {
       _reappearTimer?.cancel();
-      _reappearTimer = Timer(const Duration(milliseconds: 250), () {
-        if (mounted) {
-          if (!_isHeaderVisible) {
-            setState(() {
-              _isHeaderVisible = true;
-            });
-          }
-        }
-      });
+      _setHeaderVisible(true);
     }
   }
+
+  void _setHeaderVisible(bool visible) {
+    if (_isHeaderVisible == visible) return;
+    _suppressScrollEvents = true;
+    setState(() => _isHeaderVisible = visible);
+    _suppressTimer?.cancel();
+    _suppressTimer = Timer(const Duration(milliseconds: 320), () {
+      _suppressScrollEvents = false;
+    });
+  }
+
+  /// Brings the header back after the reader stops, but leaves it hidden at the
+  /// very end of the story where the sudden pop used to look broken.
+  void _scheduleReappear(ScrollMetrics metrics) {
+    _reappearTimer?.cancel();
+    if (metrics.extentAfter <= 1) return;
+    _reappearTimer = Timer(const Duration(milliseconds: 1600), () {
+      if (mounted) _setHeaderVisible(true);
+    });
+  }
+
+  /// Drives auto-scroll for the story pane.
+  final ScrollController _storyScrollController = ScrollController();
+
+  /// Remembers the last auto-scrolled offset so each new passage advances once.
+  double _lastAutoScrollOffset = 0;
 
   @override
   void initState() {
@@ -114,11 +113,41 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           ? SystemUiMode.immersiveSticky
           : SystemUiMode.edgeToEdge,
     );
+    _applyEngineSettings(settings);
+  }
+
+  /// Pushes the audio and auto-save preferences into the running engine.
+  void _applyEngineSettings(SettingsState settings) {
+    ref.read(gameEngineProvider.notifier).applySettings(
+          soundEnabled: settings.isSoundEnabled,
+          autosaveEnabled: settings.isAutosaveEnabled,
+          autosaveInterval: settings.autosaveInterval,
+          imagesInDialogEnabled: settings.isImagesInDialogEnabled,
+        );
+  }
+
+  /// Scrolls the story pane down after new text arrives when auto-scroll is on.
+  void _maybeAutoScroll(SettingsState settings) {
+    if (!settings.isUseAutoscroll) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_storyScrollController.hasClients) return;
+      final position = _storyScrollController.position;
+      if (position.maxScrollExtent <= _lastAutoScrollOffset) return;
+      _lastAutoScrollOffset = position.maxScrollExtent;
+      _storyScrollController.animateTo(
+        position.maxScrollExtent,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
+    });
   }
 
   @override
   void dispose() {
     _reappearTimer?.cancel();
+    _suppressTimer?.cancel();
+    _storyScrollController.dispose();
+    ref.read(gameEngineProvider.notifier).stopAutosave();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
@@ -215,17 +244,22 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         ? engineState.gameState.varsDesc
         : '<p>No status information available.</p>';
 
-    debugPrint('[GameScreen] build() fired: activeTab=$_activeTab, '
-        'isLoading=${engineState.isLoading}, '
-        'mainDescLen=${mainHtml.length}, '
-        'varsDescLen=${varsHtml.length}, '
-        'actions=${engineState.gameState.actions.length}, '
-        'objects=${engineState.gameState.objects.length}, '
-        'activeDialog=${engineState.activeDialog}');
+    // Audio and auto-save preferences must reach the engine as soon as they
+    // change, without rebuilding the whole screen.
+    ref.listen<SettingsState>(settingsProvider, (previous, next) {
+      if (previous == null) return;
+      if (previous.isSoundEnabled != next.isSoundEnabled ||
+          previous.isAutosaveEnabled != next.isAutosaveEnabled ||
+          previous.autosaveInterval != next.autosaveInterval) {
+        _applyEngineSettings(next);
+      }
+    });
 
     _maybeShowEngineDialog(engineState.activeDialog);
+    _maybeAutoScroll(settings);
 
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
     final topBarBgColor =
         theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface;
@@ -334,6 +368,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             context,
                             engineState,
                             engineNotifier,
+                            settings,
                           ),
                         ],
                       ),
@@ -376,7 +411,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             child: const Icon(Icons.article_outlined),
                           ),
                           selectedIcon: const Icon(Icons.article_rounded),
-                          label: 'Story',
+                          label: l10n.tabGame,
                         ),
                         NavigationDestination(
                           icon: Badge(
@@ -387,7 +422,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             child: const Icon(Icons.tune_rounded),
                           ),
                           selectedIcon: const Icon(Icons.tune_rounded),
-                          label: 'Status',
+                          label: l10n.tabStatus,
                         ),
                         NavigationDestination(
                           icon: Badge(
@@ -398,7 +433,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             child: const Icon(Icons.backpack_outlined),
                           ),
                           selectedIcon: const Icon(Icons.backpack_rounded),
-                          label: 'Inventory',
+                          label: l10n.tabInventory,
                         ),
                       ],
                     ),
@@ -423,7 +458,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                         child: const Icon(Icons.article_outlined),
                       ),
                       selectedIcon: const Icon(Icons.article_rounded),
-                      label: 'Story',
+                      label: l10n.tabGame,
                     ),
                     NavigationDestination(
                       icon: Badge(
@@ -433,7 +468,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                         child: const Icon(Icons.tune_rounded),
                       ),
                       selectedIcon: const Icon(Icons.tune_rounded),
-                      label: 'Status',
+                      label: l10n.tabStatus,
                     ),
                     NavigationDestination(
                       icon: Badge(
@@ -443,7 +478,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                         child: const Icon(Icons.backpack_outlined),
                       ),
                       selectedIcon: const Icon(Icons.backpack_rounded),
-                      label: 'Inventory',
+                      label: l10n.tabInventory,
                     ),
                   ],
                 ),
@@ -451,6 +486,42 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       ),
     );
   }
+
+  /// Resolves the reading surface from the selected preset plus any overrides.
+  ///
+  /// An explicit custom colour always wins over the preset, so the two features
+  /// stay independent.
+  ({Color background, Color foreground, Color link}) _readingSurface(
+    SettingsState settings,
+    ThemeData theme,
+  ) {
+    final brightness = theme.brightness;
+    final background = settings.useGameBackgroundColor
+        ? Color(settings.gameBackColor)
+        : ReadingThemeColors.background(settings.readingTheme, brightness);
+    final foreground = settings.useGameTextColor
+        ? Color(settings.gameTextColor)
+        : ReadingThemeColors.foreground(settings.readingTheme, brightness);
+    final link = settings.useGameLinkColor
+        ? Color(settings.gameLinkColor)
+        : ReadingThemeColors.link(
+            settings.readingTheme,
+            brightness,
+            theme.colorScheme.primary,
+          );
+    return (background: background, foreground: foreground, link: link);
+  }
+
+  /// Text style shared by the story, status and inventory panes.
+  TextStyle _gameTextStyle(SettingsState settings, Color color) => TextStyle(
+        fontSize: settings.fontSize.clamp(
+          QuestopiaTheme.minGameFontSize,
+          QuestopiaTheme.maxGameFontSize,
+        ),
+        color: color,
+        fontFamily: QuestopiaTheme.fontFamilyFor(settings.typefaceIndex),
+        height: 1.5,
+      );
 
   Widget _buildStoryTab(
     BuildContext context,
@@ -485,43 +556,35 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     final resolver = _getResolver();
     final theme = Theme.of(context);
-    final isCustomBg = settings.useGameBackgroundColor;
-    final bgColor = isCustomBg
-        ? Color(settings.gameBackColor)
-        : GameColors.background(theme.brightness);
-    final isCustomFontColor = settings.useGameTextColor;
-    final fontColor = isCustomFontColor
-        ? Color(settings.gameTextColor)
-        : GameColors.foreground(theme.brightness);
+    final surface = _readingSurface(settings, theme);
 
     return Container(
-      color: bgColor,
+      color: surface.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
             child: SingleChildScrollView(
+              controller: _storyScrollController,
               padding: const EdgeInsets.all(16),
               child: QspHtmlView(
                 html: mainHtml,
                 resolver: resolver,
-                backgroundColor: bgColor,
-                textStyle: TextStyle(
-                  fontSize: settings.fontSize.clamp(
-                  QuestopiaTheme.minGameFontSize,
-                  QuestopiaTheme.maxGameFontSize,
-                ),
-                  color: fontColor,
-                  fontFamily: QuestopiaTheme.fontFamily,
-                  height: 1.5,
-                ),
+                backgroundColor: surface.background,
+                textStyle: _gameTextStyle(settings, surface.foreground),
+                linkColor: surface.link,
+                disableImages: settings.isImageDisabled,
+                muteVideos: settings.isVideoMute,
+                imageWidthOverride:
+                    settings.isAutoWidth ? null : settings.customWidthImage,
+                imageHeightOverride:
+                    settings.isAutoHeight ? null : settings.customHeightImage,
                 onTapLink: (url) {
                   final lower = url.toLowerCase();
                   if (lower.startsWith('exec:') ||
                       lower.contains('/exec:') ||
                       lower.contains('exec%3a')) {
                     final code = HtmlProcessor.decodeExecUrl(url);
-                    debugPrint('[GameScreen] Executing link code: "$code"');
                     engineNotifier.execCode(code);
                     return true;
                   }
@@ -534,16 +597,20 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             Container(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
               decoration: BoxDecoration(
-                color: bgColor,
-                border: Border(
-                  top: BorderSide(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .outlineVariant
-                        .withValues(alpha: 0.3),
-                    width: 0.5,
-                  ),
-                ),
+                color: surface.background,
+                // The separator line is opt-in, so the panel reads as part of
+                // the story surface until the user asks for a divider.
+                border: settings.isUseSeparator
+                    ? Border(
+                        top: BorderSide(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outlineVariant
+                              .withValues(alpha: 0.3),
+                          width: 0.5,
+                        ),
+                      )
+                    : null,
               ),
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: maxActionHeight),
@@ -552,7 +619,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: engineState.gameState.actions.map((act) {
-                      return _buildActionButton(context, act, engineNotifier);
+                      return _buildActionButton(
+                        context,
+                        act,
+                        engineNotifier,
+                        settings,
+                      );
                     }).toList(),
                   ),
                 ),
@@ -568,9 +640,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     BuildContext context,
     QspAction act,
     GameEngineNotifier engineNotifier,
+    SettingsState settings,
   ) {
     final colors = Theme.of(context).colorScheme;
     final visual = _parseVisualItem(act.name, act.image);
+    // Action labels follow the same size as the story text so the whole game
+    // surface scales together.
+    final actionFontSize = settings.fontSize.clamp(
+      QuestopiaTheme.minGameFontSize,
+      QuestopiaTheme.maxGameFontSize,
+    );
     final file =
         visual.imagePath != null ? _findGameAssetFile(visual.imagePath!) : null;
 
@@ -635,7 +714,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             Flexible(
               child: Text(
                 visual.text,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: actionFontSize,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -674,39 +756,30 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     final resolver = _getResolver();
     final theme = Theme.of(context);
-    final isCustomBg = settings.useGameBackgroundColor;
-    final bgColor = isCustomBg
-        ? Color(settings.gameBackColor)
-        : GameColors.background(theme.brightness);
-    final isCustomFontColor = settings.useGameTextColor;
-    final fontColor = isCustomFontColor
-        ? Color(settings.gameTextColor)
-        : GameColors.foreground(theme.brightness);
+    final surface = _readingSurface(settings, theme);
 
     return Container(
-      color: bgColor,
+      color: surface.background,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: QspHtmlView(
           html: varsHtml,
           resolver: resolver,
-          backgroundColor: bgColor,
-          textStyle: TextStyle(
-            fontSize: settings.fontSize.clamp(
-              QuestopiaTheme.minGameFontSize,
-              QuestopiaTheme.maxGameFontSize,
-            ),
-            color: fontColor,
-            fontFamily: QuestopiaTheme.fontFamily,
-            height: 1.5,
-          ),
+          backgroundColor: surface.background,
+          textStyle: _gameTextStyle(settings, surface.foreground),
+          linkColor: surface.link,
+          disableImages: settings.isImageDisabled,
+          muteVideos: settings.isVideoMute,
+          imageWidthOverride:
+              settings.isAutoWidth ? null : settings.customWidthImage,
+          imageHeightOverride:
+              settings.isAutoHeight ? null : settings.customHeightImage,
           onTapLink: (url) {
             final lower = url.toLowerCase();
             if (lower.startsWith('exec:') ||
                 lower.contains('/exec:') ||
                 lower.contains('exec%3a')) {
               final code = HtmlProcessor.decodeExecUrl(url);
-              debugPrint('[GameScreen Vars] Executing link code: "$code"');
               ref.read(gameEngineProvider.notifier).execCode(code);
               return true;
             }
@@ -721,9 +794,17 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     BuildContext context,
     GameEngineState engineState,
     GameEngineNotifier engineNotifier,
+    SettingsState settings,
   ) {
     final objects = engineState.gameState.objects;
     final colors = Theme.of(context).colorScheme;
+    // The inventory keeps the Material surface: its cards are Material widgets,
+    // so a reading preset would fight the card colours. Only the font size is
+    // shared with the reading panes.
+    final objectFontSize = settings.fontSize.clamp(
+      QuestopiaTheme.minGameFontSize,
+      QuestopiaTheme.maxGameFontSize,
+    );
 
     if (objects.isEmpty) {
       return Center(
@@ -868,7 +949,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   : 'Item #${item.obj.index + 1}',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                fontSize: 15,
+                fontSize: objectFontSize,
                 color: colors.onSurface,
               ),
             ),

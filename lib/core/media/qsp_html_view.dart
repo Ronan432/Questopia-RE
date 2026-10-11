@@ -12,6 +12,11 @@ class QspHtmlView extends StatelessWidget {
     this.textStyle,
     this.backgroundColor,
     this.onTapLink,
+    this.disableImages = false,
+    this.muteVideos = false,
+    this.imageWidthOverride,
+    this.imageHeightOverride,
+    this.linkColor,
   });
 
   final String html;
@@ -19,6 +24,21 @@ class QspHtmlView extends StatelessWidget {
   final TextStyle? textStyle;
   final Color? backgroundColor;
   final FutureOr<bool> Function(String url)? onTapLink;
+
+  /// Drops every embedded image, honouring the "Disable images" preference.
+  final bool disableImages;
+
+  /// Forces embedded video to play without sound.
+  final bool muteVideos;
+
+  /// Explicit width applied to media when automatic sizing is turned off.
+  final int? imageWidthOverride;
+
+  /// Explicit height applied to media when automatic sizing is turned off.
+  final int? imageHeightOverride;
+
+  /// Overrides the colour of every hyperlink in the story text.
+  final Color? linkColor;
 
   /// QSP games frequently ship hardcoded `bgcolor` and font colors in their
   /// own markup. Those must never win over the app theme, so the legacy
@@ -44,7 +64,8 @@ class QspHtmlView extends StatelessWidget {
     const neutralBody = '<body style="background-color:transparent;'
         'color:inherit;margin:0;padding:0">';
     if (RegExp(r'<body', caseSensitive: false).hasMatch(result)) {
-      result = result.replaceAll(RegExp(r'<body[^>]*>', caseSensitive: false), neutralBody);
+      result = result.replaceAll(
+          RegExp(r'<body[^>]*>', caseSensitive: false), neutralBody);
     } else {
       result = '$neutralBody$result</body>';
     }
@@ -58,9 +79,15 @@ class QspHtmlView extends StatelessWidget {
     return double.tryParse(clean);
   }
 
+  String _hexColor(Color color) {
+    final value = color.toARGB32() & 0xFFFFFF;
+    return '#${value.toRadixString(16).padLeft(6, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final styledHtml = _applyAppStyling(html);
+    final roots = resolver.basePaths;
     return ExcludeSemantics(
       child: Container(
         color: backgroundColor ?? Colors.transparent,
@@ -72,9 +99,17 @@ class QspHtmlView extends StatelessWidget {
                   return await onTapLink!(url);
                 }
               : null,
+          customStylesBuilder: linkColor != null
+              ? (element) => element.localName == 'a'
+                  ? {'color': _hexColor(linkColor!)}
+                  : null
+              : null,
           customWidgetBuilder: (element) {
             final tag = element.localName?.toLowerCase();
             if (tag != 'img' && tag != 'video') return null;
+
+            // "Disable images" removes pictures but keeps the surrounding text.
+            if (tag == 'img' && disableImages) return const SizedBox.shrink();
 
             var src = element.attributes['src'];
             if ((src == null || src.isEmpty) && tag == 'video') {
@@ -83,8 +118,12 @@ class QspHtmlView extends StatelessWidget {
             }
             if (src == null || src.isEmpty) return null;
 
-            final w = _parseDimension(element.attributes['width']);
-            final h = _parseDimension(element.attributes['height']);
+            // An explicit size from the settings wins over the markup, which is
+            // what "automatic width and height" being switched off means.
+            final w = imageWidthOverride?.toDouble() ??
+                _parseDimension(element.attributes['width']);
+            final h = imageHeightOverride?.toDouble() ??
+                _parseDimension(element.attributes['height']);
             final isVideo = tag == 'video';
 
             return QspMedia(
@@ -92,9 +131,10 @@ class QspHtmlView extends StatelessWidget {
               src: src,
               width: w,
               height: h,
+              allowedRoots: roots,
               autoplay: true,
               loop: element.attributes.containsKey('loop') || isVideo,
-              muted: element.attributes.containsKey('muted'),
+              muted: muteVideos || element.attributes.containsKey('muted'),
             );
           },
         ),

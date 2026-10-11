@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 import '../../../core/audio/game_audio.dart';
 import '../../../core/native/qsp_callbacks.dart';
@@ -104,6 +105,82 @@ class GameEngineNotifier extends StateNotifier<GameEngineState> {
   QspCallbackBridge? _bridge;
   Timer? _timer;
 
+  bool _autosaveEnabled = false;
+  int _autosaveInterval = 15;
+  int _clicksSinceAutosave = 0;
+  bool _imagesInDialogEnabled = true;
+
+  /// Applies the audio, auto-save and image preferences to the running engine.
+  ///
+  /// These settings used to be stored but never reached the engine, so toggling
+  /// them changed nothing.
+  void applySettings({
+    required bool soundEnabled,
+    required bool autosaveEnabled,
+    required int autosaveInterval,
+    required bool imagesInDialogEnabled,
+  }) {
+    _audio.setSoundEnabled(soundEnabled);
+    _autosaveEnabled = autosaveEnabled;
+    _autosaveInterval = autosaveInterval.clamp(1, 1000);
+    _imagesInDialogEnabled = imagesInDialogEnabled;
+  }
+
+  /// Stops auto-saving, used when the game screen closes.
+  void stopAutosave() {
+    _autosaveEnabled = false;
+    _clicksSinceAutosave = 0;
+  }
+
+  /// Counts engine turns and writes an auto-save once the interval is reached.
+  void _tickAutosave() {
+    if (!_autosaveEnabled) return;
+    _clicksSinceAutosave++;
+    if (_clicksSinceAutosave < _autosaveInterval) return;
+    _clicksSinceAutosave = 0;
+    final data = _ffi?.saveGameData();
+    if (data == null || data.isEmpty) return;
+    state = state.copyWith(autoSaveData: data);
+    unawaited(_writeAutoSave(data));
+    debugPrint(
+        '[GameEngineNotifier] Auto-save captured (${data.length} bytes)');
+  }
+
+  Future<File?> _autoSaveFile() async {
+    final game = state.activeGame;
+    if (game == null) return null;
+    try {
+      final dir = await getApplicationSupportDirectory();
+      final safeId = game.id.replaceAll(RegExp(r'[^\w\-]+'), '_');
+      return File(p.join(dir.path, 'questopia_autosave', '$safeId.sav'));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _writeAutoSave(Uint8List data) async {
+    final file = await _autoSaveFile();
+    if (file == null) return;
+    try {
+      await file.parent.create(recursive: true);
+      await file.writeAsBytes(data, flush: true);
+    } catch (e) {
+      debugPrint('[GameEngineNotifier] Auto-save write failed: $e');
+    }
+  }
+
+  Future<Uint8List?> _readAutoSave() async {
+    final file = await _autoSaveFile();
+    if (file == null) return null;
+    try {
+      if (!await file.exists()) return null;
+      final bytes = await file.readAsBytes();
+      return bytes.isEmpty ? null : bytes;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   void dispose() {
     debugPrint('[GameEngineNotifier] Disposing engine notifier...');
@@ -196,6 +273,14 @@ class GameEngineNotifier extends StateNotifier<GameEngineState> {
         '[GameEngineNotifier] ffi.loadGameData() succeeded. Refreshing state...');
     _refreshState();
     _checkError();
+
+    // Restore the auto-save written during a previous session, if any.
+    _clicksSinceAutosave = 0;
+    final restored = await _readAutoSave();
+    if (restored != null) {
+      state = state.copyWith(autoSaveData: restored);
+    }
+
     state = state.copyWith(isLoading: false);
     debugPrint(
         '[GameEngineNotifier] loadGame complete. activeGame="${state.activeGame?.title}"');
@@ -279,6 +364,15 @@ class GameEngineNotifier extends StateNotifier<GameEngineState> {
           messageText: text,
         );
       case QspShowImageEvent(path: final path):
+        // When the dialog is switched off the story pane already renders the
+        // image inline, so the engine event is ignored.
+        if (!_imagesInDialogEnabled) {
+          state = state.copyWith(
+            activeDialog: GameDialogType.none,
+            previewImageUrl: '',
+          );
+          break;
+        }
         final cleanPath = path.trim();
         if (cleanPath.isEmpty) {
           state = state.copyWith(
@@ -319,7 +413,7 @@ class GameEngineNotifier extends StateNotifier<GameEngineState> {
       case QspOpenGameStatusEvent(path: final path):
         _openStatusFile(path);
       case QspSaveGameStatusEvent(path: final path):
-        _openStatusFile(path);
+        _saveStatusFile(path);
       case QspInputStrTextEvent(text: final text):
         state = state.copyWith(
           activeDialog: GameDialogType.input,
@@ -468,6 +562,30 @@ class GameEngineNotifier extends StateNotifier<GameEngineState> {
     _refreshState();
   }
 
+  /// Writes the current game state to the save file the engine asked for.
+  ///
+  /// The engine reports this through the same callback family as loading, so
+  /// it must snapshot the game and write it, not read the file back.
+  Future<void> _saveStatusFile(String path) async {
+    final resolved = _resolveGameFile(path);
+    final ffi = _ffi;
+    if (ffi == null) return;
+    final data = ffi.saveGameData();
+    if (data == null || data.isEmpty) {
+      debugPrint('[GameEngineNotifier] No save data produced for "$resolved"');
+      return;
+    }
+    try {
+      final file = File(resolved);
+      await file.parent.create(recursive: true);
+      await file.writeAsBytes(data, flush: true);
+      debugPrint(
+          '[GameEngineNotifier] Wrote ${data.length} bytes to "$resolved"');
+    } catch (error) {
+      debugPrint('[GameEngineNotifier] Save write failed for "$resolved": $error');
+    }
+  }
+
   void _armTimer(int msecs) {
     _timer?.cancel();
     _timer = null;
@@ -478,6 +596,7 @@ class GameEngineNotifier extends StateNotifier<GameEngineState> {
       if (ffi == null) return;
       ffi.execCounter();
       _checkError();
+      _tickAutosave();
     });
   }
 
@@ -615,7 +734,9 @@ class GameEngineNotifier extends StateNotifier<GameEngineState> {
 
   void loadFromSlot(int slotIndex) {
     debugPrint('[GameEngineNotifier] Loading from slot #$slotIndex');
-    final data = state.saveSlots[slotIndex];
+    // Slot -1 is the auto-save slot, which lives in its own field.
+    final data =
+        slotIndex < 0 ? state.autoSaveData : state.saveSlots[slotIndex];
     if (data != null) {
       final ffi = _ffi;
       if (ffi != null) {

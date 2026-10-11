@@ -4,6 +4,8 @@ import 'package:material_segmented_list/material_segmented_list.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/providers/settings_provider.dart';
+import '../../../../core/theme/game_colors.dart';
+import '../../../../core/theme/questopia_theme.dart';
 import '../../../../core/helpers/sheet_helper.dart';
 
 abstract final class SettingsPickerSheets {
@@ -73,35 +75,77 @@ abstract final class SettingsPickerSheets {
     };
   }
 
-  static Widget _buildSheetHeaderPill(
+  static String readingThemeLabel(BuildContext context, String id) {
+    final l10n = AppLocalizations.of(context)!;
+    return switch (id) {
+      'sepia' => l10n.readingThemeSepia,
+      'night' => l10n.readingThemeNight,
+      'contrast' => l10n.readingThemeHighContrast,
+      _ => l10n.readingThemeDefault,
+    };
+  }
+
+  static Future<void> showReadingThemePicker(
     BuildContext context,
-    String title,
-    ColorScheme colors,
-  ) {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.only(top: 4, bottom: 16),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        decoration: BoxDecoration(
-          color: colors.secondaryContainer.withValues(alpha: 0.7),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          title,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: colors.onSecondaryContainer,
-            letterSpacing: 0.2,
+    SettingsNotifier notifier,
+    SettingsState settings,
+  ) async {
+    final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
+    await showQuestopiaSheet<void>(
+      context: context,
+      builder: (ctx) {
+        final brightness = Theme.of(ctx).brightness;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              QuestopiaSheetHeaderPill(title: l10n.readingTheme),
+              SegmentedListSection(
+                children: [
+                  for (final id in kReadingThemeIds)
+                    SegmentedListTile(
+                      leading: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: ReadingThemeColors.background(id, brightness),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: id == settings.readingTheme
+                                ? colors.primary
+                                : colors.outlineVariant,
+                            width: id == settings.readingTheme ? 3 : 1,
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        readingThemeLabel(context, id),
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      trailing: id == settings.readingTheme
+                          ? Icon(Icons.check_circle_rounded,
+                              color: colors.primary)
+                          : null,
+                      onTap: () async {
+                        HapticFeedback.lightImpact();
+                        await notifier.setReadingTheme(id);
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      },
+                    ),
+                ],
+              ),
+            ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  static Future<void> showThemeModePicker(
-    BuildContext context,
+  static Future<void> showThemeModePicker(    BuildContext context,
     SettingsNotifier notifier,
     SettingsState settings,
   ) async {
@@ -117,7 +161,7 @@ abstract final class SettingsPickerSheets {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildSheetHeaderPill(ctx, l10n.themeModeTitle, colors),
+              QuestopiaSheetHeaderPill(title: l10n.themeModeTitle),
               SegmentedListSection(
                 children: [
                   for (final mode in ThemeModeOption.values)
@@ -170,7 +214,7 @@ abstract final class SettingsPickerSheets {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildSheetHeaderPill(ctx, l10n.colorAccentTitle, colors),
+              QuestopiaSheetHeaderPill(title: l10n.colorAccentTitle),
               SegmentedListSection(
                 children: [
                   for (final entry in labels.entries)
@@ -230,7 +274,7 @@ abstract final class SettingsPickerSheets {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildSheetHeaderPill(ctx, l10n.languageTitle, colors),
+              QuestopiaSheetHeaderPill(title: l10n.languageTitle),
               SegmentedListSection(
                 children: [
                   for (final option in options)
@@ -290,10 +334,12 @@ abstract final class SettingsPickerSheets {
     await showQuestopiaSheet<void>(
       context: context,
       builder: (ctx) {
+        // Local copy so the preview updates the moment a typeface is tapped,
+        // instead of waiting for the sheet to be rebuilt with fresh settings.
+        var selectedIndex = settings.typefaceIndex;
         return StatefulBuilder(
           builder: (sheetCtx, setSheetState) {
-            final activeIndex =
-                settings.typefaceIndex.clamp(0, fonts.length - 1);
+            final activeIndex = selectedIndex.clamp(0, fonts.length - 1);
 
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
@@ -301,7 +347,7 @@ abstract final class SettingsPickerSheets {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildSheetHeaderPill(sheetCtx, l10n.typeface, colors),
+                  QuestopiaSheetHeaderPill(title: l10n.typeface),
 
                   // Live Text Preview Card
                   Card(
@@ -329,7 +375,7 @@ abstract final class SettingsPickerSheets {
                             style: TextStyle(
                               fontSize: settings.fontSize,
                               fontFamily:
-                                  activeIndex == 0 ? 'Netflix Sans' : null,
+                                  QuestopiaTheme.fontFamilyFor(activeIndex),
                               color: colors.onSurface,
                             ),
                           ),
@@ -360,7 +406,7 @@ abstract final class SettingsPickerSheets {
                               : null,
                           onTap: () async {
                             HapticFeedback.lightImpact();
-                            setSheetState(() {});
+                            setSheetState(() => selectedIndex = i);
                             await notifier.setTypefaceIndex(i);
                             if (sheetCtx.mounted) Navigator.pop(sheetCtx);
                           },
@@ -393,7 +439,7 @@ abstract final class SettingsPickerSheets {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildSheetHeaderPill(ctx, l10n.actionsHeightTitle, colors),
+              QuestopiaSheetHeaderPill(title: l10n.actionsHeightTitle),
               SegmentedListSection(
                 children: [
                   for (final ratio in actionsHeightRatios)
@@ -439,7 +485,7 @@ abstract final class SettingsPickerSheets {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildSheetHeaderPill(ctx, l10n.binaryPrefixesTitle, colors),
+              QuestopiaSheetHeaderPill(title: l10n.binaryPrefixesTitle),
               SegmentedListSection(
                 children: [
                   for (final value in const [1000, 1024])

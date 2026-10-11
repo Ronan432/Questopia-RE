@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/helpers/dialog_helper.dart';
 import '../../../../core/media/poster_menu_sheet.dart';
 import '../../../../core/media/qsp_media_kind.dart';
+import '../../../../core/providers/settings_provider.dart';
 import 'game_media_viewer.dart';
 
 /// Image and video preview dialog.
-class GameImagePreviewDialog extends StatelessWidget {
+class GameImagePreviewDialog extends ConsumerWidget {
   const GameImagePreviewDialog({
     super.key,
     required this.imageUrl,
@@ -17,11 +19,12 @@ class GameImagePreviewDialog extends StatelessWidget {
   final VoidCallback onClose;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isVideo = detectMediaKind(imageUrl) == QspMediaKind.video;
+    final settings = ref.watch(settingsProvider);
 
     return QuestopiaDialog(
-      maxWidth: 380,
+      maxWidth: settings.isFullscreenImages ? 640 : 380,
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -40,6 +43,8 @@ class GameImagePreviewDialog extends StatelessWidget {
       content: GameMediaViewer(
         mediaPath: imageUrl,
         maxHeight: 320,
+        enableZoom: settings.isPinchZoomEnabled,
+        forceFullscreen: settings.isFullscreenImages,
       ),
       actions: [
         QuestopiaMorphButton.filled(

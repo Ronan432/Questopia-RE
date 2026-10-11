@@ -39,8 +39,32 @@ final class CrashReporter {
       final file = await _reportFile();
       final stamped = '[${DateTime.now().toIso8601String()}]\n$text\n\n';
       await file.writeAsString(stamped, mode: FileMode.append);
+      await _trim(file);
     } catch (_) {
       // Reporting must never crash the app.
+    }
+  }
+
+  /// Upper bound for the on-disk crash log.
+  ///
+  /// The log used to grow forever: a repeating error could fill the storage of
+  /// the device on its own.
+  static const int maxReportBytes = 64 * 1024;
+
+  /// Keeps only the newest [maxReportBytes] of the log.
+  static Future<void> _trim(File file) async {
+    try {
+      final length = await file.length();
+      if (length <= maxReportBytes) return;
+      final content = await file.readAsString();
+      final keepFrom = content.length - maxReportBytes;
+      // Cut on an entry boundary so the log never starts mid report.
+      final cut = content.indexOf('\n[', keepFrom);
+      final trimmed =
+          cut >= 0 ? content.substring(cut + 1) : content.substring(keepFrom);
+      await file.writeAsString(trimmed, flush: true);
+    } catch (_) {
+      // Trimming is best-effort.
     }
   }
 
