@@ -1,6 +1,6 @@
 # FLUTTER.md — Questopia Flutter Architecture & Handover Documentation
 
-> **Last Update:** October 10, 2026  
+> **Last Update:** October 11, 2026  
 > **Target Framework:** Flutter 3.44.6 / Dart 3.12.2  
 > **Branch:** `master`  
 > **`flutter analyze`:** CLEAN (0 issues)  
@@ -17,7 +17,7 @@ Questopia-RE is a high-performance cross-platform interpreter and library client
 - **Supported Platforms:** Android (API 26+), Windows (x64), Linux, macOS
 - **Engine Bindings:** Native C-API QSP (`libqsp.so` on Android/Linux, `qsp.dll` on Windows) via Dart FFI (`dart:ffi`)
 - **State Management:** Riverpod (`StateNotifierProvider`) with generation counters
-- **Typography:** `Netflix Sans` (applied app-wide and dynamically injected into WebView CSS)
+- **Typography:** platform default typeface app wide. No font files are declared in `pubspec.yaml`, so naming a family in the theme only falls back to the platform default. The in-game typeface is user selectable and resolves through `QuestopiaTheme.fontFamilyFor(index)` (see Section 3.7).
 - **Design System:** Material 3 Expressive (`material_3_expressive`), dynamic theming (`dynamic_color`), active shape morphing
 - **Localization:** 100% dynamic internationalization via ARB files (`app_en.arb`, `app_ru.arb`)
 
@@ -33,8 +33,8 @@ Questopia-RE is a high-performance cross-platform interpreter and library client
 6. **UNIFIED CONTEXT DIALOG ARCHITECTURE:** All modal pop-ups, confirmation dialogs, input prompts, error alerts, and crash reports must utilize `showQuestopiaDialog` and `QuestopiaDialog` / `QuestopiaConfirmationDialog` with morph-shaping animations and backdrop blur, eliminating raw disparate `AlertDialog` implementations.
 7. **SANDBOX REGISTRY ISOLATION:** Never write metadata, registry entries, or hidden dot-files into external shared storage. All persistent game records must go through `GameRegistry` inside `getApplicationSupportDirectory()`.
 8. **MODULAR HELPER COHESION:** Utility and helper routines must be encapsulated in dedicated helper files under `lib/core/helpers/` (e.g. `sheet_helper.dart`, `dialog_helper.dart`, `path_picker_helper.dart`, `html_processor.dart`).
-9. **EFFECTIVE SETTINGS LINKAGE:** Every setting field in `SettingsState` must have an active consumer and observable effect in the UI or runtime engine (blur, haptics, action height ratio, immersive mode, square posters, font family, etc.).
-10. **STANDARDIZED COMMIT FORMAT AND USER-FRIENDLY DESCRIPTIONS:** Commit subject lines must strictly adhere to standardized conventional prefix syntax (e.g. `Feat: <reason>`, `Fix: <reason>`, `Ci: <reason>`). Never put multi-line descriptions or markdown headers in commit titles. Commit descriptions/bodies must be written in plain, easily understandable user-facing English explaining what changed and why.
+9. **EFFECTIVE SETTINGS LINKAGE:** Every setting field in `SettingsState` must have an active consumer and observable effect in the UI or runtime engine (blur, haptics, action height ratio, immersive mode, square posters, font family, reading theme, auto-save, and so on). A setting that no longer has a consumer must be **removed** from `SettingsState`, the settings UI and the ARB files rather than left in place. A visible control that changes nothing is a bug, not a placeholder.
+10. **STANDARDIZED COMMIT FORMAT AND USER-FRIENDLY DESCRIPTIONS:** Commit subject lines must strictly adhere to standardized conventional prefix syntax (e.g. `Feat: <reason>`, `Fix: <reason>`, `Ci: <reason>`). Never put multi-line descriptions or markdown headers in commit titles. Commit descriptions/bodies must be written in plain, easily understandable user-facing English explaining what changed and why. **Every commit body must contain a definitive change list:** one bullet per changed file or behaviour, naming the file and stating exactly what changed in it. A vague summary ("various fixes", "cleanup", "improvements") is not acceptable. If a file was touched, it must appear in the list. See Section 6.2 for the exact format.
 11. **BAN ON `&` SYMBOL:** The ampersand character (`&`) is strictly forbidden across all user-facing UI strings, headers, button labels, documentation, and commit messages. Always use the full word "and" or "ve".
 12. **ON-DEMAND CLEANUP ONLY:** Code cleanup, dead code removal, and refactoring must be performed **only when the user explicitly requests it**. A cleanup is never started on initiative, never bundled into a feature change, and never committed without a separate request. Every removal must be proven by a zero reference count first, and no cleanup may alter runtime behaviour. The full procedure lives in [CLEANUP.md](CLEANUP.md).
 13. **AI AGENT BEHAVIOR PROTOCOL:** Every AI agent working in this repository must follow Section 7 in full. Section 7 overrides any default habit of the agent. A violation of Section 7 counts as a failed task even if the code compiles.
@@ -78,6 +78,15 @@ Questopia-RE is a high-performance cross-platform interpreter and library client
 - **Swipeable Horizontal Navigation:** Both `LibraryScreen` (Local Library, Remote Catalog, Settings) and `SettingsScreen` (Appearance, General, Typography, Media, Sound, Storage, About) feature horizontal swipeable `PageView` animations coordinated with category chips and bottom bars.
 - **Strict File Modularity:** Heavy controllers are broken into clean sub-views (e.g. `LocalGamesView`, `CatalogGamesView`, `AppearanceSection`, `TypographyMediaSection`, `SoundStorageAboutSection`), ensuring all files remain under 300 lines with zero code duplication.
 
+### 3.7. Reading Experience, Auto-Save and Storage Accounting
+- **Reading Themes (`ReadingThemeColors`):** Four presets (`default`, `sepia`, `night`, `contrast`) select the background, text and link colour of the story and status panes. An explicit custom colour always wins over the preset, so the two features stay independent. The inventory keeps the Material surface because its cards are Material widgets.
+- **Real Auto-Save (`GameEngineNotifier`):** Counts engine counter ticks and, once `autosaveInterval` turns have passed, snapshots the game with `saveGameData()` into the `autoSaveData` state field and to `<app support>/questopia_autosave/<game id>.sav`. The snapshot is restored on the next `loadGame()`, so an interrupted session survives a restart.
+- **Save Handler Correctness:** `QSP_CALL_SAVE_GAME_STATUS` writes the snapshot to the requested path. It previously routed into the load path, so in-game saves never reached the disk.
+- **Storage Accounting (`GameRepository.computeStorageStats`, `cleanupOrphanFolders`):** Reports the bytes each game folder occupies and removes leftover folders inside the games directory that hold no game file. Both run in an isolate and are surfaced in the Storage settings section.
+- **Managed vs Referenced Folders (`LocalGame.isManaged`):** Only folders the app created (import copy, archive extraction, download, or a folder inside the games directory) are deleted from disk. A folder the user merely pointed at is unlinked from the library and left untouched. A loose `.qsp` or `.gam` file directly inside the games directory is deleted on its own, never together with its parent folder.
+- **Scoped Media Endpoint (`OgvAssetServer`):** The loopback media server only serves files inside the game folders announced by the player page and answers everything else with `403`.
+- **Live Settings Consumption:** `GameScreen` pushes the audio, auto-save and image-dialog preferences into the engine through `GameEngineNotifier.applySettings()` and reacts to later changes with `ref.listen`. `libraryProvider` reads the games folder on demand, so changing it applies without a restart.
+
 ---
 
 ## 4. Key Project Files and Responsibilities
@@ -92,7 +101,9 @@ Questopia-RE is a high-performance cross-platform interpreter and library client
 | `lib/core/helpers/path_picker_helper.dart` | Platform-aware native file/folder picker and Android Scoped Storage directory resolver. |
 | `lib/core/media/qsp_media.dart` | Unified media rendering widget combining native `video_player` hardware video and image loaders. |
 | `lib/core/media/qsp_ogv_video.dart` | WebAssembly Ogg Theora decoder hosted in a WebView for formats the platform decoder rejects. |
-| `lib/core/theme/game_colors.dart` | Fixed high contrast reading surface colors for the game text panes. |
+| `lib/core/theme/game_colors.dart` | Fixed high contrast reading surface colors plus the `ReadingThemeColors` presets for the game text panes. |
+| `lib/core/helpers/byte_format.dart` | Byte count formatter honouring the decimal or binary prefix setting. |
+| `lib/features/library/data/storage_stats.dart` | Storage audit result type holding the per-game byte counts. |
 | `lib/core/media/qsp_html_view.dart` | Native HTML widget renderer with custom widget builder for video and image tags. |
 | `lib/features/library/data/game_repository.dart` | 3-Tier import pipeline (zero-copy, isolate copy, archive unpacker) and isolate BFS scanner. |
 | `lib/features/library/presentation/library_screen.dart` | Modular hub with swipeable PageView navigation connecting library, catalog, and inline settings. |
@@ -133,6 +144,8 @@ The first line (subject) must be concise and use standard conventional prefixes:
 - Written strictly in **simple, accessible, plain English** using clear user-facing language.
 - Use concise bullet points to explain what was changed and the user-facing benefit or reason.
 - Avoid overcomplicated technical jargon where simple explanations suffice.
+- **The body must be a definitive change list, not a summary.** One bullet per changed file or behaviour. Each bullet names the file (or the exact behaviour) and says what changed and why. Every file that was touched in the commit must be listed; nothing that changed may be left out, and nothing that did not change may be listed.
+- A vague or partial description (for example "various fixes", "code cleanup", "performance improvements", "updated files") is a failed commit and must be rewritten before it is recorded.
 
 #### Example:
 ```text
