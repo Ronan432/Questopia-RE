@@ -15,6 +15,12 @@ analyzer:
     - android/**
     - ios/**
     - windows/**
+    # Third-party AI skill packages ship illustrative example snippets that are
+    # not part of the app and do not compile on their own. Keep them out of the
+    # analyzer so real project issues are never buried in skill sample noise.
+    - .agents/**
+    - agent/**
+    - .claude/**
 
 linter:
   # The lint rules applied to this project can be customized in the

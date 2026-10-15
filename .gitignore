@@ -75,3 +75,10 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 .widget_preview/
+
+# Third-party AI skill packages. These are local agent tooling, not app code,
+# and the installer mirrors the same content into three directories.
+/agent/
+/.agents/
+/.claude/
+skills-lock.json
