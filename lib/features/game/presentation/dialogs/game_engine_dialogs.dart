@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/helpers/dialog_helper.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/native/qsp_models.dart';
 
 /// Engine input prompt modal dialog.
@@ -41,13 +42,14 @@ class _GameInputDialogState extends State<GameInputDialog> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final cleanPrompt = widget.prompt
         .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), ' ')
         .replaceAll(RegExp(r'<[^>]*>', caseSensitive: false, dotAll: true), '')
         .trim();
 
     return QuestopiaDialog(
-      title: Text(cleanPrompt.isNotEmpty ? cleanPrompt : 'Input'),
+      title: Text(cleanPrompt.isNotEmpty ? cleanPrompt : l10n.input),
       content: TextField(
         controller: _controller,
         autofocus: true,
@@ -66,11 +68,11 @@ class _GameInputDialogState extends State<GameInputDialog> {
       actions: [
         QuestopiaMorphButton.outlined(
           onPressed: widget.onCancel,
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         QuestopiaMorphButton.filled(
           onPressed: () => widget.onSubmit(_controller.text),
-          child: const Text('OK'),
+          child: Text(l10n.ok),
         ),
       ],
     );
@@ -93,14 +95,15 @@ class GameMenuDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return QuestopiaDialog(
-      title: const Text('Choose'),
+      title: Text(l10n.choose),
       content: SizedBox(
         width: double.maxFinite,
         child: items.isEmpty
             ? Text(
-                'No options',
+                l10n.noOptions,
                 style: TextStyle(color: colors.onSurfaceVariant),
               )
             : ListView.builder(
@@ -138,7 +141,7 @@ class GameMenuDialog extends StatelessWidget {
       actions: [
         QuestopiaMorphButton.outlined(
           onPressed: onCancel,
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
       ],
     );
@@ -155,19 +158,20 @@ class GameErrorDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final details = [
       if (error != null) ...[
-        'Error #${error!.errorNum}: ${error!.errorDesc}',
-        if (error!.locName.isNotEmpty) 'Location: ${error!.locName}',
-        if (error!.lineNum > 0) 'Line: ${error!.lineNum}',
-        if (error!.codeLine.isNotEmpty) 'Code: ${error!.codeLine}',
+        l10n.errorNumber(error!.errorNum, error!.errorDesc),
+        if (error!.locName.isNotEmpty) l10n.errorLocation(error!.locName),
+        if (error!.lineNum > 0) l10n.errorLine(error!.lineNum),
+        if (error!.codeLine.isNotEmpty) l10n.errorCode(error!.codeLine),
       ] else
-        'Unknown engine error',
+        l10n.unknownEngineError,
     ].join('\n');
 
     return QuestopiaDialog(
       icon: const Icon(Icons.error_outline_rounded),
-      title: const Text('Engine Error'),
+      title: Text(l10n.engineError),
       content: Text(
         details,
         style: TextStyle(
@@ -179,7 +183,7 @@ class GameErrorDialog extends StatelessWidget {
       actions: [
         QuestopiaMorphButton.filled(
           onPressed: onClose,
-          child: const Text('OK'),
+          child: Text(l10n.ok),
         ),
       ],
     );
@@ -196,18 +200,19 @@ class GameFileLoadDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return QuestopiaDialog(
       icon: const Icon(Icons.folder_open_rounded),
-      title: const Text('Open Save File'),
+      title: Text(l10n.openSaveFile),
       content: Text(
-        'Pick an external .sav file to load.',
+        l10n.openSaveFileHint,
         style: TextStyle(color: colors.onSurfaceVariant, fontSize: 15),
       ),
       actions: [
         QuestopiaMorphButton.outlined(
           onPressed: onClose,
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         QuestopiaMorphButton.filled(
           onPressed: () async {
@@ -218,7 +223,7 @@ class GameFileLoadDialog extends StatelessWidget {
             final path = result?.files.singleOrNull?.path;
             if (path != null && path.isNotEmpty) onPick(path);
           },
-          child: const Text('Pick File'),
+          child: Text(l10n.pickFile),
         ),
       ],
     );

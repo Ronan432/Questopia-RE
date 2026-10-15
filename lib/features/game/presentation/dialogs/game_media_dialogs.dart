@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/helpers/dialog_helper.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/media/poster_menu_sheet.dart';
 import '../../../../core/media/qsp_media_kind.dart';
 import '../../../../core/providers/settings_provider.dart';
@@ -22,16 +23,17 @@ class GameImagePreviewDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isVideo = detectMediaKind(imageUrl) == QspMediaKind.video;
     final settings = ref.watch(settingsProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return QuestopiaDialog(
       maxWidth: settings.isFullscreenImages ? 640 : 380,
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(isVideo ? 'Video Preview' : 'Image Preview'),
+          Text(isVideo ? l10n.videoPreview : l10n.imagePreview),
           if (imageUrl.isNotEmpty)
             IconButton(
-              tooltip: 'Options',
+              tooltip: l10n.options,
               icon: const Icon(Icons.more_vert_rounded),
               onPressed: () => showPosterMenuSheet(
                 context: context,
@@ -49,7 +51,7 @@ class GameImagePreviewDialog extends ConsumerWidget {
       actions: [
         QuestopiaMorphButton.filled(
           onPressed: onClose,
-          child: const Text('Close'),
+          child: Text(l10n.close),
         ),
       ],
     );
@@ -69,13 +71,14 @@ class GameRestartConfirmationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return QuestopiaConfirmationDialog(
       icon: Icons.restart_alt_rounded,
       isDestructive: true,
-      title: 'Restart game?',
-      message: 'Unsaved progress will be lost.',
-      confirmLabel: 'Restart',
-      cancelLabel: 'Cancel',
+      title: l10n.restartGameTitle,
+      message: l10n.restartGameMessage,
+      confirmLabel: l10n.restart,
+      cancelLabel: l10n.cancel,
       onConfirm: onConfirm,
       onCancel: onCancel,
     );
@@ -111,11 +114,12 @@ class _GameExecutorDialogState extends State<GameExecutorDialog> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return QuestopiaDialog(
       maxWidth: 360,
       icon: const Icon(Icons.terminal_rounded),
-      title: const Text('QSP Console'),
+      title: Text(l10n.qspConsole),
       content: SizedBox(
         width: double.maxFinite,
         child: Column(
@@ -131,7 +135,7 @@ class _GameExecutorDialogState extends State<GameExecutorDialog> {
               ),
               child: SingleChildScrollView(
                 child: Text(
-                  widget.output.isEmpty ? 'No output yet' : widget.output,
+                  widget.output.isEmpty ? l10n.noOutputYet : widget.output,
                   style: TextStyle(
                     fontFamily: 'monospace',
                     color: colors.onSurface,
@@ -145,7 +149,7 @@ class _GameExecutorDialogState extends State<GameExecutorDialog> {
               controller: _controller,
               style: TextStyle(color: colors.onSurface),
               decoration: InputDecoration(
-                hintText: 'QSP code...',
+                hintText: l10n.qspCodeHint,
                 hintStyle: TextStyle(color: colors.onSurfaceVariant),
                 filled: true,
                 fillColor: colors.surfaceContainerHighest,
@@ -167,7 +171,7 @@ class _GameExecutorDialogState extends State<GameExecutorDialog> {
       actions: [
         QuestopiaMorphButton.outlined(
           onPressed: widget.onClose,
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         QuestopiaMorphButton.filled(
           onPressed: () {
@@ -176,7 +180,7 @@ class _GameExecutorDialogState extends State<GameExecutorDialog> {
               _controller.clear();
             }
           },
-          child: const Text('Run'),
+          child: Text(l10n.run),
         ),
       ],
     );

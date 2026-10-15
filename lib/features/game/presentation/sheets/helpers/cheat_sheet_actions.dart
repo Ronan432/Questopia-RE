@@ -4,6 +4,7 @@ import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
 
 import '../../../../../core/helpers/sheet_ui_helper.dart';
+import '../../../../../core/l10n/app_localizations.dart';
 import '../../../providers/cheat_provider.dart';
 import '../../../providers/game_engine_provider.dart';
 
@@ -21,6 +22,7 @@ class CheatTeleportView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return SingleChildScrollView(
       child: Column(
@@ -29,7 +31,7 @@ class CheatTeleportView extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(4),
             child: Text(
-              'Jump to a specific QSP location in the story.',
+              l10n.jumpToLocationHint,
               style: TextStyle(color: colors.onSurfaceVariant),
             ),
           ),
@@ -37,7 +39,7 @@ class CheatTeleportView extends StatelessWidget {
           TextField(
             controller: controller,
             decoration: InputDecoration(
-              hintText: 'Location name (e.g. start, room, shop)...',
+              hintText: l10n.locationNameHint,
               prefixIcon: const Icon(Icons.explore_outlined),
               filled: true,
               fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.5),
@@ -53,7 +55,7 @@ class CheatTeleportView extends StatelessWidget {
           M3EButton.icon(
             onPressed: () => onTeleport(controller.text),
             icon: const Icon(Icons.my_location_rounded, size: 18),
-            label: const Text('Teleport'),
+            label: Text(l10n.teleport),
             style: M3EButtonStyle.filled,
             size: M3EButtonSize.md,
             shape: M3EButtonShape.round,
@@ -82,6 +84,7 @@ class CheatInventoryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final objects = engineState.gameState.objects;
 
     return Column(
@@ -92,7 +95,7 @@ class CheatInventoryView extends StatelessWidget {
               child: TextField(
                 controller: itemController,
                 decoration: InputDecoration(
-                  hintText: 'New item name...',
+                  hintText: l10n.newItemNameHint,
                   prefixIcon: const Icon(Icons.add_rounded),
                   isDense: true,
                   filled: true,
@@ -110,7 +113,7 @@ class CheatInventoryView extends StatelessWidget {
             M3EButton.icon(
               onPressed: () => onAddItem(itemController.text),
               icon: const Icon(Icons.add_rounded, size: 18),
-              label: const Text('Add'),
+              label: Text(l10n.add),
               style: M3EButtonStyle.filled,
               size: M3EButtonSize.sm,
               shape: M3EButtonShape.round,
@@ -120,9 +123,9 @@ class CheatInventoryView extends StatelessWidget {
         const SizedBox(height: 14),
         Expanded(
           child: objects.isEmpty
-              ? const QuestopiaSheetEmptyState(
+              ? QuestopiaSheetEmptyState(
                   icon: Icons.inventory_2_outlined,
-                  message: 'Inventory is empty',
+                  message: l10n.inventoryIsEmpty,
                 )
               : ListView(
                   children: [
@@ -135,12 +138,17 @@ class CheatInventoryView extends StatelessWidget {
                             title: Text(item.name,
                                 style: const TextStyle(fontWeight: FontWeight.w600)),
                             trailing: IconButton(
-                              tooltip: 'Remove',
+                              tooltip: l10n.remove,
                               icon: Icon(Icons.delete_outline_rounded,
                                   color: colors.error, size: 20),
                               onPressed: () {
                                 final ok = notifier.removeItem(item.name);
-                                if (!ok) showSheetSnackBar(context, 'Could not remove item');
+                                if (!ok) {
+                                  showSheetSnackBar(
+                                    context,
+                                    l10n.couldNotRemoveItem,
+                                  );
+                                }
                               },
                             ),
                           ),
@@ -170,6 +178,7 @@ class CheatConsoleView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -186,9 +195,7 @@ class CheatConsoleView extends StatelessWidget {
             ),
             child: SingleChildScrollView(
               child: Text(
-                consoleOutput.isEmpty
-                    ? 'QSP Console ready.\nEnter statements like: money += 500 or goto \'start\''
-                    : consoleOutput,
+                consoleOutput.isEmpty ? l10n.qspConsoleReady : consoleOutput,
                 style: const TextStyle(
                   fontFamily: 'monospace',
                   fontSize: 13,
@@ -205,7 +212,7 @@ class CheatConsoleView extends StatelessWidget {
               child: TextField(
                 controller: consoleController,
                 decoration: InputDecoration(
-                  hintText: 'QSP statement...',
+                  hintText: l10n.qspStatementHint,
                   isDense: true,
                   filled: true,
                   fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.5),
@@ -221,7 +228,7 @@ class CheatConsoleView extends StatelessWidget {
             M3EButton.icon(
               onPressed: onRunConsole,
               icon: const Icon(Icons.play_arrow_rounded, size: 18),
-              label: const Text('Run'),
+              label: Text(l10n.run),
               style: M3EButtonStyle.filled,
               size: M3EButtonSize.sm,
               shape: M3EButtonShape.round,

@@ -36,6 +36,16 @@ class GameEngineState {
   final String previewImageUrl;
   final Map<int, Uint8List> saveSlots;
   final Uint8List? autoSaveData;
+
+  /// Wall-clock time each manual slot was last written, keyed like [saveSlots].
+  ///
+  /// The QSP save payload itself carries no timestamp, so the moment of
+  /// saving is tracked alongside it for the slot previews.
+  final Map<int, DateTime> saveSlotTimestamps;
+
+  /// Wall-clock time [autoSaveData] was last captured.
+  final DateTime? autoSaveTimestamp;
+
   final bool isLoading;
   final int timerIntervalMs;
   final String consoleOutput;
@@ -52,6 +62,8 @@ class GameEngineState {
     this.previewImageUrl = '',
     this.saveSlots = const {},
     this.autoSaveData,
+    this.saveSlotTimestamps = const {},
+    this.autoSaveTimestamp,
     this.isLoading = false,
     this.timerIntervalMs = 0,
     this.consoleOutput = '',
@@ -69,6 +81,8 @@ class GameEngineState {
     String? previewImageUrl,
     Map<int, Uint8List>? saveSlots,
     Uint8List? autoSaveData,
+    Map<int, DateTime>? saveSlotTimestamps,
+    DateTime? autoSaveTimestamp,
     bool? isLoading,
     int? timerIntervalMs,
     String? consoleOutput,
@@ -85,6 +99,8 @@ class GameEngineState {
       previewImageUrl: previewImageUrl ?? this.previewImageUrl,
       saveSlots: saveSlots ?? this.saveSlots,
       autoSaveData: autoSaveData ?? this.autoSaveData,
+      saveSlotTimestamps: saveSlotTimestamps ?? this.saveSlotTimestamps,
+      autoSaveTimestamp: autoSaveTimestamp ?? this.autoSaveTimestamp,
       isLoading: isLoading ?? this.isLoading,
       timerIntervalMs: timerIntervalMs ?? this.timerIntervalMs,
       consoleOutput: consoleOutput ?? this.consoleOutput,
@@ -140,7 +156,10 @@ class GameEngineNotifier extends StateNotifier<GameEngineState> {
     _clicksSinceAutosave = 0;
     final data = _ffi?.saveGameData();
     if (data == null || data.isEmpty) return;
-    state = state.copyWith(autoSaveData: data);
+    state = state.copyWith(
+      autoSaveData: data,
+      autoSaveTimestamp: DateTime.now(),
+    );
     unawaited(_writeAutoSave(data));
     debugPrint(
         '[GameEngineNotifier] Auto-save captured (${data.length} bytes)');
@@ -278,7 +297,16 @@ class GameEngineNotifier extends StateNotifier<GameEngineState> {
     _clicksSinceAutosave = 0;
     final restored = await _readAutoSave();
     if (restored != null) {
-      state = state.copyWith(autoSaveData: restored);
+      // _readAutoSave returns the file's own modification time indirectly via
+      // the file stat below; fall back to now when it is unavailable.
+      final restoredAt = await _autoSaveFile().then(
+        (file) async =>
+            file != null && await file.exists() ? file.lastModified() : null,
+      );
+      state = state.copyWith(
+        autoSaveData: restored,
+        autoSaveTimestamp: restoredAt ?? DateTime.now(),
+      );
     }
 
     state = state.copyWith(isLoading: false);
@@ -727,7 +755,12 @@ class GameEngineNotifier extends StateNotifier<GameEngineState> {
       if (data != null) {
         final newSlots = Map<int, Uint8List>.from(state.saveSlots);
         newSlots[slotIndex] = data;
-        state = state.copyWith(saveSlots: newSlots);
+        final newTimestamps = Map<int, DateTime>.from(state.saveSlotTimestamps);
+        newTimestamps[slotIndex] = DateTime.now();
+        state = state.copyWith(
+          saveSlots: newSlots,
+          saveSlotTimestamps: newTimestamps,
+        );
       }
     }
   }

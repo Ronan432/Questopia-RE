@@ -5,6 +5,7 @@ import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
 
 import '../../../../../core/helpers/sheet_ui_helper.dart';
+import '../../../../../core/l10n/app_localizations.dart';
 import '../../../providers/cheat_provider.dart';
 
 /// Variables and watcher list view for Cheat Engine.
@@ -29,6 +30,7 @@ class CheatVariablesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final query = searchController.text.trim().toLowerCase();
     final vars = query.isEmpty
         ? cheat.watchedVars
@@ -44,7 +46,7 @@ class CheatVariablesView extends StatelessWidget {
               child: TextField(
                 controller: addVarController,
                 decoration: InputDecoration(
-                  hintText: 'Add variable to watch...',
+                  hintText: l10n.addVariableHint,
                   prefixIcon: const Icon(Icons.add_rounded),
                   isDense: true,
                   filled: true,
@@ -63,13 +65,13 @@ class CheatVariablesView extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             M3EButton.icon(
-              tooltip: 'Scan all game variables',
+              tooltip: l10n.scanAllVariables,
               onPressed: () {
                 HapticFeedback.lightImpact();
                 notifier.refresh();
               },
               icon: const Icon(Icons.sync_rounded, size: 18),
-              label: const Text('Scan'),
+              label: Text(l10n.scan),
               style: M3EButtonStyle.tonal,
               size: M3EButtonSize.sm,
               shape: M3EButtonShape.round,
@@ -79,15 +81,15 @@ class CheatVariablesView extends StatelessWidget {
         const SizedBox(height: 10),
         QuestopiaSheetSearchBar(
           controller: searchController,
-          hintText: 'Search variables (${vars.length} found)...',
+          hintText: l10n.searchVariablesHint(vars.length),
           onChanged: (_) => onSearchChanged(),
         ),
         const SizedBox(height: 12),
         Expanded(
           child: vars.isEmpty
-              ? const QuestopiaSheetEmptyState(
+              ? QuestopiaSheetEmptyState(
                   icon: Icons.search_off_rounded,
-                  message: 'No variables found',
+                  message: l10n.noVariablesFound,
                 )
               : ListView(
                   children: [
@@ -111,6 +113,7 @@ class CheatVariablesView extends StatelessWidget {
     CheatNotifier notifier,
     ColorScheme colors,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final frozen = cheat.frozen.containsKey(v.name);
     return SegmentedListTile(
       leading: Container(
@@ -133,7 +136,7 @@ class CheatVariablesView extends StatelessWidget {
         style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
       ),
       subtitle: Text(
-        v.displayValue.isEmpty ? '(empty string)' : v.displayValue,
+        v.displayValue.isEmpty ? l10n.emptyStringValue : v.displayValue,
         style: TextStyle(
           color: colors.primary,
           fontWeight: FontWeight.bold,
@@ -146,7 +149,7 @@ class CheatVariablesView extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            tooltip: frozen ? 'Unlock' : 'Lock value',
+            tooltip: frozen ? l10n.unlock : l10n.lockValue,
             icon: Icon(
               frozen ? Icons.lock_rounded : Icons.lock_open_outlined,
               size: 20,
@@ -161,12 +164,12 @@ class CheatVariablesView extends StatelessWidget {
             },
           ),
           IconButton(
-            tooltip: 'Edit value',
+            tooltip: l10n.editValue,
             icon: const Icon(Icons.edit_outlined, size: 20),
             onPressed: () => onEditVar(v.name, v.displayValue),
           ),
           IconButton(
-            tooltip: 'Remove',
+            tooltip: l10n.remove,
             icon: const Icon(Icons.close_rounded, size: 20),
             onPressed: () {
               HapticFeedback.selectionClick();
@@ -193,10 +196,11 @@ class CheatLocksView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     if (cheat.frozen.isEmpty) {
-      return const QuestopiaSheetEmptyState(
+      return QuestopiaSheetEmptyState(
         icon: Icons.lock_open_rounded,
-        message: 'No locked variables active',
+        message: l10n.noLockedVariables,
       );
     }
     final entries = cheat.frozen.entries.toList();
@@ -215,9 +219,9 @@ class CheatLocksView extends StatelessWidget {
                   child: Icon(Icons.lock_rounded, size: 18, color: colors.tertiary),
                 ),
                 title: Text(entry.key, style: const TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: Text('Locked to ${entry.value}', style: TextStyle(color: colors.tertiary)),
+                subtitle: Text(l10n.lockedTo(entry.value), style: TextStyle(color: colors.tertiary)),
                 trailing: IconButton(
-                  tooltip: 'Unlock',
+                  tooltip: l10n.unlock,
                   icon: const Icon(Icons.lock_open_outlined),
                   onPressed: () => notifier.toggleFreeze(entry.key, entry.value),
                 ),
@@ -238,13 +242,14 @@ class CheatDiffView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final diff = cheat.diff;
     if (!cheat.hasSnapshotSave || diff.isEmpty) {
       return QuestopiaSheetEmptyState(
         icon: Icons.difference_outlined,
         message: !cheat.hasSnapshotSave
-            ? 'No snapshot yet. Changes will appear here.'
-            : 'No changes since snapshot',
+            ? l10n.noSnapshotYet
+            : l10n.noChangesSinceSnapshot,
       );
     }
     return ListView(

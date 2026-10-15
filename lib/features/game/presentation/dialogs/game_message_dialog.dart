@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/helpers/dialog_helper.dart';
 import '../../../../core/helpers/html_processor.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import 'game_media_viewer.dart';
 
 /// Engine message modal dialog with image extraction and text decoding.
@@ -95,11 +96,12 @@ class GameMessageDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final images = _extractImageSources(text);
     final clean = _cleanText(text);
 
     return QuestopiaDialog(
-      title: const Text('Message'),
+      title: Text(l10n.message),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -119,7 +121,7 @@ class GameMessageDialog extends StatelessWidget {
       actions: [
         QuestopiaMorphButton.filled(
           onPressed: onClose,
-          child: const Text('OK'),
+          child: Text(l10n.ok),
         ),
       ],
     );

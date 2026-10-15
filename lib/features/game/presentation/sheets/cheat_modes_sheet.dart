@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/helpers/dialog_helper.dart';
 import '../../../../core/helpers/sheet_helper.dart';
 import '../../../../core/helpers/sheet_ui_helper.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../../providers/cheat_provider.dart';
 import '../../providers/game_engine_provider.dart';
 import 'helpers/cheat_sheet_actions.dart';
@@ -26,13 +27,13 @@ class _CheatModesSheetState extends ConsumerState<CheatModesSheet> {
   String _consoleOutput = '';
   int _activeTabIndex = 0;
 
-  static const _tabTitles = [
-    'Variables',
-    'Locks',
-    'Teleport',
-    'Inventory',
-    'Console',
-    'Diff',
+  static const _tabTitleKeys = [
+    'variables',
+    'locks',
+    'teleport',
+    'inventory',
+    'console',
+    'diff',
   ];
 
   static const _tabIcons = [
@@ -43,6 +44,24 @@ class _CheatModesSheetState extends ConsumerState<CheatModesSheet> {
     Icons.terminal_rounded,
     Icons.difference_outlined,
   ];
+
+  /// Maps a tab index to its localized title.
+  String _localizedTabTitle(AppLocalizations l10n, int index) {
+    switch (_tabTitleKeys[index]) {
+      case 'variables':
+        return l10n.variables;
+      case 'locks':
+        return l10n.locks;
+      case 'teleport':
+        return l10n.teleport;
+      case 'inventory':
+        return l10n.inventory;
+      case 'console':
+        return l10n.console;
+      default:
+        return l10n.diff;
+    }
+  }
 
   @override
   void dispose() {
@@ -60,12 +79,13 @@ class _CheatModesSheetState extends ConsumerState<CheatModesSheet> {
     final cheat = ref.watch(cheatProvider);
     final notifier = ref.read(cheatProvider.notifier);
     final engineState = ref.watch(gameEngineProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return QuestopiaSheetContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const QuestopiaSheetHeaderPill(title: 'Cheat Engine and Editor'),
+          QuestopiaSheetHeaderPill(title: l10n.cheatEngineAndEditor),
           const SizedBox(height: 12),
 
           // Category Tabs Bar
@@ -73,12 +93,12 @@ class _CheatModesSheetState extends ConsumerState<CheatModesSheet> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                for (var i = 0; i < _tabTitles.length; i++) ...[
+                for (var i = 0; i < _tabTitleKeys.length; i++) ...[
                   if (i > 0) const SizedBox(width: 8),
                   ChoiceChip(
                     showCheckmark: false,
                     avatar: Icon(_tabIcons[i], size: 16),
-                    label: Text(_tabTitles[i]),
+                    label: Text(_localizedTabTitle(l10n, i)),
                     selected: _activeTabIndex == i,
                     shape: RoundedRectangleBorder(
                       borderRadius:
@@ -136,17 +156,18 @@ class _CheatModesSheetState extends ConsumerState<CheatModesSheet> {
   void _showEditVarDialog(String varName, String currentValue) {
     final controller = TextEditingController(text: currentValue);
     final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     showQuestopiaDialog<void>(
       context: context,
       builder: (ctx) => QuestopiaDialog(
         icon: const Icon(Icons.edit_note_rounded),
-        title: Text('Edit $varName'),
+        title: Text(l10n.editVarTitle(varName)),
         content: TextField(
           controller: controller,
           autofocus: true,
           decoration: InputDecoration(
-            labelText: 'New Value',
+            labelText: l10n.newValue,
             filled: true,
             fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.5),
             border: OutlineInputBorder(
@@ -157,7 +178,7 @@ class _CheatModesSheetState extends ConsumerState<CheatModesSheet> {
         actions: [
           QuestopiaMorphButton.outlined(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           QuestopiaMorphButton.filled(
             onPressed: () {
@@ -165,9 +186,11 @@ class _CheatModesSheetState extends ConsumerState<CheatModesSheet> {
                   .read(cheatProvider.notifier)
                   .setVar(varName, controller.text);
               Navigator.pop(ctx);
-              if (!ok) showSheetSnackBar(context, 'Engine rejected the value');
+              if (!ok) {
+                showSheetSnackBar(context, l10n.engineRejectedValue);
+              }
             },
-            child: const Text('Apply'),
+            child: Text(l10n.apply),
           ),
         ],
       ),
@@ -175,24 +198,36 @@ class _CheatModesSheetState extends ConsumerState<CheatModesSheet> {
   }
 
   void _doTeleport(String location) {
+    final l10n = AppLocalizations.of(context)!;
     final ok = ref.read(cheatProvider.notifier).teleport(location);
-    showSheetSnackBar(context, ok ? 'Teleported to $location' : 'Teleport failed');
+    showSheetSnackBar(
+      context,
+      ok ? l10n.teleportedTo(location) : l10n.teleportFailed,
+    );
   }
 
   void _doAddItem(String name) {
     if (name.trim().isEmpty) return;
+    final l10n = AppLocalizations.of(context)!;
     final ok = ref.read(cheatProvider.notifier).addItem(name);
     if (ok) _itemController.clear();
-    showSheetSnackBar(context, ok ? 'Item added' : 'Could not add item');
+    showSheetSnackBar(
+      context,
+      ok ? l10n.itemAdded : l10n.couldNotAddItem,
+    );
   }
 
   void _runConsole() {
     final code = _consoleController.text.trim();
     if (code.isEmpty) return;
+    final l10n = AppLocalizations.of(context)!;
     final ok = ref.read(gameEngineProvider.notifier).execCodeBool(code);
     ref.read(cheatProvider.notifier).refresh();
     setState(() {
-      _consoleOutput = '$_consoleOutput\n> $code\n${ok ? 'OK' : 'Failed'}';
+      // The 'OK'/'Failed' pair is the evaluation result of a QSP statement,
+      // not UI chrome, so it is reported through the localized labels anyway.
+      final result = ok ? l10n.ok : l10n.consoleFailed;
+      _consoleOutput = '$_consoleOutput\n> $code\n$result';
     });
     _consoleController.clear();
   }

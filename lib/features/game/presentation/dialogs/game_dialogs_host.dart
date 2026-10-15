@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/l10n/app_localizations.dart';
 import '../../providers/game_engine_provider.dart';
 import 'game_engine_dialogs.dart';
 import 'game_media_dialogs.dart';
@@ -83,7 +84,11 @@ class GameDialogsHost extends ConsumerWidget {
             dismiss();
             if (context.mounted && !ok) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Could not open save file')),
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(context)!.couldNotOpenSaveFile,
+                  ),
+                ),
               );
             }
           },

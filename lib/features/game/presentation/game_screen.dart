@@ -18,6 +18,7 @@ import '../../../core/helpers/html_processor.dart';
 import '../../../core/helpers/sheet_helper.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/widgets/questopia_scaffold.dart';
+import '../../library/providers/play_session_tracker.dart';
 import '../providers/game_engine_provider.dart';
 import 'dialogs/game_dialogs_host.dart';
 import 'sheets/game_options_sheet.dart';
@@ -31,7 +32,8 @@ class GameScreen extends ConsumerStatefulWidget {
   ConsumerState<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends ConsumerState<GameScreen> {
+class _GameScreenState extends ConsumerState<GameScreen>
+    with WidgetsBindingObserver {
   int _activeTab =
       0; // 0: Story (Main Desc and Actions), 1: Status (Vars Desc), 2: Inventory (Objects)
 
@@ -104,6 +106,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   /// Remembers the last auto-scrolled offset so each new passage advances once.
   double _lastAutoScrollOffset = 0;
 
+  /// Play-time tracker captured once at init.
+  ///
+  /// The lifecycle callback cannot read the provider itself: the binding
+  /// broadcasts a lifecycle change to every observer that was registered when
+  /// the notification started, so a change arriving during teardown reaches a
+  /// disposed element and `ref` throws. Holding the instance keeps the callback
+  /// free of provider access, which is what the framework expects from an
+  /// observer that may outlive its element by a frame.
+  PlaySessionTracker? _playSessionTracker;
+
   @override
   void initState() {
     super.initState();
@@ -114,6 +126,42 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           : SystemUiMode.edgeToEdge,
     );
     _applyEngineSettings(settings);
+    _playSessionTracker = ref.read(playSessionTrackerProvider);
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  /// Starts or stops play-time accounting with the app lifecycle.
+  ///
+  /// Counting is tied to the foreground because a game left open in the
+  /// background is not being played; pausing keeps the seconds already counted.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Reads the instance captured at init instead of the provider, because the
+    // binding may deliver a lifecycle change to an observer whose element is
+    // already disposed.
+    final tracker = _playSessionTracker;
+    if (tracker == null) return;
+    if (state == AppLifecycleState.resumed) {
+      tracker.resume();
+    } else {
+      tracker.pause();
+      unawaited(tracker.flush());
+    }
+  }
+
+  /// Begins timing the active game once the engine has a loaded world.
+  ///
+  /// The tracker keys off the same id the registry uses, so statistics land on
+  /// the same entry the library menu reads back.
+  void _syncPlaySession(GameEngineState engineState) {
+    final game = engineState.activeGame;
+    if (game == null || engineState.isLoading) return;
+    final id = game.id.trim().isNotEmpty ? game.id.trim() : game.folderPath.trim();
+    if (id.isEmpty) return;
+    final tracker = ref.read(playSessionTrackerProvider);
+    if (tracker.gameId == id) return;
+    unawaited(tracker.start(id));
   }
 
   /// Pushes the audio and auto-save preferences into the running engine.
@@ -148,6 +196,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     _suppressTimer?.cancel();
     _storyScrollController.dispose();
     ref.read(gameEngineProvider.notifier).stopAutosave();
+    WidgetsBinding.instance.removeObserver(this);
+    // Flush the final partial interval before the screen goes away, then drop
+    // the session so the next game starts from a clean counter.
+    final tracker = _playSessionTracker;
+    _playSessionTracker = null;
+    if (tracker != null) {
+      unawaited(tracker.stop());
+    }
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
@@ -257,6 +313,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     _maybeShowEngineDialog(engineState.activeDialog);
     _maybeAutoScroll(settings);
+    _syncPlaySession(engineState);
 
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
@@ -335,13 +392,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             child: ExcludeSemantics(
               child: SafeArea(
                 child: engineState.isLoading
-                    ? const Center(
+                    ? Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 16),
-                            Text('Loading game world...'),
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 16),
+                            Text(
+                              AppLocalizations.of(context)!
+                                  .loadingGameWorld,
+                            ),
                           ],
                         ),
                       )
@@ -496,18 +556,30 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     ThemeData theme,
   ) {
     final brightness = theme.brightness;
+    // Only the opt-in "materialYou" preset is allowed to read the scheme, so the
+    // default surface stays stable even when the accent follows the wallpaper.
+    final scheme = theme.colorScheme;
     final background = settings.useGameBackgroundColor
         ? Color(settings.gameBackColor)
-        : ReadingThemeColors.background(settings.readingTheme, brightness);
+        : ReadingThemeColors.background(
+            settings.readingTheme,
+            brightness,
+            scheme: scheme,
+          );
     final foreground = settings.useGameTextColor
         ? Color(settings.gameTextColor)
-        : ReadingThemeColors.foreground(settings.readingTheme, brightness);
+        : ReadingThemeColors.foreground(
+            settings.readingTheme,
+            brightness,
+            scheme: scheme,
+          );
     final link = settings.useGameLinkColor
         ? Color(settings.gameLinkColor)
         : ReadingThemeColors.link(
             settings.readingTheme,
             brightness,
-            theme.colorScheme.primary,
+            scheme.primary,
+            scheme: scheme,
           );
     return (background: background, foreground: foreground, link: link);
   }
@@ -744,7 +816,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'No status information available',
+              AppLocalizations.of(context)!.noStatusInformation,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.outline,
                   ),
@@ -818,7 +890,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Inventory is empty',
+              AppLocalizations.of(context)!.inventoryIsEmpty,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: colors.outline,
                   ),

@@ -7,6 +7,7 @@ import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.
 import 'package:material_3_expressive/material_3_expressive.dart';
 
 import '../../../../../core/helpers/sheet_ui_helper.dart';
+import '../../../../../core/l10n/app_localizations.dart';
 import '../../../providers/game_engine_provider.dart';
 
 /// Helper for importing and exporting .sav files in save slots sheet.
@@ -16,6 +17,7 @@ class SaveImportExportRow extends StatelessWidget {
   final GameEngineNotifier engineNotifier;
 
   Future<void> _handleImport(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final navigator = Navigator.of(context);
     FilePickerResult? result;
     try {
@@ -41,22 +43,23 @@ class SaveImportExportRow extends StatelessWidget {
         if (ok) navigator.pop();
         showSheetSnackBar(
           context,
-          ok ? 'Save file imported successfully' : 'Failed to import save file',
+          ok ? l10n.saveImported : l10n.saveImportFailed,
         );
       }
     }
   }
 
   Future<void> _handleExport(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final bytes = engineNotifier.takeSaveSnapshot();
     if (bytes == null || bytes.isEmpty) {
-      showSheetSnackBar(context, 'No active save data to export');
+      showSheetSnackBar(context, l10n.noActiveSaveData);
       return;
     }
     String? result;
     try {
       result = await FilePicker.platform.saveFile(
-        dialogTitle: 'Export Save File',
+        dialogTitle: l10n.exportSaveFileDialog,
         fileName: 'game_save.sav',
         type: FileType.custom,
         allowedExtensions: ['sav'],
@@ -64,7 +67,7 @@ class SaveImportExportRow extends StatelessWidget {
       );
     } catch (_) {
       result = await FilePicker.platform.saveFile(
-        dialogTitle: 'Export Save File',
+        dialogTitle: l10n.exportSaveFileDialog,
         fileName: 'game_save.sav',
         type: FileType.any,
         bytes: bytes,
@@ -78,12 +81,13 @@ class SaveImportExportRow extends StatelessWidget {
           await file.writeAsBytes(bytes, flush: true);
         } catch (_) {}
       }
-      if (context.mounted) showSheetSnackBar(context, 'Save file exported');
+      if (context.mounted) showSheetSnackBar(context, l10n.saveFileExported);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
@@ -92,7 +96,7 @@ class SaveImportExportRow extends StatelessWidget {
             size: M3EButtonSize.sm,
             style: M3EButtonStyle.outlined,
             icon: const Icon(Icons.file_upload_outlined, size: 18),
-            label: const Text('Import .sav'),
+            label: Text(l10n.importSav),
           ),
         ),
         const SizedBox(width: 12),
@@ -102,7 +106,7 @@ class SaveImportExportRow extends StatelessWidget {
             size: M3EButtonSize.sm,
             style: M3EButtonStyle.outlined,
             icon: const Icon(Icons.file_download_outlined, size: 18),
-            label: const Text('Export .sav'),
+            label: Text(l10n.exportSav),
           ),
         ),
       ],
