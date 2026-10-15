@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../helpers/platform_helper.dart';
 import 'window_title_bar.dart';
 
 /// Scaffold with a fully collapsible header bar that animates its own height
@@ -70,16 +70,9 @@ class _QuestopiaScaffoldState extends State<QuestopiaScaffold>
     super.dispose();
   }
 
-  bool _isDesktopPlatform() {
-    if (kIsWeb) return false;
-    return defaultTargetPlatform == TargetPlatform.windows ||
-        defaultTargetPlatform == TargetPlatform.macOS ||
-        defaultTargetPlatform == TargetPlatform.linux;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final showCustomTitleBar = _isDesktopPlatform();
+    final showCustomTitleBar = isDesktopPlatform;
     final topInset = showCustomTitleBar
         ? 0.0
         : MediaQuery.paddingOf(context).top;

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../widgets/questopia_morph_button.dart';
 
 export '../widgets/questopia_morph_button.dart';
@@ -15,11 +16,12 @@ Future<T?> showQuestopiaDialog<T>({
 }) {
   final capturedThemes =
       InheritedTheme.capture(from: context, to: Navigator.of(context).context);
+  final barrierLabel = AppLocalizations.of(context)?.dismiss ?? 'Dismiss';
 
   return showGeneralDialog<T>(
     context: context,
     barrierDismissible: barrierDismissible,
-    barrierLabel: 'Dismiss',
+    barrierLabel: barrierLabel,
     barrierColor: Colors.black.withValues(alpha: 0.60),
     useRootNavigator: useRootNavigator,
     transitionDuration: const Duration(milliseconds: 220),
@@ -159,8 +161,8 @@ class QuestopiaConfirmationDialog extends StatelessWidget {
     super.key,
     required this.title,
     required this.message,
-    this.confirmLabel = 'Confirm',
-    this.cancelLabel = 'Cancel',
+    this.confirmLabel,
+    this.cancelLabel,
     this.isDestructive = false,
     this.icon,
     this.onConfirm,
@@ -169,8 +171,8 @@ class QuestopiaConfirmationDialog extends StatelessWidget {
 
   final String title;
   final String message;
-  final String confirmLabel;
-  final String cancelLabel;
+  final String? confirmLabel;
+  final String? cancelLabel;
   final bool isDestructive;
   final IconData? icon;
   final VoidCallback? onConfirm;
@@ -179,6 +181,9 @@ class QuestopiaConfirmationDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final resolvedConfirmLabel = confirmLabel ?? l10n.confirm;
+    final resolvedCancelLabel = cancelLabel ?? l10n.cancel;
 
     return QuestopiaDialog(
       icon: icon != null
@@ -204,7 +209,7 @@ class QuestopiaConfirmationDialog extends StatelessWidget {
               Navigator.of(context).pop(false);
             }
           },
-          child: Text(cancelLabel),
+          child: Text(resolvedCancelLabel),
         ),
         QuestopiaMorphButton.filled(
           onPressed: () {
@@ -215,7 +220,7 @@ class QuestopiaConfirmationDialog extends StatelessWidget {
             }
           },
           isDestructive: isDestructive,
-          child: Text(confirmLabel),
+          child: Text(resolvedConfirmLabel),
         ),
       ],
     );

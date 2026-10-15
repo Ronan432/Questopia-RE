@@ -29,7 +29,11 @@ class GameColors {
 /// Each preset defines a background, a text color and a link color so a long
 /// story stays comfortable in different lighting. The `default` preset keeps the
 /// original black or white surface so nothing changes for users who never open
-/// the setting.
+/// the setting, and it deliberately never reads the Material color scheme:
+/// dynamic Material You tints shift with the system wallpaper, which would make
+/// the reading surface move under the reader. Only the explicit `materialYou`
+/// preset opts into that scheme, so a wallpaper tinted surface is a choice
+/// rather than the fallback.
 class ReadingThemeColors {
   const ReadingThemeColors._();
 
@@ -42,7 +46,14 @@ class ReadingThemeColors {
   static const Color _nightLink = Color(0xFF8AB4F8);
 
   /// Reading surface behind the game text.
-  static Color background(String themeId, Brightness brightness) {
+  ///
+  /// [scheme] is only consulted by the opt-in `materialYou` preset. Every other
+  /// preset stays independent of it, so the surface is stable by default.
+  static Color background(
+    String themeId,
+    Brightness brightness, {
+    ColorScheme? scheme,
+  }) {
     switch (themeId) {
       case 'sepia':
         return _sepiaBackground;
@@ -52,13 +63,19 @@ class ReadingThemeColors {
         return brightness == Brightness.dark
             ? const Color(0xFF000000)
             : const Color(0xFFFFFFFF);
+      case 'materialYou':
+        return scheme?.surface ?? GameColors.background(brightness);
       default:
         return GameColors.background(brightness);
     }
   }
 
   /// Text color paired with [background].
-  static Color foreground(String themeId, Brightness brightness) {
+  static Color foreground(
+    String themeId,
+    Brightness brightness, {
+    ColorScheme? scheme,
+  }) {
     switch (themeId) {
       case 'sepia':
         return _sepiaForeground;
@@ -68,18 +85,27 @@ class ReadingThemeColors {
         return brightness == Brightness.dark
             ? const Color(0xFFFFFFFF)
             : const Color(0xFF000000);
+      case 'materialYou':
+        return scheme?.onSurface ?? GameColors.foreground(brightness);
       default:
         return GameColors.foreground(brightness);
     }
   }
 
   /// Link color used inside the story text.
-  static Color link(String themeId, Brightness brightness, Color fallback) {
+  static Color link(
+    String themeId,
+    Brightness brightness,
+    Color fallback, {
+    ColorScheme? scheme,
+  }) {
     switch (themeId) {
       case 'sepia':
         return _sepiaLink;
       case 'night':
         return _nightLink;
+      case 'materialYou':
+        return scheme?.primary ?? fallback;
       default:
         return fallback;
     }

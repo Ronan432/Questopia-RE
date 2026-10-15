@@ -1,8 +1,9 @@
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import 'platform_helper.dart';
 
 /// Shows a Modal Bottom Sheet with backdrop blur, constrained strictly so its
 /// drag handle and top edges never cross or overlap the status bar or custom titlebar.
@@ -15,10 +16,7 @@ Future<T?> showQuestopiaSheet<T>({
   Color? backgroundColor,
 }) {
   final mediaQuery = MediaQuery.of(context);
-  final showCustomTitleBar = !kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.windows ||
-          defaultTargetPlatform == TargetPlatform.macOS ||
-          defaultTargetPlatform == TargetPlatform.linux);
+  final showCustomTitleBar = isDesktopPlatform;
   final topPadding =
       mediaQuery.padding.top + (showCustomTitleBar ? 40.0 : 24.0);
   final maxSheetHeight = (mediaQuery.size.height - topPadding)
@@ -27,6 +25,13 @@ Future<T?> showQuestopiaSheet<T>({
   final sheetBgColor = backgroundColor ?? colors.surfaceContainerLowest;
   final isDark =
       ThemeData.estimateBrightnessForColor(sheetBgColor) == Brightness.dark;
+
+  // A desktop window is far wider than a phone, and a bottom sheet stretched
+  // across it turns into a full width panel that reads as a page rather than a
+  // sheet. Clamping the width and centering keeps the phone proportions.
+  final maxSheetWidth = isDesktopPlatform
+      ? (mediaQuery.size.width * 0.6).clamp(360.0, 560.0)
+      : mediaQuery.size.width;
 
   final capturedThemes =
       InheritedTheme.capture(from: context, to: Navigator.of(context).context);
@@ -43,6 +48,7 @@ Future<T?> showQuestopiaSheet<T>({
       elevation: 0,
       constraints: BoxConstraints(
         maxHeight: maxSheetHeight,
+        maxWidth: maxSheetWidth,
       ),
       builder: (sheetContext) {
         final sheetMediaQuery = MediaQuery.of(sheetContext);
@@ -51,6 +57,9 @@ Future<T?> showQuestopiaSheet<T>({
         final currentMaxHeight =
             (sheetMediaQuery.size.height - currentTopPadding)
                 .clamp(200.0, sheetMediaQuery.size.height);
+        final currentMaxWidth = isDesktopPlatform
+            ? (sheetMediaQuery.size.width * 0.6).clamp(360.0, 560.0)
+            : sheetMediaQuery.size.width;
 
         final overlayStyle = SystemUiOverlayStyle(
           systemNavigationBarColor: Colors.transparent,
@@ -68,6 +77,7 @@ Future<T?> showQuestopiaSheet<T>({
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxHeight: currentMaxHeight,
+              maxWidth: currentMaxWidth,
             ),
             child: ClipRRect(
               borderRadius:

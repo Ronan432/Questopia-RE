@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 
+import '../helpers/platform_helper.dart';
+
 abstract final class QuestopiaTheme {
   // The app intentionally ships without a bundled typeface: no font files are
   // declared in pubspec.yaml, so naming one here would only fall back to the
@@ -16,6 +18,10 @@ abstract final class QuestopiaTheme {
   /// Index 0 means "Default system" and resolves to null so the renderer keeps
   /// the platform default font. The remaining entries line up with the labels
   /// exposed by `SettingsPickerSheets.typefaceNames`.
+  // Android ships these as system families, so naming one is enough: the
+  // platform font manager resolves it without a bundled font file. The list
+  // obeys the same two rules as the desktop one below: every name must exist,
+  // and no family may appear twice.
   static const List<String> _androidFontFamilies = <String>[
     '', // 0 - Default system
     'sans-serif', // 1 - Sans-serif
@@ -31,19 +37,24 @@ abstract final class QuestopiaTheme {
     'serif-monospace', // 11 - Serif monospace
   ];
 
+  // Every entry must be a real, DISTINCT family name. Flutter resolves
+  // `fontFamily` by family, not by face, so naming a face ("Segoe UI Semibold")
+  // silently renders as the parent family and the choice looks broken. Families
+  // are also duplicated nowhere: two slots pointing at one family make one of
+  // the two options a no-op. Both mistakes were present here before.
   static const List<String> _desktopFontFamilies = <String>[
     '', // 0 - Default system
     'Segoe UI', // 1 - Sans-serif
     'Georgia', // 2 - Serif
     'Consolas', // 3 - Monospace
-    'Segoe UI Semibold', // 4 - Medium
+    'Calibri', // 4 - Medium
     'Segoe Script', // 5 - Cursive
-    'Segoe UI Light', // 6 - Light
-    'Bahnschrift Condensed', // 7 - Condensed
-    'Segoe UI Black', // 8 - Black
-    'Segoe UI Light', // 9 - Thin
+    'Candara', // 6 - Light
+    'Bahnschrift', // 7 - Condensed
+    'Impact', // 8 - Black
+    'Corbel', // 9 - Thin
     'Comic Sans MS', // 10 - Casual
-    'Consolas', // 11 - Serif monospace
+    'Courier New', // 11 - Serif monospace
   ];
 
   /// Resolves the in-game typeface index to a platform font family.
@@ -51,13 +62,8 @@ abstract final class QuestopiaTheme {
   /// Returns null for index 0 and any out-of-range index so the game text
   /// falls back to the platform default font.
   static String? fontFamilyFor(int index) {
-    final families = switch (defaultTargetPlatform) {
-      TargetPlatform.windows ||
-      TargetPlatform.macOS ||
-      TargetPlatform.linux =>
-        _desktopFontFamilies,
-      _ => _androidFontFamilies,
-    };
+    final families =
+        isDesktopPlatform ? _desktopFontFamilies : _androidFontFamilies;
     if (index <= 0 || index >= families.length) return null;
     return families[index];
   }
@@ -199,6 +205,27 @@ abstract final class QuestopiaTheme {
             isBlack ? const Color(0xFF2C2C2C) : const Color(0xFF2E2E30),
       );
     }
+  }
+
+  /// Single Source of Truth slider theme for every M3E slider in the app.
+  ///
+  /// The stock M3E slider narrows its handle from 4px to 2px while pressed,
+  /// which on a desktop pointer reads as the handle collapsing under the
+  /// cursor instead of a deliberate press cue. Pinning the pressed width to the
+  /// resting width keeps the handle steady while dragging.
+  static final M3ESliderTheme sliderTheme =
+      M3ESliderTheme.defaults.copyWith(
+    pressedHandleWidth: 4,
+  );
+
+  /// Builds the M3E theme data every M3ETheme host in the app shares, so the
+  /// color scheme bridge and the slider overrides cannot drift apart between
+  /// screens.
+  static M3EThemeData m3eThemeDataFrom(ThemeData theme) {
+    return M3EThemeData(
+      colorScheme: m3eColorSchemeFrom(theme.colorScheme),
+      sliderTheme: sliderTheme,
+    );
   }
 
   /// Single Source of Truth helper converting Flutter's [ColorScheme] into [M3EColorScheme].

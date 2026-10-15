@@ -145,16 +145,13 @@ class PathPickerHelper {
   /// Displays a choice modal matching the Settings segmented list style allowing
   /// the user to select between importing a game file/archive or selecting an extracted game folder.
   static Future<String?> pickGame(BuildContext context) async {
-    final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
     final option = await showQuestopiaSheet<int>(
       context: context,
       builder: (ctx) {
         return M3ETheme(
-          data: M3EThemeData(
-            colorScheme: QuestopiaTheme.m3eColorSchemeFrom(colors),
-          ),
+          data: QuestopiaTheme.m3eThemeDataFrom(Theme.of(ctx)),
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
             child: Column(

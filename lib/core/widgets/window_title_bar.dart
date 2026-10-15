@@ -1,17 +1,20 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
+
+import '../helpers/platform_helper.dart';
+import '../l10n/app_localizations.dart';
 
 class WindowTitleBar extends StatefulWidget implements PreferredSizeWidget {
   const WindowTitleBar({
     super.key,
-    this.title = 'Questopia',
+    this.title,
     this.leading,
     this.titleWidget,
     this.actions,
   });
 
-  final String title;
+  /// Window title override; falls back to the localized application title.
+  final String? title;
   final Widget? leading;
   final Widget? titleWidget;
   final List<Widget>? actions;
@@ -58,14 +61,12 @@ class _WindowTitleBarState extends State<WindowTitleBar> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    if (!kIsWeb &&
-        (defaultTargetPlatform != TargetPlatform.windows &&
-            defaultTargetPlatform != TargetPlatform.macOS &&
-            defaultTargetPlatform != TargetPlatform.linux)) {
+    if (!isDesktopPlatform) {
       return const SizedBox.shrink();
     }
 
     final colors = Theme.of(context).colorScheme;
+    final title = widget.title ?? AppLocalizations.of(context)!.appTitle;
 
     return Container(
       height: 40,
@@ -79,8 +80,9 @@ class _WindowTitleBarState extends State<WindowTitleBar> with WindowListener {
               child: Center(child: widget.leading),
             )
           else ...[
-            const SizedBox(width: 12),
-            const QuestopiaLogoIcon(size: 24),
+            const SizedBox(width: 6),
+            const _TitleBarAppIcon(),
+            const SizedBox(width: 4),
           ],
           Expanded(
             child: GestureDetector(
@@ -94,9 +96,9 @@ class _WindowTitleBarState extends State<WindowTitleBar> with WindowListener {
                   alignment: Alignment.centerLeft,
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: widget.titleWidget ??
-                      (widget.title.isNotEmpty
+                      (title.isNotEmpty
                           ? Text(
-                              widget.title,
+                              title,
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -135,33 +137,32 @@ class QuestopiaLogoIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(size * 0.22),
-      child: Image.asset(
-        'assets/images/app_logo.png',
-        width: size,
-        height: size,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) {
-          final colors = Theme.of(context).colorScheme;
-          return Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: colors.primaryContainer,
-              borderRadius: BorderRadius.circular(size * 0.22),
-            ),
-            child: Center(
-              child: Icon(
-                Icons.sports_esports_rounded,
-                size: size * 0.62,
-                color: colors.onPrimaryContainer,
-              ),
-            ),
-          );
-        },
+    return SizedBox(
+      width: size,
+      height: size,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.22),
+        child: Image.asset(
+          'assets/images/app_logo.png',
+          width: size,
+          height: size,
+          fit: BoxFit.contain,
+          // The logo is the brand mark, so a missing asset must never silently
+          // degrade into an unrelated generic glyph. Keep the frame blank and
+          // let the retry below recover once the bundle finishes loading.
+          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+        ),
       ),
     );
+  }
+}
+
+class _TitleBarAppIcon extends StatelessWidget {
+  const _TitleBarAppIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return const QuestopiaLogoIcon(size: 22);
   }
 }
 
@@ -178,12 +179,13 @@ class _WindowButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final iconColor = colors.onSurfaceVariant;
+    final l10n = AppLocalizations.of(context)!;
 
     return Row(
       children: [
         _TitleBarButton(
           icon: Icon(Icons.remove_rounded, size: 16, color: iconColor),
-          tooltip: 'Minimize',
+          tooltip: l10n.minimize,
           onPressed: () => windowManager.minimize(),
         ),
         _TitleBarButton(
@@ -192,12 +194,12 @@ class _WindowButtons extends StatelessWidget {
             size: 14,
             color: iconColor,
           ),
-          tooltip: isMaximized ? 'Restore' : 'Maximize',
+          tooltip: isMaximized ? l10n.restore : l10n.maximize,
           onPressed: onMaximizeToggle,
         ),
         _TitleBarCloseButton(
           icon: Icon(Icons.close_rounded, size: 16, color: iconColor),
-          tooltip: 'Close',
+          tooltip: l10n.close,
           onPressed: () => windowManager.close(),
         ),
       ],

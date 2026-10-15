@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 
+import '../l10n/app_localizations.dart';
 import '../theme/questopia_theme.dart';
 
 /// Standard responsive container wrapper for bottom sheets.
@@ -19,12 +20,8 @@ class QuestopiaSheetContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeColors = Theme.of(context).colorScheme;
-
     return M3ETheme(
-      data: M3EThemeData(
-        colorScheme: QuestopiaTheme.m3eColorSchemeFrom(themeColors),
-      ),
+      data: QuestopiaTheme.m3eThemeDataFrom(Theme.of(context)),
       child: SafeArea(
         child: SizedBox(
           height: MediaQuery.sizeOf(context).height * heightFactor,
@@ -120,6 +117,7 @@ class QuestopiaSheetPageNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         M3EButton.icon(
@@ -127,12 +125,12 @@ class QuestopiaSheetPageNav extends StatelessWidget {
           size: M3EButtonSize.sm,
           style: M3EButtonStyle.outlined,
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
-          label: const Text('Prev'),
+          label: Text(l10n.prev),
         ),
         Expanded(
           child: Center(
             child: Text(
-              'Page ${currentPage + 1} / $totalPages',
+              l10n.pageOfPages(currentPage + 1, totalPages),
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -144,7 +142,7 @@ class QuestopiaSheetPageNav extends StatelessWidget {
           size: M3EButtonSize.sm,
           style: M3EButtonStyle.outlined,
           icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
-          label: const Text('Next'),
+          label: Text(l10n.next),
         ),
       ],
     );
