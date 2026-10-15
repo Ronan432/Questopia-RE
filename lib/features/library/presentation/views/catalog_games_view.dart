@@ -1,10 +1,9 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, TargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/helpers/platform_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/providers/settings_provider.dart';
 import '../../../game/presentation/game_screen.dart';
@@ -25,10 +24,7 @@ class CatalogGamesView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(libraryProvider);
-    final isDesktop = !kIsWeb &&
-        (defaultTargetPlatform == TargetPlatform.windows ||
-            defaultTargetPlatform == TargetPlatform.macOS ||
-            defaultTargetPlatform == TargetPlatform.linux);
+    final isDesktop = isDesktopPlatform;
 
     return Column(
       children: [
@@ -76,7 +72,7 @@ class CatalogGamesView extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                state.remoteError!,
+                state.remoteError ?? l10n.couldNotReachRepository,
                 textAlign: TextAlign.center,
               ),
             ),
@@ -109,12 +105,9 @@ class CatalogGamesView extends ConsumerWidget {
 
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isCompact = screenWidth < 600;
-    final isDesktop = !kIsWeb &&
-        (defaultTargetPlatform == TargetPlatform.windows ||
-            defaultTargetPlatform == TargetPlatform.macOS ||
-            defaultTargetPlatform == TargetPlatform.linux);
+    final isDesktop = isDesktopPlatform;
     final isNavBarBlur = !isDesktop && ref.watch(settingsProvider).isNavBarBlur;
-final hasPagination = state.totalPages > 1;
+    final hasPagination = state.totalPages > 1;
     final bottomGridPadding = hasPagination
         ? 8.0
         : (isNavBarBlur ? 90.0 : (isCompact ? 20.0 : 24.0));
@@ -146,22 +139,24 @@ final hasPagination = state.totalPages > 1;
           );
         } catch (_) {}
 
+        final installed = matchingLocal;
+
         return RemoteGameCard(
           game: remoteGame,
           isCompact: isCompact,
           isDownloading: isDownloading,
           progress: progress,
-          isInstalled: matchingLocal != null,
-          onPlay: matchingLocal != null
+          isInstalled: installed != null,
+          onPlay: installed != null
               ? () async {
-                  final f = File(matchingLocal!.gameFilePath);
+                  final f = File(installed.gameFilePath);
                   if (!await f.exists()) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
                             l10n.gameFileNotFound(
-                              matchingLocal!.gameFilePath,
+                              installed.gameFilePath,
                             ),
                           ),
                         ),
@@ -169,11 +164,11 @@ final hasPagination = state.totalPages > 1;
                     }
                     return;
                   }
-                  ref.read(gameEngineProvider.notifier).loadGame(matchingLocal!);
+                  ref.read(gameEngineProvider.notifier).loadGame(installed);
                   if (context.mounted) {
                     Navigator.of(context, rootNavigator: true).push(
                       MaterialPageRoute<void>(
-                        builder: (_) => GameScreen(title: matchingLocal!.title),
+                        builder: (_) => GameScreen(title: installed.title),
                       ),
                     );
                   }

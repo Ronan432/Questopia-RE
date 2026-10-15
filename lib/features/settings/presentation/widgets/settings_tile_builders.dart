@@ -93,6 +93,7 @@ class SettingsTiles {
     required double min,
     required double max,
     required ValueChanged<double> onChanged,
+    ValueChanged<double>? onChangeEnd,
     int? divisions,
   }) {
     return SegmentedListTile(
@@ -103,56 +104,36 @@ class SettingsTiles {
         padding: const EdgeInsets.only(top: 2),
         child: Icon(icon, size: 24),
       ),
-      title: Builder(
-        builder: (context) {
-          final colors = Theme.of(context).colorScheme;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(fontSize: 16),
-              ),
-              // The default Slider reserves extra vertical space for a large
-              // thumb overlay, which left a wide gap under the label. A fixed
-              // height and a smaller overlay close that gap and keep the row
-              // tidy. Tick marks are hidden so the track reads as one clean
-              // bar while the value still snaps to the divisions.
-              SizedBox(
-                height: 28,
-                child: SliderTheme(
-                  data: SliderThemeData(
-                    trackHeight: 6.0,
-                    trackShape: const RoundedRectSliderTrackShape(),
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: 8.0,
-                      elevation: 2.0,
-                      pressedElevation: 4.0,
-                    ),
-                    overlayShape:
-                        const RoundSliderOverlayShape(overlayRadius: 14.0),
-                    activeTrackColor: colors.primary,
-                    inactiveTrackColor: colors.surfaceContainerHighest,
-                    thumbColor: colors.primary,
-                    activeTickMarkColor: Colors.transparent,
-                    inactiveTickMarkColor: Colors.transparent,
-                    trackGap: 2.0,
-                  ),
-                  child: Slider(
-                    value: value.clamp(min, max).toDouble(),
-                    min: min,
-                    max: max,
-                    divisions: divisions,
-                    onChanged: onChanged,
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 16),
+          ),
+          // M3E draws the handle as a rounded 4x44 bar, the vertical mark the
+          // design calls for, so the slider reserves about 44 logical pixels of
+          // height on its own. The row only needs a small top inset; forcing a
+          // fixed height here would clip the handle. The pressed handle width is
+          // pinned to its resting width by QuestopiaTheme.sliderTheme, because
+          // the stock transition narrows the bar to 2px on press, which reads as
+          // the handle caving in under the cursor on desktop.
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: M3ESlider(
+              value: value.clamp(min, max).toDouble(),
+              min: min,
+              max: max,
+              divisions: divisions,
+              haptic: M3EHapticFeedback.light,
+              onChangeEnd: onChangeEnd,
+              onChanged: onChanged,
+            ),
+          ),
+        ],
       ),
-      minVerticalPadding: 12,
+      minVerticalPadding: 8,
     );
   }
 }

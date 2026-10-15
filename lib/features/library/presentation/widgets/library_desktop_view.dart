@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
 import '../../providers/library_provider.dart';
+import 'catalog_search_history.dart';
 
 /// Desktop layout with left-hand NavigationRail and animated content switcher.
 class LibraryDesktopView extends ConsumerWidget {
@@ -14,6 +15,8 @@ class LibraryDesktopView extends ConsumerWidget {
     required this.searchFocusNode,
     required this.onTabChanged,
     required this.onSearchChanged,
+    required this.onSearchSubmitted,
+    required this.onHistoryQuerySelected,
     required this.onImportGame,
     required this.child,
   });
@@ -24,6 +27,13 @@ class LibraryDesktopView extends ConsumerWidget {
   final FocusNode searchFocusNode;
   final ValueChanged<int> onTabChanged;
   final ValueChanged<String> onSearchChanged;
+
+  /// Called with the query text when the user submits the search field.
+  final ValueChanged<String> onSearchSubmitted;
+
+  /// Called with a query chosen from the catalog search history.
+  final ValueChanged<String> onHistoryQuerySelected;
+
   final VoidCallback onImportGame;
   final Widget child;
 
@@ -31,6 +41,10 @@ class LibraryDesktopView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+
+    // The suggestion dropdown is a catalog-only affordance and appears only
+    // once the field has focus and something has been searched before.
+    final showHistory = selectedTab == 1 && isSearchFocused;
 
     return SafeArea(
       child: Row(
@@ -84,7 +98,10 @@ class LibraryDesktopView extends ConsumerWidget {
                 if (selectedTab != 2)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-                    child: AnimatedContainer(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        AnimatedContainer(
                       duration: const Duration(milliseconds: 250),
                       curve: Curves.easeOutCubic,
                       decoration: BoxDecoration(
@@ -128,7 +145,17 @@ class LibraryDesktopView extends ConsumerWidget {
                             ),
                         ],
                         onChanged: onSearchChanged,
+                        onSubmitted: onSearchSubmitted,
                       ),
+                    ),
+                        if (showHistory)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: CatalogSearchHistory(
+                              onQuerySelected: onHistoryQuerySelected,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 Expanded(

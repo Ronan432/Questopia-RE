@@ -2,81 +2,12 @@ import 'dart:ffi';
 import 'dart:io';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
+import '../helpers/qsp_var_discovery.dart';
 import 'qsp_models.dart';
 import 'qsp_utf16.dart';
 
-// Native typedefs
-typedef NativeQSPInit = Void Function();
-typedef NativeQSPTerminate = Void Function();
-typedef NativeQSPGetVersion = QSPStringStruct Function();
-typedef NativeQSPGetMainDesc = QSPStringStruct Function();
-typedef NativeQSPGetVarsDesc = QSPStringStruct Function();
-
-typedef NativeQSPGetActions = Int32 Function(
-    Pointer<QSPListItemStruct> items, Int32 bufSize);
-typedef NativeQSPSetSelActionIndex = Int8 Function(
-    Int32 index, Int32 toRefreshUI);
-typedef NativeQSPExecuteSelActionCode = Int8 Function(Int32 toRefreshUI);
-
-typedef NativeQSPGetObjects = Int32 Function(
-    Pointer<QSPListItemStruct> items, Int32 bufSize);
-typedef NativeQSPSetSelObjectIndex = Int8 Function(
-    Int32 index, Int32 toRefreshUI);
-
-typedef NativeQSPExecString = Int8 Function(
-    QSPStringStruct str, Int32 toRefreshUI);
-typedef NativeQSPLoadGameWorldFromData = Int8 Function(
-    Pointer<Uint8> data, Int32 size, Int32 isNewGame);
-typedef NativeQSPOpenSavedGameFromData = Int8 Function(
-    Pointer<Uint8> data, Int32 size, Int32 toRefreshUI);
-typedef NativeQSPSaveGameAsData = Int8 Function(
-    Pointer<Uint8> buf, Pointer<Int32> bufSize, Int32 toRefreshUI);
-typedef NativeQSPRestartGame = Int8 Function(Int32 toRefreshUI);
-typedef NativeQSPGetLastErrorData = QSPErrorInfoStruct Function();
-typedef NativeQSPSetCallback = Void Function(
-    Int32, Pointer<NativeFunction<Int64 Function()>>);
-typedef NativeQSPExecCounter = Int8 Function(Int32 toRefreshUI);
-
-typedef NativeQSPGetVarValue = Int32 Function(QSPStringStruct name, Int32 index,
-    Pointer<Void> variantRes); // Simplified for primitive lookup
-typedef NativeQSPGetNumVarValue = Int8 Function(
-    QSPStringStruct name, Int32 index, Pointer<Int32> res);
-typedef NativeQSPGetStrVarValue = Int8 Function(
-    QSPStringStruct name, Int32 index, Pointer<QSPStringStruct> res);
-
-// Dart typedefs
-typedef DartQSPInit = void Function();
-typedef DartQSPTerminate = void Function();
-typedef DartQSPGetVersion = QSPStringStruct Function();
-typedef DartQSPGetMainDesc = QSPStringStruct Function();
-typedef DartQSPGetVarsDesc = QSPStringStruct Function();
-
-typedef DartQSPGetActions = int Function(
-    Pointer<QSPListItemStruct> items, int bufSize);
-typedef DartQSPSetSelActionIndex = int Function(int index, int toRefreshUI);
-typedef DartQSPExecuteSelActionCode = int Function(int toRefreshUI);
-
-typedef DartQSPGetObjects = int Function(
-    Pointer<QSPListItemStruct> items, int bufSize);
-typedef DartQSPSetSelObjectIndex = int Function(int index, int toRefreshUI);
-
-typedef DartQSPExecString = int Function(QSPStringStruct str, int toRefreshUI);
-typedef DartQSPLoadGameWorldFromData = int Function(
-    Pointer<Uint8> data, int size, int isNewGame);
-typedef DartQSPOpenSavedGameFromData = int Function(
-    Pointer<Uint8> data, int size, int toRefreshUI);
-typedef DartQSPSaveGameAsData = int Function(
-    Pointer<Uint8> buf, Pointer<Int32> bufSize, int toRefreshUI);
-typedef DartQSPRestartGame = int Function(int toRefreshUI);
-typedef DartQSPGetLastErrorData = QSPErrorInfoStruct Function();
-typedef DartQSPSetCallback = void Function(
-    int, Pointer<NativeFunction<Int64 Function()>>);
-typedef DartQSPExecCounter = int Function(int toRefreshUI);
-
-typedef DartQSPGetNumVarValue = int Function(
-    QSPStringStruct name, int index, Pointer<Int32> res);
-typedef DartQSPGetStrVarValue = int Function(
-    QSPStringStruct name, int index, Pointer<QSPStringStruct> res);
+import 'qsp_ffi_types.dart';
+export 'qsp_ffi_types.dart';
 
 class QspFfi {
   QspFfi._(this._library) {
@@ -155,13 +86,6 @@ class QspFfi {
     }
 
     try {
-      _qspVarsPtr = _library.lookup<Void>('qspVars');
-      debugPrint('[QSP FFI] qspVars symbol resolved.');
-    } catch (_) {
-      debugPrint('[QSP FFI] qspVars symbol unavailable.');
-    }
-
-    try {
       final verStruct = _getVersion();
       if (verStruct.str != nullptr) {
         if (verStruct.end != nullptr) {
@@ -213,7 +137,6 @@ class QspFfi {
 
   DartQSPGetNumVarValue? _getNumVarValue;
   DartQSPGetStrVarValue? _getStrVarValue;
-  Pointer<Void>? _qspVarsPtr;
 
   static QspFfi? instance;
 
@@ -397,7 +320,7 @@ class QspFfi {
 
   bool get supportsCallbacks => _setCallback != null;
 
-  void setCallback(int type, Pointer<NativeFunction<Int64 Function()>> func) {
+  void setCallback(int type, Pointer<NativeFunction<NativeQspCallback>> func) {
     debugPrint('[QSP FFI] setCallback(type: $type)');
     _setCallback?.call(type, func);
   }
@@ -424,6 +347,11 @@ class QspFfi {
     return info;
   }
 
+  /// Reads a numeric variable through `QSPGetNumVarValue`.
+  ///
+  /// The native out-parameter is `QSP_BIGINT *`. The [Int32] buffer below
+  /// matches the current native build, where `QSP_USE_BIGINT` is undefined and
+  /// `QSP_BIGINT` is therefore `int` (see `native/qsp/qsp/bindings/qsp.h`).
   int getVarNum(String name, [int index = 0]) {
     if (_getNumVarValue == null) return 0;
     final ptr = QspUtf16.stringToNative(name);
@@ -456,77 +384,31 @@ class QspFfi {
     }
   }
 
+  /// Collects variable names by probing the engine, never by reading raw
+  /// engine memory.
+  ///
+  /// An earlier revision walked the native `qspVars` bucket table directly.
+  /// That approach could never work: `qspVars` is not part of the exported
+  /// C-API symbol set, so the lookup always failed. Even with a resolvable
+  /// symbol the walk was unsound, because the guessed `QSPVar` stride (48 or
+  /// 28 bytes) does not match the real layout (56 bytes on 64-bit) and the
+  /// only bounds were a bucket count and a `ValsCount < 500` guess, which
+  /// together let the walk run past the end of a real allocation. Variable
+  /// discovery therefore relies exclusively on the two safe fallbacks below.
   List<String> getDiscoveredVarNames({String varsDesc = '', String mainDesc = ''}) {
     final discovered = <String>{};
 
-    // 1. Direct memory scan from native qspVars bucket table if available
-    if (_qspVarsPtr != null) {
-      try {
-        final is64Bit = sizeOf<Pointer<Void>>() == 8;
-        final bucketSize = is64Bit ? 16 : 8;
-        final varSize = is64Bit ? 48 : 28;
-
-        for (var b = 0; b < 1024; b++) {
-          final bucket = _qspVarsPtr!.cast<Uint8>() + (b * bucketSize);
-          final varsAddress = bucket.cast<Pointer<Uint8>>().value;
-          final varsCount = is64Bit
-              ? (bucket + 8).cast<Int32>().value
-              : (bucket + 4).cast<Int32>().value;
-
-          if (varsAddress != nullptr) {
-            if (varsCount > 0) {
-              if (varsCount < 500) {
-                for (var v = 0; v < varsCount; v++) {
-                  final varEntry = varsAddress + (v * varSize);
-                  final strStruct = varEntry.cast<QSPStringStruct>().ref;
-                  final name = QspUtf16.fromStruct(strStruct).trim();
-                  if (name.isNotEmpty) {
-                    discovered.add(name);
-                  }
-                }
-              }
-            }
-          }
-        }
-      } catch (e) {
-        debugPrint('[QSP FFI] Error scanning qspVars memory: $e');
+    // 1. Tokens named in the game text that the engine reports a value for.
+    for (final token in extractVarTokens(varsDesc, mainDesc)) {
+      if (getVarNum(token) != 0 || getVarStr(token).isNotEmpty) {
+        discovered.add(token);
       }
     }
 
-    // 2. Scan varsDesc and mainDesc for variable/stat tokens
-    final textCombined = '$varsDesc $mainDesc';
-    if (textCombined.trim().isNotEmpty) {
-      final matches = RegExp(r'\b([a-zA-Z_][a-zA-Z0-9_]{0,35})\b')
-          .allMatches(textCombined);
-      for (final m in matches) {
-        final token = m.group(1);
-        if (token != null) {
-          if (token.length >= 2) {
-            final numVal = getVarNum(token);
-            final strVal = getVarStr(token);
-            if (numVal != 0 || strVal.isNotEmpty) {
-              discovered.add(token);
-            }
-          }
-        }
-      }
-    }
-
-    // 3. Proactive check of common QSP game variables
-    const commonVars = [
-      'money', 'gold', 'cash', 'rub', 'rubles', 'coins', 'hp', 'health',
-      'maxhp', 'mana', 'mp', 'energy', 'stamina', 'exp', 'level', 'lvl',
-      'stat', 'points', 'str', 'agi', 'dex', 'int', 'vit', 'cha', 'luc',
-      'day', 'hour', 'min', 'sec', 'month', 'year', 'score', 'age',
-      'mood', 'hunger', 'thirst', 'sleep', 'hygiene', 'reputation', 'fame',
-      'lust', 'arousal', 'stress', 'weight', 'height', 'curloc', 'loc',
-      'caller', 'args', 'result'
-    ];
-    for (final v in commonVars) {
-      final numVal = getVarNum(v);
-      final strVal = getVarStr(v);
-      if (numVal != 0 || strVal.isNotEmpty) {
-        discovered.add(v);
+    // 2. Common QSP game variables that this particular game also defines.
+    for (final name in kCommonQspVarNames) {
+      if (getVarNum(name) != 0 || getVarStr(name).isNotEmpty) {
+        discovered.add(name);
       }
     }
 

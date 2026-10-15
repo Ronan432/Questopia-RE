@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:path/path.dart' as p;
 
+import '../helpers/ogv_media_access.dart';
 import 'ogv_player_page.dart';
 
 /// Loopback HTTP server that exposes the bundled OGV.js decoder and game media
@@ -16,25 +16,31 @@ import 'ogv_player_page.dart';
 /// `127.0.0.1` keeps range streaming intact while staying on the device, and
 /// the decoder page is served from the same origin so no cross-origin
 /// handshake is required.
+///
+/// Because loopback is reachable by every process on the device, the media
+/// endpoint never serves an arbitrary path: readable folders are registered
+/// in-process before the player page loads, and `/player` itself requires a
+/// one-shot token that only this process can mint.
 class OgvAssetServer {
   OgvAssetServer._(this._server);
 
   final HttpServer _server;
 
-  /// Directories the media endpoint may read from.
+  /// Directories the media endpoint may read from, plus the one-shot tokens
+  /// that authorise a player page load.
   ///
-  /// A loopback server is reachable by every process on the device, so it must
-  /// never serve an arbitrary path. Only the roots announced by the player page
-  /// are accepted, which keeps the endpoint scoped to the active game folder.
-  final Set<String> _allowedRoots = <String>{};
-
-  static String _normalize(String path) =>
-      p.normalize(p.absolute(path)).toLowerCase();
+  /// Roots are never taken from the request; they are registered in-process by
+  /// [registerRoots] just before the player page is loaded.
+  final OgvMediaAccess _access = OgvMediaAccess();
 
   static OgvAssetServer? _active;
 
   /// Base URL of the loopback server, without a trailing slash.
   String get baseUrl => 'http://127.0.0.1:${_server.port}';
+
+  /// Registers the game folders the media endpoint may read from and returns
+  /// the one-shot token that authorises the matching `/player` request.
+  String registerRoots(Iterable<String> roots) => _access.registerRoots(roots);
 
   /// Returns the shared server, starting it on first use.
   ///
@@ -123,6 +129,15 @@ class OgvAssetServer {
   }
 
   Future<void> _servePlayer(HttpRequest request) async {
+    final token = request.uri.queryParameters['token'] ?? '';
+    // The token must match a value this process minted and must not have been
+    // used before, otherwise the request is not the page load the app started.
+    if (!_access.consumeToken(token)) {
+      debugPrint('[OgvServer] rejected player request with invalid token');
+      await _close(request, HttpStatus.forbidden);
+      return;
+    }
+
     final source = request.uri.queryParameters['src'] ?? '';
     if (source.isEmpty) {
       await _close(request, HttpStatus.badRequest);
@@ -131,14 +146,6 @@ class OgvAssetServer {
     final muted = request.uri.queryParameters['muted'] == '1';
     final loop = request.uri.queryParameters['loop'] == '1';
     final autoplay = request.uri.queryParameters['autoplay'] != '0';
-
-    // The player page is the only trusted caller, so this is where the game
-    // folders the media endpoint may read from get registered.
-    for (final root
-        in request.uri.queryParametersAll['root'] ?? const <String>[]) {
-      final trimmed = root.trim();
-      if (trimmed.isNotEmpty) _allowedRoots.add(_normalize(trimmed));
-    }
 
     final html = OgvPlayerPage.build(
       mediaUrl: '/media?path=${Uri.encodeQueryComponent(source)}',
@@ -156,16 +163,7 @@ class OgvAssetServer {
   }
 
   /// Returns true when [path] sits inside one of the registered game folders.
-  bool _isAllowed(String path) {
-    if (_allowedRoots.isEmpty) return false;
-    final target = _normalize(path);
-    for (final root in _allowedRoots) {
-      if (target == root || target.startsWith('$root${p.separator}')) {
-        return true;
-      }
-    }
-    return false;
-  }
+  bool _isAllowed(String path) => _access.isAllowed(path);
 
   Future<void> _serveMedia(HttpRequest request) async {
     final raw = request.uri.queryParameters['path'] ?? '';
@@ -267,7 +265,7 @@ class OgvAssetServer {
   Future<void> stop() async {
     if (!identical(_active, this)) return;
     _active = null;
-    _allowedRoots.clear();
+    _access.clear();
     try {
       await _server.close(force: true);
     } catch (_) {

@@ -1,6 +1,9 @@
 import 'dart:ffi';
 
+import 'qsp_callback_types.dart';
 import 'qsp_utf16.dart';
+
+export 'qsp_callback_types.dart';
 
 /// Callback indices matching the native `QSP_CALL_*` enum in `qsp.h`.
 enum QspCallbackId {
@@ -142,22 +145,6 @@ final class QspInputStrTextEvent extends QspEngineEvent {
   @override
   String toString() => 'QspInputStrTextEvent("$text")';
 }
-
-typedef NativeStrCallback = Void Function(QSPStringStruct);
-typedef NativeStrIntCallback = Void Function(QSPStringStruct, Int32);
-typedef NativeIntCallback = Void Function(Int32);
-typedef NativeIntBoolCallback = Void Function(Int32, Int8);
-typedef NativeBoolCallback = Void Function(Int8);
-typedef NativeSetCallback = Void Function(
-    Int32, Pointer<NativeFunction<Int64 Function()>>);
-
-typedef DartStrCallback = void Function(QSPStringStruct);
-typedef DartStrIntCallback = void Function(QSPStringStruct, int);
-typedef DartIntCallback = void Function(int);
-typedef DartIntBoolCallback = void Function(int, int);
-typedef DartBoolCallback = void Function(int);
-typedef DartSetCallback = void Function(
-    int, Pointer<NativeFunction<Int64 Function()>>);
 
 void _onShowMessage(QSPStringStruct text) {
   final msg = QspUtf16.fromStruct(text);

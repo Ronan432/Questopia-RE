@@ -1,10 +1,11 @@
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, TargetPlatform, kIsWeb;
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 
 import '../../../core/helpers/path_picker_helper.dart';
+import '../../../core/helpers/platform_helper.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/theme/questopia_theme.dart';
@@ -13,7 +14,10 @@ import '../../../core/widgets/questopia_scaffold.dart';
 import '../../../core/widgets/window_title_bar.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../providers/library_provider.dart';
+import '../providers/search_history_provider.dart';
 import 'helpers/crash_dialog_helper.dart';
+import 'helpers/library_filter_helper.dart';
+import 'helpers/library_import_helper.dart';
 import 'views/catalog_games_view.dart';
 import 'views/local_games_view.dart';
 import 'widgets/catalog_pagination_bar.dart';
@@ -43,16 +47,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   @override
   void initState() {
     super.initState();
-    _desktopSearchFocusNode.addListener(() {
-      if (mounted) {
-        setState(() {
-          _isDesktopSearchFocused = _desktopSearchFocusNode.hasFocus;
-        });
-      }
-    });
+    _desktopSearchFocusNode.addListener(_onDesktopFocusChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       CrashDialogHelper.offerCrashReport(context);
-      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      if (defaultTargetPlatform == TargetPlatform.android) {
         await PathPickerHelper.ensureStoragePermissions();
       }
       if (mounted) {
@@ -61,8 +59,17 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     });
   }
 
+  /// Keeps the desktop search suggestions in sync with the field focus.
+  void _onDesktopFocusChanged() {
+    if (!mounted) return;
+    final focused = _desktopSearchFocusNode.hasFocus;
+    if (focused == _isDesktopSearchFocused) return;
+    setState(() => _isDesktopSearchFocused = focused);
+  }
+
   @override
   void dispose() {
+    _desktopSearchFocusNode.removeListener(_onDesktopFocusChanged);
     _libraryPageController.dispose();
     _searchFocusNode.dispose();
     _searchController.dispose();
@@ -72,9 +79,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   void _openSearch() {
     setState(() => _isSearchOpen = true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _searchFocusNode.requestFocus();
-    });
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _searchFocusNode.requestFocus());
   }
 
   void _closeSearch() {
@@ -84,26 +90,27 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     FocusScope.of(context).unfocus();
   }
 
-  Future<void> _importGameFolder() async {
-    final path = await PathPickerHelper.pickGame(context);
-    if (!mounted || path == null || path.isEmpty) return;
-
-    final l10n = AppLocalizations.of(context)!;
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      final game =
-          await ref.read(libraryProvider.notifier).importGameFolder(path);
-      if (game != null) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l10n.importedGame(game.title))),
-        );
-      }
-    } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.importFailed(e.toString()))),
-      );
-    }
+  /// Records the query in the catalog history (catalog tab only).
+  void _rememberCatalogSearch(String rawQuery) {
+    if (_selectedTab != 1) return;
+    final trimmed = rawQuery.trim();
+    if (trimmed.isEmpty) return;
+    ref.read(searchHistoryProvider.notifier).record(trimmed);
   }
+
+  /// Applies a query picked from the catalog search history.
+  void _applyHistoryQuery(String query) {
+    _searchController
+      ..text = query
+      ..selection = TextSelection.fromPosition(
+        TextPosition(offset: query.length),
+      );
+    setState(() => _searchQuery = query);
+    FocusScope.of(context).unfocus();
+  }
+
+  Future<void> _importGameFolder() =>
+      LibraryImportHelper.pickAndImport(context, ref);
 
   void _onTabChanged(int index) {
     if (_selectedTab == index) return;
@@ -116,11 +123,15 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         curve: Curves.easeOutCubic,
       );
     }
-    if (index == 1) {
-      final state = ref.read(libraryProvider);
-      if (!state.hasLoadedRemote && !state.isLoadingRemote) {
-        ref.read(libraryProvider.notifier).refreshRemoteCatalog();
-      }
+    _ensureCatalogLoaded(index);
+  }
+
+  /// Lazily loads the remote catalogue the first time the tab is opened.
+  void _ensureCatalogLoaded(int index) {
+    if (index != 1) return;
+    final state = ref.read(libraryProvider);
+    if (!state.hasLoadedRemote && !state.isLoadingRemote) {
+      ref.read(libraryProvider.notifier).refreshRemoteCatalog();
     }
   }
 
@@ -129,29 +140,19 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final state = ref.watch(libraryProvider);
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final isDesktop = !kIsWeb &&
-        (defaultTargetPlatform == TargetPlatform.windows ||
-            defaultTargetPlatform == TargetPlatform.macOS ||
-            defaultTargetPlatform == TargetPlatform.linux);
-
+    final isDesktop = isDesktopPlatform;
+    final l10n = AppLocalizations.of(context)!;
     // Search covers the author as well as the title, and the catalogue also
     // matches on its description text.
-    final query = _searchQuery.trim().toLowerCase();
-
-    final filteredLocalGames = state.localGames.where((game) {
-      final matchesSearch = query.isEmpty ||
-          game.title.toLowerCase().contains(query) ||
-          game.author.toLowerCase().contains(query);
-      final matchesFav = !_showFavoritesOnly || game.isFavorite;
-      return matchesSearch && matchesFav;
-    }).toList();
-
-    final filteredRemoteGames = state.remoteGames.where((game) {
-      if (query.isEmpty) return true;
-      return game.displayName.toLowerCase().contains(query) ||
-          game.author.toLowerCase().contains(query) ||
-          game.descriptionText.toLowerCase().contains(query);
-    }).toList();
+    final filteredLocalGames = LibraryFilterHelper.filterLocalGames(
+      state.localGames,
+      _searchQuery,
+      favoritesOnly: _showFavoritesOnly,
+    );
+    final filteredRemoteGames = LibraryFilterHelper.filterRemoteGames(
+      state.remoteGames,
+      _searchQuery,
+    );
 
     Widget mainContentFor(int tabIndex) {
       switch (tabIndex) {
@@ -173,19 +174,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           return const SizedBox.shrink();
       }
     }
-
     final pageViews = PageView(
       controller: _libraryPageController,
       physics: const ClampingScrollPhysics(),
       onPageChanged: (value) {
         _closeSearch();
         setState(() => _selectedTab = value);
-        if (value == 1) {
-          final s = ref.read(libraryProvider);
-          if (!s.hasLoadedRemote && !s.isLoadingRemote) {
-            ref.read(libraryProvider.notifier).refreshRemoteCatalog();
-          }
-        }
+        _ensureCatalogLoaded(value);
       },
       children: [
         mainContentFor(0),
@@ -195,9 +190,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     );
 
     return M3ETheme(
-      data: M3EThemeData(
-        colorScheme: QuestopiaTheme.m3eColorSchemeFrom(colors),
-      ),
+      data: QuestopiaTheme.m3eThemeDataFrom(Theme.of(context)),
       child: PopScope(
         canPop: !_isSearchOpen && _selectedTab == 0,
         onPopInvokedWithResult: (didPop, result) {
@@ -211,7 +204,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           }
         },
         child: QuestopiaScaffold(
-          title: 'Questopia',
+          title: l10n.appTitle,
           leading: isDesktop
               ? const Padding(
                   padding: EdgeInsets.all(8.0),
@@ -223,8 +216,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   if (_selectedTab == 0)
                     IconButton(
                       tooltip: _showFavoritesOnly
-                          ? 'Show all games'
-                          : 'Show favorites only',
+                          ? l10n.showAllGames
+                          : l10n.showFavoritesOnly,
                       icon: Icon(
                         _showFavoritesOnly
                             ? Icons.favorite_rounded
@@ -236,7 +229,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     ),
                   if (_selectedTab == 1)
                     IconButton(
-                      tooltip: 'Refresh catalog',
+                      tooltip: l10n.refreshCatalog,
                       icon: const Icon(Icons.refresh_rounded),
                       onPressed: () => ref
                           .read(libraryProvider.notifier)
@@ -255,6 +248,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   searchFocusNode: _searchFocusNode,
                   onSearchChanged: (value) =>
                       setState(() => _searchQuery = value),
+                  onSearchSubmitted: _rememberCatalogSearch,
+                  onHistoryQuerySelected: _applyHistoryQuery,
                   onOpenSearch: _openSearch,
                   onCloseSearch: _closeSearch,
                   onToggleFavorites: () => setState(
@@ -269,6 +264,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   searchFocusNode: _desktopSearchFocusNode,
                   onTabChanged: _onTabChanged,
                   onSearchChanged: (val) => setState(() => _searchQuery = val),
+                  onSearchSubmitted: _rememberCatalogSearch,
+                  onHistoryQuerySelected: _applyHistoryQuery,
                   onImportGame: _importGameFolder,
                   child: mainContentFor(_selectedTab),
                 )

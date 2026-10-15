@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
 import '../../providers/library_provider.dart';
+import '../../providers/search_history_provider.dart';
+import 'catalog_search_history.dart';
 
 /// Mobile app bar for library screen with dynamic title, animated transitions, search bar, and actions.
 class LibraryMobileAppBar extends ConsumerWidget implements PreferredSizeWidget {
@@ -14,6 +16,8 @@ class LibraryMobileAppBar extends ConsumerWidget implements PreferredSizeWidget 
     required this.searchController,
     required this.searchFocusNode,
     required this.onSearchChanged,
+    required this.onSearchSubmitted,
+    required this.onHistoryQuerySelected,
     required this.onOpenSearch,
     required this.onCloseSearch,
     required this.onToggleFavorites,
@@ -26,6 +30,13 @@ class LibraryMobileAppBar extends ConsumerWidget implements PreferredSizeWidget 
   final TextEditingController searchController;
   final FocusNode searchFocusNode;
   final ValueChanged<String> onSearchChanged;
+
+  /// Called with the query text when the user submits the search field.
+  final ValueChanged<String> onSearchSubmitted;
+
+  /// Called with a query chosen from the catalog search history.
+  final ValueChanged<String> onHistoryQuerySelected;
+
   final VoidCallback onOpenSearch;
   final VoidCallback onCloseSearch;
   final VoidCallback onToggleFavorites;
@@ -38,6 +49,12 @@ class LibraryMobileAppBar extends ConsumerWidget implements PreferredSizeWidget 
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    final history = ref.watch(searchHistoryProvider);
+
+    // The history dropdown belongs to the catalog tab only and stays hidden
+    // while there is nothing stored to suggest.
+    final showHistory =
+        isSearchOpen && selectedTab == 1 && history.isNotEmpty;
 
     return AppBar(
       automaticallyImplyLeading: false,
@@ -45,6 +62,18 @@ class LibraryMobileAppBar extends ConsumerWidget implements PreferredSizeWidget 
       surfaceTintColor: Colors.transparent,
       backgroundColor: colors.surface,
       titleSpacing: 0,
+      bottom: showHistory
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(200),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                child: CatalogSearchHistory(
+                  maxHeight: 190,
+                  onQuerySelected: onHistoryQuerySelected,
+                ),
+              ),
+            )
+          : null,
       title: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: AnimatedSwitcher(
@@ -70,9 +99,7 @@ class LibraryMobileAppBar extends ConsumerWidget implements PreferredSizeWidget 
                   child: SearchBar(
                     controller: searchController,
                     focusNode: searchFocusNode,
-                    hintText: selectedTab == 0
-                        ? l10n.search
-                        : 'Search games...',
+                    hintText: l10n.search,
                     leading: Icon(
                       Icons.search_rounded,
                       color: colors.primary,
@@ -81,7 +108,7 @@ class LibraryMobileAppBar extends ConsumerWidget implements PreferredSizeWidget 
                     trailing: [
                       IconButton(
                         icon: const Icon(Icons.close_rounded, size: 20),
-                        tooltip: 'Close search',
+                        tooltip: l10n.closeSearch,
                         onPressed: onCloseSearch,
                       ),
                     ],
@@ -109,6 +136,7 @@ class LibraryMobileAppBar extends ConsumerWidget implements PreferredSizeWidget 
                       ),
                     ),
                     onChanged: onSearchChanged,
+                    onSubmitted: onSearchSubmitted,
                   ),
                 )
               : Row(
@@ -116,7 +144,7 @@ class LibraryMobileAppBar extends ConsumerWidget implements PreferredSizeWidget 
                   children: [
                     Text(
                       selectedTab == 0
-                          ? 'Questopia'
+                          ? l10n.appTitle
                           : (selectedTab == 1
                               ? l10n.catalog
                               : l10n.settings),
@@ -134,8 +162,8 @@ class LibraryMobileAppBar extends ConsumerWidget implements PreferredSizeWidget 
                       ),
                       IconButton(
                         tooltip: showFavoritesOnly
-                            ? 'Show all games'
-                            : 'Show favorites only',
+                            ? l10n.showAllGames
+                            : l10n.showFavoritesOnly,
                         icon: Icon(
                           showFavoritesOnly
                               ? Icons.favorite_rounded
@@ -151,7 +179,7 @@ class LibraryMobileAppBar extends ConsumerWidget implements PreferredSizeWidget 
                       ),
                     ] else if (selectedTab == 1) ...[
                       IconButton(
-                        tooltip: 'Refresh catalog',
+                        tooltip: l10n.refreshCatalog,
                         icon: const Icon(Icons.refresh_rounded),
                         onPressed: () => ref
                             .read(libraryProvider.notifier)

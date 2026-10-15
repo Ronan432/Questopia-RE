@@ -1,10 +1,9 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, TargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/helpers/platform_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/providers/settings_provider.dart';
 import '../../../../core/widgets/questopia_morph_button.dart';
@@ -69,10 +68,7 @@ class LocalGamesView extends ConsumerWidget {
 
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isCompact = screenWidth < 600;
-    final isDesktop = !kIsWeb &&
-        (defaultTargetPlatform == TargetPlatform.windows ||
-            defaultTargetPlatform == TargetPlatform.macOS ||
-            defaultTargetPlatform == TargetPlatform.linux);
+    final isDesktop = isDesktopPlatform;
     final isNavBarBlur = !isDesktop && ref.watch(settingsProvider).isNavBarBlur;
 
     final horizontalPadding = isCompact ? 12.0 : 20.0;

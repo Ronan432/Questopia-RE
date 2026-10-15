@@ -9,9 +9,28 @@ import '../../../../core/helpers/sheet_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../providers/library_provider.dart';
 
+/// Resolves the localized label of a catalog sort option.
+String _sortLabel(AppLocalizations l10n, CatalogSortOption option) {
+  switch (option) {
+    case CatalogSortOption.comments:
+      return l10n.sortComments;
+    case CatalogSortOption.name:
+      return l10n.sortName;
+    case CatalogSortOption.updated:
+      return l10n.sortUpdated;
+    case CatalogSortOption.created:
+      return l10n.sortCreated;
+    case CatalogSortOption.likes:
+      return l10n.sortLikes;
+    case CatalogSortOption.downloads:
+      return l10n.sortDownloads;
+    case CatalogSortOption.plays:
+      return l10n.sortPlays;
+  }
+}
+
 /// Horizontal filter bar for remote catalog including sort, language, and featured chips.
-class CatalogFilterBar extends ConsumerStatefulWidget {
-  const CatalogFilterBar({super.key});
+class CatalogFilterBar extends ConsumerStatefulWidget {  const CatalogFilterBar({super.key});
 
   @override
   ConsumerState<CatalogFilterBar> createState() => _CatalogFilterBarState();
@@ -107,7 +126,7 @@ class _CatalogFilterBarState extends ConsumerState<CatalogFilterBar> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              state.catalogSort.label,
+                              _sortLabel(l10n, state.catalogSort),
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -179,7 +198,7 @@ class _CatalogFilterBarState extends ConsumerState<CatalogFilterBar> {
                             ? Theme.of(ctx).colorScheme.primary
                             : null,
                       ),
-                      title: Text(opt.label),
+                      title: Text(_sortLabel(l10n, opt)),
                       trailing: state.catalogSort == opt
                           ? Icon(
                               Icons.check_rounded,

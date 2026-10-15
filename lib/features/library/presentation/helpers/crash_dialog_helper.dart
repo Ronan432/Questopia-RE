@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/error/crash_reporter.dart';
 import '../../../../core/helpers/dialog_helper.dart';
+import '../../../../core/l10n/app_localizations.dart';
 
 /// Helper to display previous crash reports if any occurred.
 class CrashDialogHelper {
@@ -18,16 +19,15 @@ class CrashDialogHelper {
       context: context,
       builder: (ctx) {
         final colors = Theme.of(ctx).colorScheme;
+        final l10n = AppLocalizations.of(ctx)!;
         return QuestopiaDialog(
           icon: Icon(Icons.bug_report_rounded, color: colors.error),
-          title: const Text('Previous Session Crashed'),
+          title: Text(l10n.previousSessionCrashed),
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Questopia encountered an unhandled error in the last run. You can copy the diagnostic details below to report it.',
-              ),
+              Text(l10n.crashIntro),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -49,20 +49,20 @@ class CrashDialogHelper {
           actions: [
             QuestopiaMorphButton.outlined(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             QuestopiaMorphButton.filled(
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: report));
                 Navigator.of(ctx).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Crash log copied to clipboard'),
+                  SnackBar(
+                    content: Text(l10n.crashLogCopied),
                   ),
                 );
               },
               icon: const Icon(Icons.copy_rounded),
-              child: const Text('Copy Details'),
+              child: Text(l10n.copyDetails),
             ),
           ],
         );

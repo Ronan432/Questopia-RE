@@ -220,8 +220,20 @@ class AboutSection extends StatelessWidget {
               minVerticalPadding: 12,
               onTap: () => showLicensePage(
                 context: context,
-                applicationName: 'Questopia',
+                applicationName: l10n.appTitle,
               ),
+            ),
+            SegmentedListTile(
+              leading: const Icon(Icons.restart_alt_rounded),
+              title: Text(l10n.onboardingRestart),
+              subtitle: Text(
+                l10n.onboardingRestartHint,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              minVerticalPadding: 12,
+              onTap: () => notifier.restartOnboarding(),
             ),
           ],
         ),

@@ -46,8 +46,9 @@ class _QspOgvVideoState extends State<QspOgvVideo> {
   bool _failed = false;
   bool _ready = false;
 
-  String _playerUrl(String baseUrl) {
+  String _playerUrl(String baseUrl, String token) {
     final query = <String, String>{
+      'token': token,
       'src': widget.path,
       'muted': widget.muted ? '1' : '0',
       'loop': widget.loop ? '1' : '0',
@@ -57,11 +58,7 @@ class _QspOgvVideoState extends State<QspOgvVideo> {
         .map((e) => '${Uri.encodeQueryComponent(e.key)}='
             '${Uri.encodeQueryComponent(e.value)}')
         .join('&');
-    final roots = widget.allowedRoots
-        .where((root) => root.trim().isNotEmpty)
-        .map((root) => '&root=${Uri.encodeQueryComponent(root)}')
-        .join();
-    return '$baseUrl/player?$encoded$roots';
+    return '$baseUrl/player?$encoded';
   }
 
   @override
@@ -73,7 +70,11 @@ class _QspOgvVideoState extends State<QspOgvVideo> {
   Future<void> _initialize() async {
     try {
       final server = await OgvAssetServer.ensureStarted();
-      final url = _playerUrl(server.baseUrl);
+      // The readable folders are registered in-process and the matching
+      // one-shot token authorises exactly this page load; neither is taken
+      // from the request.
+      final token = server.registerRoots(widget.allowedRoots);
+      final url = _playerUrl(server.baseUrl, token);
       debugPrint('[OgvVideo] starting: $url');
 
       final controller = WebViewController()

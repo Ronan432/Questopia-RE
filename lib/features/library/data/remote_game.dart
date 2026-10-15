@@ -37,7 +37,12 @@ class RemoteGame {
   String get description =>
       descriptionText.isNotEmpty ? descriptionText : descUrl;
 
-  String get displayName => title.trim().isNotEmpty ? title : 'Game $id';
+  /// Raw fallback title used only when the repository entry carries no title.
+  ///
+  /// Presentation layers should prefer the localized
+  /// `AppLocalizations.untitledRemoteGame` instead, which is why this getter
+  /// exposes the bare identifier form.
+  String get displayName => title.trim().isNotEmpty ? title : 'Game #$id';
 
   /// Resolves relative cover/poster image paths (e.g. `/storage/games/99/cover.jpg`)
   /// to full absolute HTTP/HTTPS URLs on qsp.org.

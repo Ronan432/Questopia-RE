@@ -7,6 +7,7 @@ import '../../../../core/providers/settings_provider.dart';
 import '../../../../core/theme/game_colors.dart';
 import '../../../../core/theme/questopia_theme.dart';
 import '../../../../core/helpers/sheet_helper.dart';
+import '../../../../core/widgets/questopia_morph_button.dart';
 
 abstract final class SettingsPickerSheets {
   static List<String> typefaceNames(BuildContext context) {
@@ -81,6 +82,7 @@ abstract final class SettingsPickerSheets {
       'sepia' => l10n.readingThemeSepia,
       'night' => l10n.readingThemeNight,
       'contrast' => l10n.readingThemeHighContrast,
+      'materialYou' => l10n.readingThemeMaterialYou,
       _ => l10n.readingThemeDefault,
     };
   }
@@ -96,7 +98,11 @@ abstract final class SettingsPickerSheets {
     await showQuestopiaSheet<void>(
       context: context,
       builder: (ctx) {
-        final brightness = Theme.of(ctx).brightness;
+        final theme = Theme.of(ctx);
+        final brightness = theme.brightness;
+        // The swatch must match what the game screen will actually paint, so the
+        // scheme is forwarded the same way the reading surface forwards it.
+        final scheme = theme.colorScheme;
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
           child: Column(
@@ -112,7 +118,11 @@ abstract final class SettingsPickerSheets {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: ReadingThemeColors.background(id, brightness),
+                          color: ReadingThemeColors.background(
+                            id,
+                            brightness,
+                            scheme: scheme,
+                          ),
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: id == settings.readingTheme
@@ -289,7 +299,9 @@ abstract final class SettingsPickerSheets {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          option.$1.isEmpty ? 'AUTO' : option.$1.toUpperCase(),
+                          option.$1.isEmpty
+                              ? l10n.languageAuto
+                              : option.$1.toUpperCase(),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
@@ -334,8 +346,10 @@ abstract final class SettingsPickerSheets {
     await showQuestopiaSheet<void>(
       context: context,
       builder: (ctx) {
-        // Local copy so the preview updates the moment a typeface is tapped,
-        // instead of waiting for the sheet to be rebuilt with fresh settings.
+        // Selecting only moves the highlight: the preference is written when the
+        // user confirms. Committing on tap would close the sheet and leave the
+        // preview visible for a choice that was never seen, which is exactly the
+        // behaviour this picker must avoid.
         var selectedIndex = settings.typefaceIndex;
         return StatefulBuilder(
           builder: (sheetCtx, setSheetState) {
@@ -404,14 +418,22 @@ abstract final class SettingsPickerSheets {
                               ? Icon(Icons.check_circle_rounded,
                                   color: colors.primary)
                               : null,
-                          onTap: () async {
-                            HapticFeedback.lightImpact();
+                          onTap: () {
+                            HapticFeedback.selectionClick();
                             setSheetState(() => selectedIndex = i);
-                            await notifier.setTypefaceIndex(i);
-                            if (sheetCtx.mounted) Navigator.pop(sheetCtx);
                           },
                         ),
                     ],
+                  ),
+                  const SizedBox(height: 16),
+                  QuestopiaMorphButton.filled(
+                    onPressed: () async {
+                      HapticFeedback.lightImpact();
+                      await notifier.setTypefaceIndex(activeIndex);
+                      if (sheetCtx.mounted) Navigator.pop(sheetCtx);
+                    },
+                    icon: const Icon(Icons.check_rounded, size: 18),
+                    child: Text(l10n.apply),
                   ),
                 ],
               ),

@@ -4,5 +4,10 @@
 #define QSP_VER_STR "@qsp_VERSION@"
 #define QSP_GAMEMINVER_STR "@QSP_GAMEMIN_VER@"
 
+/* The engine always serializes save data as UTF-16: every toolchain that builds
+   this library enables QSP_DEFAULT_UCS2. The Dart save preview helper relies on
+   this to decode the saved game text. */
+#define QSP_DEFAULT_UCS2
+
 #endif
 

@@ -6,10 +6,12 @@ import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
 
 import '../../../../core/helpers/dialog_helper.dart';
+import '../../../../core/helpers/duration_format.dart';
 import '../../../../core/helpers/sheet_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
-import '../../../../core/providers/settings_provider.dart';
 import '../../data/local_game.dart';
+import '../../data/play_stats_store.dart';
+import '../../providers/play_stats_provider.dart';
 import 'game_card_frame.dart';
 import 'game_poster.dart';
 
@@ -29,7 +31,11 @@ class LocalGameCard extends ConsumerWidget {
   final VoidCallback onToggleFavorite;
   final bool isCompact;
 
-  Future<void> _showMenuSheet(BuildContext context) async {
+  Future<void> _showMenuSheet(
+    BuildContext context,
+    WidgetRef ref,
+    PlayStats playStats,
+  ) async {
     final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
@@ -54,6 +60,7 @@ class LocalGameCard extends ConsumerWidget {
                         child: GamePoster(
                           localPath: game.posterPath,
                           isLocal: true,
+                          title: game.title,
                           height: 44,
                         ),
                       ),
@@ -77,7 +84,7 @@ class LocalGameCard extends ConsumerWidget {
                           Text(
                             game.author.isNotEmpty
                                 ? game.author
-                                : 'QSP Interactive Fiction',
+                                : l10n.qspInteractiveFiction,
                             style: TextStyle(
                               fontSize: 12,
                               color: colors.onSurfaceVariant,
@@ -110,6 +117,42 @@ class LocalGameCard extends ConsumerWidget {
                       onPlay();
                     },
                   ),
+                  // Play statistics are informational: the tile renders without
+                  // a tap handler and stays hidden until the game has actually
+                  // been played, so unused games keep a short menu.
+                  if (playStats.hasPlayed)
+                    SegmentedListTile(
+                      leading: Icon(
+                        Icons.schedule_rounded,
+                        color: colors.onSurfaceVariant,
+                        size: 24,
+                      ),
+                      title: Text(
+                        l10n.playStatsTotal,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      subtitle: Text(
+                        formatPlayDuration(
+                          l10n,
+                          Duration(seconds: playStats.totalSeconds),
+                        ),
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: colors.onSurface,
+                        ),
+                      ),
+                      trailing: Text(
+                        playStats.lastPlayed == null
+                            ? l10n.neverPlayed
+                            : formatLastPlayedDate(playStats.lastPlayed!),
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                      minVerticalPadding: 12,
+                    ),
                   SegmentedListTile(
                     leading: Icon(
                       game.isFavorite
@@ -120,8 +163,8 @@ class LocalGameCard extends ConsumerWidget {
                     ),
                     title: Text(
                       game.isFavorite
-                          ? 'Remove from favorites'
-                          : 'Add to favorites',
+                          ? l10n.removeFromFavorites
+                          : l10n.addToFavorites,
                       style: const TextStyle(fontSize: 16),
                     ),
                     trailing: game.isFavorite
@@ -144,7 +187,7 @@ class LocalGameCard extends ConsumerWidget {
                       size: 24,
                     ),
                     title: Text(
-                      game.isFromRepo ? 'Delete game' : 'Remove from library',
+                      game.isFromRepo ? l10n.deleteGame : l10n.removeFromLibrary,
                       style: TextStyle(
                         fontSize: 16,
                         color: colors.error,
@@ -162,12 +205,12 @@ class LocalGameCard extends ConsumerWidget {
                               ? Icons.delete_forever_rounded
                               : Icons.delete_outline_rounded,
                           isDestructive: true,
-                          title: isRepo ? 'Delete Game' : 'Remove from library',
+                          title: isRepo ? l10n.deleteGameTitle : l10n.removeFromLibrary,
                           message: isRepo
-                              ? 'Permanently delete "${game.title}" and all its files from your device?\n\nThis action cannot be undone.'
-                              : 'Remove "${game.title}" from your library?\n\nNote: Game files on your device will NOT be deleted.',
-                          confirmLabel: isRepo ? 'Delete' : 'Remove',
-                          cancelLabel: 'Cancel',
+                              ? l10n.deleteGameMessage(game.title)
+                              : l10n.removeFromLibraryMessage(game.title),
+                          confirmLabel: isRepo ? l10n.delete : l10n.remove,
+                          cancelLabel: l10n.cancel,
                         ),
                       );
                       if (confirmed == true) {
@@ -188,18 +231,21 @@ class LocalGameCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    final squarePosters = ref.watch(settingsProvider).isSquarePosters;
+    // Unknown stats (still loading, or no entry yet) collapse to empty stats so
+    // the menu renders the same shape with the statistics row hidden.
+    final playStats =
+        ref.watch(playStatsProvider(game.id)).valueOrNull ?? const PlayStats();
 
     return GameCardFrame(
       contentPadding: isCompact
           ? const EdgeInsets.fromLTRB(8, 6, 8, 6)
           : const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      onTap: () => _showMenuSheet(context),
+      onTap: () => _showMenuSheet(context, ref, playStats),
       posterWidget: GamePoster(
         localPath: game.posterPath,
         isLocal: true,
+        title: game.title,
         height: isCompact ? 86 : 116,
-        square: squarePosters,
       ),
       titleWidget: Text(
         game.title,
@@ -212,7 +258,7 @@ class LocalGameCard extends ConsumerWidget {
         overflow: TextOverflow.ellipsis,
       ),
       subtitleWidget: Text(
-        game.author.isNotEmpty ? game.author : 'QSP Interactive Fiction',
+        game.author.isNotEmpty ? game.author : l10n.qspInteractiveFiction,
         style: TextStyle(
           fontSize: isCompact ? 10.5 : 11.5,
           color: colors.onSurfaceVariant,

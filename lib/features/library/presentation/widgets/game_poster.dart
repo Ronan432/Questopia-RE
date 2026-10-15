@@ -4,6 +4,8 @@ import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'poster_fallback.dart';
+
 /// A high-performance, GPU-cached poster image widget using ExtendedImage and flutter_svg.
 ///
 /// Features:
@@ -11,27 +13,28 @@ import 'package:flutter_svg/flutter_svg.dart';
 /// - Native vector rendering for SVGs via [SvgPicture].
 /// - Downsamples decoded raster bitmaps using [cacheWidth] to prevent memory thrashing.
 /// - Avoids cascading recursive network storms on missing posters (preventing ANRs).
+/// - Falls back to a deterministic initial-based [PosterFallback] instead of a bare icon.
 class GamePoster extends StatelessWidget {
   const GamePoster({
     super.key,
     this.localPath,
     this.remoteUrl,
+    required this.title,
     this.height = 120,
     this.width = double.infinity,
     this.borderRadius,
     this.isLocal = false,
-    this.square = false,
   });
 
   final String? localPath;
   final String? remoteUrl;
+
+  /// Drives the offline fallback letter and its stable colour.
+  final String title;
   final double height;
   final double width;
   final BorderRadius? borderRadius;
   final bool isLocal;
-
-  /// Constrains the artwork to a square inside the same box.
-  final bool square;
 
   bool _isSvg(String uri) {
     final lower = uri.toLowerCase().trim();
@@ -54,7 +57,7 @@ class GamePoster extends StatelessWidget {
             height: height,
             width: width,
             fit: BoxFit.cover,
-            placeholderBuilder: (_) => _buildPlaceholder(colors),
+            placeholderBuilder: (_) => _buildFallback(colors),
           );
         } else {
           content = ExtendedImage.file(
@@ -70,7 +73,7 @@ class GamePoster extends StatelessWidget {
                 case LoadState.loading:
                   return _buildLoading(colors);
                 case LoadState.failed:
-                  return _buildPlaceholder(colors);
+                  return _buildFallback(colors);
                 case LoadState.completed:
                   return null;
               }
@@ -78,7 +81,7 @@ class GamePoster extends StatelessWidget {
           );
         }
       } else {
-        content = _buildPlaceholder(colors);
+        content = _buildFallback(colors);
       }
     } else {
       final url = (remoteUrl ?? '').trim();
@@ -88,7 +91,7 @@ class GamePoster extends StatelessWidget {
           uri.host.isNotEmpty;
 
       if (!isValidHttp || url.isEmpty) {
-        content = _buildPlaceholder(colors);
+        content = _buildFallback(colors);
       } else if (_isSvg(url)) {
         content = SvgPicture.network(
           url,
@@ -100,7 +103,7 @@ class GamePoster extends StatelessWidget {
           height: height,
           width: width,
           fit: BoxFit.cover,
-          placeholderBuilder: (_) => _buildPlaceholder(colors),
+          placeholderBuilder: (_) => _buildFallback(colors),
         );
       } else {
         content = ExtendedImage.network(
@@ -123,7 +126,7 @@ class GamePoster extends StatelessWidget {
               case LoadState.loading:
                 return _buildLoading(colors);
               case LoadState.failed:
-                return _buildPlaceholder(colors);
+                return _buildFallback(colors);
               case LoadState.completed:
                 return null;
             }
@@ -132,29 +135,13 @@ class GamePoster extends StatelessWidget {
       }
     }
 
+    final box = SizedBox(height: height, width: width, child: content);
+
     if (borderRadius != null) {
-      return ClipRRect(
-        borderRadius: borderRadius!,
-        child: _box(content),
-      );
+      return ClipRRect(borderRadius: borderRadius!, child: box);
     }
 
-    return _box(content);
-  }
-
-  /// Applies the configured size, optionally constraining the art to a square.
-  ///
-  /// A square poster is centred inside the same box, so turning the option on
-  /// never changes the surrounding card layout.
-  Widget _box(Widget content) {
-    if (!square) return SizedBox(height: height, width: width, child: content);
-    return SizedBox(
-      height: height,
-      width: width,
-      child: Center(
-        child: AspectRatio(aspectRatio: 1, child: content),
-      ),
-    );
+    return box;
   }
 
   Widget _buildLoading(ColorScheme colors) {
@@ -172,20 +159,7 @@ class GamePoster extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholder(ColorScheme colors) {
-    return Container(
-      height: height,
-      width: width,
-      color: isLocal ? colors.secondaryContainer : colors.tertiaryContainer,
-      child: Center(
-        child: Icon(
-          isLocal ? Icons.auto_stories_rounded : Icons.cloud_download_rounded,
-          size: 36,
-          color: isLocal
-              ? colors.onSecondaryContainer
-              : colors.onTertiaryContainer,
-        ),
-      ),
-    );
+  Widget _buildFallback(ColorScheme colors) {
+    return PosterFallback(title: title, colors: colors);
   }
 }

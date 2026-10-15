@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
 
 import '../helpers/sheet_helper.dart';
+import '../l10n/app_localizations.dart';
 import 'game_media.dart';
 
 Future<void> showPosterMenuSheet({
@@ -18,6 +19,7 @@ Future<void> showPosterMenuSheet({
     showDragHandle: true,
     builder: (sheetContext) {
       final colors = Theme.of(sheetContext).colorScheme;
+      final l10n = AppLocalizations.of(sheetContext)!;
       Future<void> run(
         Future<bool> Function() action,
         String ok,
@@ -55,7 +57,7 @@ Future<void> showPosterMenuSheet({
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  'Image Options',
+                  l10n.imageOptions,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
@@ -79,29 +81,29 @@ Future<void> showPosterMenuSheet({
               children: [
                 SegmentedListTile(
                   leading: const Icon(Icons.content_copy_rounded),
-                  title: const Text('Copy image'),
+                  title: Text(l10n.copyImage),
                   onTap: () => run(
                     () => service.copyImage(imageUri),
-                    'Image reference copied',
-                    'Could not copy the image',
+                    l10n.imageReferenceCopied,
+                    l10n.couldNotCopyImage,
                   ),
                 ),
                 SegmentedListTile(
                   leading: const Icon(Icons.file_download_rounded),
-                  title: const Text('Save to gallery'),
+                  title: Text(l10n.saveToGallery),
                   onTap: () => run(
                     () => service.saveToGallery(imageUri),
-                    'Image saved to gallery',
-                    'Could not save the image',
+                    l10n.imageSavedToGallery,
+                    l10n.couldNotSaveImage,
                   ),
                 ),
                 SegmentedListTile(
                   leading: const Icon(Icons.search_rounded),
-                  title: const Text('Search image on Yandex'),
+                  title: Text(l10n.searchImageOnYandex),
                   onTap: () => run(
                     () => service.searchImage(imageUri, languageCode: languageCode),
-                    'Opening Yandex image search',
-                    'Could not open Yandex search',
+                    l10n.openingYandexSearch,
+                    l10n.couldNotOpenYandexSearch,
                   ),
                 ),
               ],

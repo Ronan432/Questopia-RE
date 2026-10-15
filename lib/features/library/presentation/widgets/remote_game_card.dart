@@ -7,7 +7,6 @@ import 'package:material_segmented_list/material_segmented_list.dart';
 import '../../../../core/helpers/sheet_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/media/poster_menu_sheet.dart';
-import '../../../../core/providers/settings_provider.dart';
 import '../../data/remote_game.dart';
 import 'game_card_frame.dart';
 import 'game_poster.dart';
@@ -31,6 +30,13 @@ class RemoteGameCard extends ConsumerWidget {
   final bool isInstalled;
   final VoidCallback? onPlay;
   final bool isCompact;
+
+  /// Title shown on the card and in the details sheet.
+  ///
+  /// Repository entries occasionally arrive without a title; in that case the
+  /// localized fallback name is used instead of the raw id.
+  String _title(AppLocalizations l10n) =>
+      game.title.trim().isNotEmpty ? game.title : l10n.untitledRemoteGame(game.id);
 
   String get _sizeLabel {
     if (game.fileSize <= 0) return '';
@@ -69,7 +75,7 @@ class RemoteGameCard extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              QuestopiaSheetHeaderPill(title: game.displayName),
+              QuestopiaSheetHeaderPill(title: _title(l10n)),
               if (rows.isNotEmpty)
                 SegmentedListSection(
                   children: [
@@ -130,7 +136,8 @@ class RemoteGameCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).colorScheme;
-    final squarePosters = ref.watch(settingsProvider).isSquarePosters;
+    final l10n = AppLocalizations.of(context)!;
+    final title = _title(l10n);
 
     return GameCardFrame(
       contentPadding: isCompact
@@ -146,15 +153,15 @@ class RemoteGameCard extends ConsumerWidget {
       posterWidget: GamePoster(
         remoteUrl: game.posterUrl,
         isLocal: false,
+        title: title,
         height: isCompact ? 84 : 112,
-        square: squarePosters,
       ),
       titleWidget: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Text(
-              game.displayName,
+              title,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: isCompact ? 13 : 15,

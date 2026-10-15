@@ -10,6 +10,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:xml/xml.dart';
 
+import '../../../core/helpers/platform_helper.dart';
 import '../../../core/native/rust_runtime.dart';
 import 'game_registry.dart';
 import 'local_game.dart';
@@ -1064,105 +1065,113 @@ class GameRepository {
         folderName.isEmpty
             ? 'game_${DateTime.now().millisecondsSinceEpoch}'
             : folderName));
-    if (!await targetFolder.exists()) {
+    final folderExisted = await targetFolder.exists();
+    if (!folderExisted) {
       await targetFolder.create(recursive: true);
     }
 
-    final directDownloadUrl =
-        await resolveDirectDownloadUrl(remoteGame.fileUrl);
+    try {
+      final directDownloadUrl =
+          await resolveDirectDownloadUrl(remoteGame.fileUrl);
 
-    final fileName = resolveDownloadFileName(
-      await _probeContentDisposition(directDownloadUrl),
-      directDownloadUrl,
-      remoteGame.id,
-      remoteGame.fileExt,
-    );
+      final fileName = resolveDownloadFileName(
+        await _probeContentDisposition(directDownloadUrl),
+        directDownloadUrl,
+        remoteGame.id,
+        remoteGame.fileExt,
+      );
 
-    final destinationFile = File(p.join(targetFolder.path, fileName));
+      final destinationFile = File(p.join(targetFolder.path, fileName));
 
-    await _downloadFileDirect(
-      directDownloadUrl,
-      destinationFile,
-      onProgress: (progress) =>
-          onProgress?.call((progress * 0.85).clamp(0.0, 0.85)),
-    );
+      await _downloadFileDirect(
+        directDownloadUrl,
+        destinationFile,
+        onProgress: (progress) =>
+            onProgress?.call((progress * 0.85).clamp(0.0, 0.85)),
+      );
 
-    if (!await destinationFile.exists() ||
-        await destinationFile.length() == 0) {
-      throw RepositoryException('Download finished but the file is empty.');
-    }
-
-    final extracted = await _extractArchiveFile(
-      destinationFile,
-      targetFolder,
-      onProgress: (value) =>
-          onProgress?.call(0.85 + (value.clamp(0.0, 1.0) * 0.15)),
-    );
-    if (!extracted) {
-      final ext = p.extension(fileName).toLowerCase();
-      if (ext != '.qsp' && ext != '.gam') {
-        await _deleteQuietly(destinationFile);
-        throw RepositoryException(
-            'Unsupported archive format: ${p.extension(fileName)}');
+      if (!await destinationFile.exists() ||
+          await destinationFile.length() == 0) {
+        throw RepositoryException('Download finished but the file is empty.');
       }
-    }
 
-    // Only delete archive file if it was a compressed archive (.zip, .rar, .aqsp, .7z)
-    final archiveExt = p.extension(destinationFile.path).toLowerCase();
-    if (archiveExt != '.qsp' && archiveExt != '.gam') {
-      await _deleteQuietly(destinationFile);
-    }
-
-    // Download and cache remote poster image if local folder doesn't have a poster image
-    if (await _findPosterAsync(targetFolder) == null &&
-        remoteGame.posterUrl.isNotEmpty) {
-      try {
-        final imgRes =
-            await http.get(Uri.parse(remoteGame.posterUrl), headers: {
-          'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Referer': 'https://qsp.org/',
-        }).timeout(const Duration(seconds: 10));
-        if (imgRes.statusCode == 200 && imgRes.bodyBytes.isNotEmpty) {
-          final ext = p.extension(remoteGame.posterUrl).toLowerCase();
-          final targetPosterName =
-              (ext == '.png' || ext == '.webp') ? 'poster$ext' : 'poster.jpg';
-          final cachedPoster =
-              File(p.join(targetFolder.path, targetPosterName));
-          await cachedPoster.writeAsBytes(imgRes.bodyBytes);
+      final extracted = await _extractArchiveFile(
+        destinationFile,
+        targetFolder,
+        onProgress: (value) =>
+            onProgress?.call(0.85 + (value.clamp(0.0, 1.0) * 0.15)),
+      );
+      if (!extracted) {
+        final ext = p.extension(fileName).toLowerCase();
+        if (ext != '.qsp' && ext != '.gam') {
+          throw RepositoryException(
+              'Unsupported archive format: ${p.extension(fileName)}');
         }
-      } catch (_) {}
+      }
+
+      // Only delete archive file if it was a compressed archive (.zip, .rar, .aqsp, .7z)
+      final archiveExt = p.extension(destinationFile.path).toLowerCase();
+      if (archiveExt != '.qsp' && archiveExt != '.gam') {
+        await _deleteQuietly(destinationFile);
+      }
+
+      // Download and cache remote poster image if local folder doesn't have a poster image
+      if (await _findPosterAsync(targetFolder) == null &&
+          remoteGame.posterUrl.isNotEmpty) {
+        try {
+          final imgRes =
+              await http.get(Uri.parse(remoteGame.posterUrl), headers: {
+            'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://qsp.org/',
+          }).timeout(const Duration(seconds: 10));
+          if (imgRes.statusCode == 200 && imgRes.bodyBytes.isNotEmpty) {
+            final ext = p.extension(remoteGame.posterUrl).toLowerCase();
+            final targetPosterName =
+                (ext == '.png' || ext == '.webp') ? 'poster$ext' : 'poster.jpg';
+            final cachedPoster =
+                File(p.join(targetFolder.path, targetPosterName));
+            await cachedPoster.writeAsBytes(imgRes.bodyBytes);
+          }
+        } catch (_) {}
+      }
+
+      final gameFile =
+          await findGameFile(targetFolder.path, maxDepth: _maxGameFileDepth);
+      if (gameFile == null) {
+        throw RepositoryException(
+            'Download finished but no game file was found.');
+      }
+
+      final poster = await _findPosterAsync(targetFolder);
+      final fileSize = await File(gameFile).length();
+
+      final game = LocalGame(
+        id: remoteGame.id,
+        title: remoteGame.title,
+        author: remoteGame.author,
+        version: remoteGame.version,
+        folderPath: targetFolder.path,
+        gameFilePath: gameFile,
+        posterPath: poster?.path ?? '',
+        fileSize: fileSize,
+        isFromRepo: true,
+        isManaged: true,
+      );
+
+      final registry = await GameRegistry.open();
+      await registry.upsert(game.toRegistry());
+      await _createMarkerFiles(targetFolder);
+
+      onProgress?.call(1.0);
+      return game;
+    } catch (_) {
+      // Keep a pre-existing user folder intact; only remove what we created.
+      if (!folderExisted) {
+        await _deleteQuietly(targetFolder);
+      }
+      rethrow;
     }
-
-    final gameFile =
-        await findGameFile(targetFolder.path, maxDepth: _maxGameFileDepth);
-    if (gameFile == null) {
-      throw RepositoryException(
-          'Download finished but no game file was found.');
-    }
-
-    final poster = await _findPosterAsync(targetFolder);
-    final fileSize = await File(gameFile).length();
-
-    final game = LocalGame(
-      id: remoteGame.id,
-      title: remoteGame.title,
-      author: remoteGame.author,
-      version: remoteGame.version,
-      folderPath: targetFolder.path,
-      gameFilePath: gameFile,
-      posterPath: poster?.path ?? '',
-      fileSize: fileSize,
-      isFromRepo: true,
-      isManaged: true,
-    );
-
-    final registry = await GameRegistry.open();
-    await registry.upsert(game.toRegistry());
-    await _createMarkerFiles(targetFolder);
-
-    onProgress?.call(1.0);
-    return game;
   }
 
   Future<void> _downloadFileDirect(
@@ -1424,6 +1433,15 @@ class GameRepository {
 
     await target.create(recursive: true);
 
+    // Every branch below delegates to a native extractor that would happily
+    // follow a member name such as "../../evil.exe" out of the target folder,
+    // so the member list is validated here, before any extractor runs.
+    if (!await _archiveEntriesAreSafe(archiveFile, target.path)) {
+      debugPrint(
+          '[GameRepository] Rejected archive with unsafe member: ${archiveFile.path}');
+      return false;
+    }
+
     final rust = RustRuntime.tryLoad();
     if (rust != null) {
       try {
@@ -1438,10 +1456,7 @@ class GameRepository {
     final targetPath = target.path;
 
     // On Desktop (Windows, macOS, Linux), bsdtar (tar) supports RAR, 7z, ZIP, TAR, GZ, etc.
-    if (!kIsWeb &&
-        (defaultTargetPlatform == TargetPlatform.windows ||
-            defaultTargetPlatform == TargetPlatform.linux ||
-            defaultTargetPlatform == TargetPlatform.macOS)) {
+    if (isDesktopPlatform) {
       try {
         final result = await Process.run(
           'tar',
@@ -1492,6 +1507,38 @@ class GameRepository {
     } catch (e) {
       debugPrint('[GameRepository] Extraction error: $e');
       return false;
+    }
+  }
+
+  /// Lists [archiveFile] and returns false when any member would escape
+  /// [targetRoot] (Zip Slip).
+  ///
+  /// The Rust and system `tar` branches extract without consulting Dart, so
+  /// this pre-flight pass is the only gate they get. Validation reuses
+  /// [_safeArchivePath], the same helper that guards the Dart decoder.
+  ///
+  /// A listing failure is not treated as unsafe: the archive may simply use a
+  /// format the local `tar` cannot read, and the Dart decoder still applies its
+  /// own per-entry check afterwards.
+  static Future<bool> _archiveEntriesAreSafe(
+    File archiveFile,
+    String targetRoot,
+  ) async {
+    if (!isDesktopPlatform) {
+      return true;
+    }
+    try {
+      final listing = await Process.run('tar', ['-tf', archiveFile.path]);
+      if (listing.exitCode != 0) return true;
+      final entries = listing.stdout.toString().split(RegExp(r'\r?\n'));
+      for (final entry in entries) {
+        if (entry.trim().isEmpty) continue;
+        if (_safeArchivePath(targetRoot, entry.trim()) == null) return false;
+      }
+      return true;
+    } catch (e) {
+      debugPrint('[GameRepository] Archive listing error: $e');
+      return true;
     }
   }
 

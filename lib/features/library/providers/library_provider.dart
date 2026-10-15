@@ -183,7 +183,7 @@ class LibraryNotifier extends StateNotifier<LibraryState> {
       if (!mounted) return;
       state = state.copyWith(
         isLoadingRemote: false,
-        remoteError: 'Could not reach the repository.',
+        remoteError: null,
         hasLoadedRemote: true,
       );
     }

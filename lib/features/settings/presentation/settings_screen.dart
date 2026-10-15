@@ -130,17 +130,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     if (widget.isInline) {
       return M3ETheme(
-        data: M3EThemeData(
-          colorScheme: QuestopiaTheme.m3eColorSchemeFrom(theme.colorScheme),
-        ),
+        data: QuestopiaTheme.m3eThemeDataFrom(theme),
         child: content,
       );
     }
 
     return M3ETheme(
-      data: M3EThemeData(
-        colorScheme: QuestopiaTheme.m3eColorSchemeFrom(theme.colorScheme),
-      ),
+      data: QuestopiaTheme.m3eThemeDataFrom(theme),
       child: QuestopiaScaffold.simple(
         title: l10n.settings,
         body: content,
