@@ -4,7 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 enum ThemeModeOption { system, light, dark, amoled }
 
 /// Identifiers for the reading surface presets used by the game text panes.
-const kReadingThemeIds = <String>['default', 'sepia', 'night', 'contrast'];
+const kReadingThemeIds = <String>[
+  'default',
+  'sepia',
+  'night',
+  'contrast',
+  'materialYou',
+];
 
 /// Accent color options matching the legacy Android/KMP theme palette.
 const kThemeColorOptions = <String>[
@@ -27,7 +33,6 @@ class SettingsState {
   final int typefaceIndex;
   final bool isUseAutoscroll;
   final bool isUseSeparator;
-  final bool isSquarePosters;
   final bool isSoundEnabled;
   final bool isVideoMute;
   final bool isImageDisabled;
@@ -39,6 +44,7 @@ class SettingsState {
   final String actionsHeightRatio;
   final String language;
   final String gamesDirectory;
+  final bool isOnboardingCompleted;
 
   // Legacy parity settings (old Android/KMP client).
   final bool isImmersiveMode;
@@ -66,7 +72,6 @@ class SettingsState {
     this.typefaceIndex = 0,
     this.isUseAutoscroll = true,
     this.isUseSeparator = false,
-    this.isSquarePosters = false,
     this.isSoundEnabled = true,
     this.isVideoMute = true,
     this.isImageDisabled = false,
@@ -78,6 +83,7 @@ class SettingsState {
     this.actionsHeightRatio = '1/3',
     this.language = 'system',
     this.gamesDirectory = '',
+    this.isOnboardingCompleted = false,
     this.isImmersiveMode = false,
     this.isImagesInDialogEnabled = true,
     this.useGameTextColor = false,
@@ -104,7 +110,6 @@ class SettingsState {
     int? typefaceIndex,
     bool? isUseAutoscroll,
     bool? isUseSeparator,
-    bool? isSquarePosters,
     bool? isSoundEnabled,
     bool? isVideoMute,
     bool? isImageDisabled,
@@ -116,6 +121,7 @@ class SettingsState {
     String? actionsHeightRatio,
     String? language,
     String? gamesDirectory,
+    bool? isOnboardingCompleted,
     bool? isImmersiveMode,
     bool? isImagesInDialogEnabled,
     bool? useGameTextColor,
@@ -141,7 +147,6 @@ class SettingsState {
       typefaceIndex: typefaceIndex ?? this.typefaceIndex,
       isUseAutoscroll: isUseAutoscroll ?? this.isUseAutoscroll,
       isUseSeparator: isUseSeparator ?? this.isUseSeparator,
-      isSquarePosters: isSquarePosters ?? this.isSquarePosters,
       isSoundEnabled: isSoundEnabled ?? this.isSoundEnabled,
       isVideoMute: isVideoMute ?? this.isVideoMute,
       isImageDisabled: isImageDisabled ?? this.isImageDisabled,
@@ -153,6 +158,8 @@ class SettingsState {
       actionsHeightRatio: actionsHeightRatio ?? this.actionsHeightRatio,
       language: language ?? this.language,
       gamesDirectory: gamesDirectory ?? this.gamesDirectory,
+      isOnboardingCompleted:
+          isOnboardingCompleted ?? this.isOnboardingCompleted,
       isImmersiveMode: isImmersiveMode ?? this.isImmersiveMode,
       isImagesInDialogEnabled:
           isImagesInDialogEnabled ?? this.isImagesInDialogEnabled,
@@ -187,7 +194,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   static const _kTypeface = 'pref_typeface';
   static const _kAutoscroll = 'pref_autoscroll';
   static const _kSeparator = 'pref_separator';
-  static const _kSquarePosters = 'pref_square_posters';
   static const _kSound = 'pref_sound';
   static const _kVideoMute = 'pref_video_mute';
   static const _kImageDisabled = 'pref_image_disabled';
@@ -199,6 +205,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   static const _kActsHeight = 'pref_acts_height';
   static const _kLanguage = 'pref_language';
   static const _kGamesDir = 'pref_games_dir';
+  static const _kOnboardingCompleted = 'pref_onboarding_completed';
   static const _kImmersive = 'pref_immersive_mode';
   static const _kImagesInDialog = 'pref_images_in_dialog';
   static const _kUseGameTextColor = 'pref_use_game_text_color';
@@ -254,9 +261,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       isUseSeparator: prefs.getBool(_kSeparator) ??
           _legacyBool(prefs, 'separator') ??
           false,
-      isSquarePosters: prefs.getBool(_kSquarePosters) ??
-          _legacyBool(prefs, 'squarePosters') ??
-          false,
       isSoundEnabled: prefs.getBool(_kSound) ??
           _legacyBool(prefs, 'pref_audio_play') ??
           _legacyBool(prefs, 'sound') ??
@@ -288,6 +292,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
           _legacyString(prefs, 'lang') ??
           'system',
       gamesDirectory: prefs.getString(_kGamesDir) ?? '',
+      isOnboardingCompleted: prefs.getBool(_kOnboardingCompleted) ?? false,
       isImmersiveMode: prefs.getBool(_kImmersive) ??
           _legacyBool(prefs, 'immersiveMode') ??
           false,
@@ -349,7 +354,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     await _migrateString(prefs, 'fontStyle', _kTypeface);
     await _migrateBool(prefs, 'autoscroll', _kAutoscroll);
     await _migrateBool(prefs, 'separator', _kSeparator);
-    await _migrateBool(prefs, 'squarePosters', _kSquarePosters);
     await _migrateBool(prefs, 'pref_audio_play', _kSound);
     await _migrateBool(prefs, 'pref_mute_video', _kVideoMute);
     await _migrateBool(prefs, 'pref_disable_image', _kImageDisabled);
@@ -484,11 +488,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     await _set(_kSeparator, value);
   }
 
-  Future<void> setSquarePosters(bool value) async {
-    state = state.copyWith(isSquarePosters: value);
-    await _set(_kSquarePosters, value);
-  }
-
   Future<void> setSoundEnabled(bool value) async {
     state = state.copyWith(isSoundEnabled: value);
     await _set(_kSound, value);
@@ -542,6 +541,18 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   Future<void> setGamesDirectory(String path) async {
     state = state.copyWith(gamesDirectory: path);
     await _set(_kGamesDir, path);
+  }
+
+  /// Marks the first-run setup flow as finished so it stops appearing.
+  Future<void> completeOnboarding() async {
+    state = state.copyWith(isOnboardingCompleted: true);
+    await _set(_kOnboardingCompleted, true);
+  }
+
+  /// Clears the first-run flag so the setup flow is shown again.
+  Future<void> restartOnboarding() async {
+    state = state.copyWith(isOnboardingCompleted: false);
+    await _set(_kOnboardingCompleted, false);
   }
 
   Future<void> setImmersiveMode(bool value) async {

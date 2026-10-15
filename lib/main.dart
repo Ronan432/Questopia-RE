@@ -1,21 +1,19 @@
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'core/error/crash_reporter.dart';
+import 'core/helpers/platform_helper.dart';
 import 'core/l10n/app_localizations.dart';
 import 'core/providers/settings_provider.dart';
 import 'core/theme/questopia_theme.dart';
 import 'features/library/presentation/library_screen.dart';
+import 'features/onboarding/presentation/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (!kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.windows ||
-          defaultTargetPlatform == TargetPlatform.macOS ||
-          defaultTargetPlatform == TargetPlatform.linux)) {
+  if (isDesktopPlatform) {
     await windowManager.ensureInitialized();
     windowManager.waitUntilReadyToShow(
       const WindowOptions(
@@ -63,7 +61,7 @@ class QuestopiaApp extends ConsumerWidget {
     return DynamicColorBuilder(
       builder: (lightDynamic, darkDynamic) {
         return MaterialApp(
-          title: 'Questopia',
+          onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
           debugShowCheckedModeBanner: false,
           locale: appLocale,
           theme: QuestopiaTheme.light(
@@ -78,7 +76,9 @@ class QuestopiaApp extends ConsumerWidget {
           themeMode: mode,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const LibraryScreen(),
+          home: settings.isOnboardingCompleted
+              ? const LibraryScreen()
+              : const OnboardingScreen(),
         );
       },
     );

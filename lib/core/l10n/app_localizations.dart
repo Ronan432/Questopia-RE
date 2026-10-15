@@ -632,12 +632,6 @@ abstract class AppLocalizations {
   /// **'Link color'**
   String get linkColor;
 
-  /// No description provided for @squarePosters.
-  ///
-  /// In en, this message translates to:
-  /// **'Square poster cards'**
-  String get squarePosters;
-
   /// No description provided for @disableImages.
   ///
   /// In en, this message translates to:
@@ -827,7 +821,7 @@ abstract class AppLocalizations {
   /// No description provided for @accentMonochrome.
   ///
   /// In en, this message translates to:
-  /// **'Lana Monochrome'**
+  /// **'Monochrome'**
   String get accentMonochrome;
 
   /// No description provided for @fontDefaultSystem.
@@ -932,53 +926,1205 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete all installed games from your library? This action cannot be undone.'**
   String get deleteAllGamesMessage;
 
+  /// No description provided for @readingTheme.
+  ///
   /// In en, this message translates to:
   /// **'Reading theme'**
   String get readingTheme;
 
+  /// No description provided for @readingThemeDefault.
+  ///
   /// In en, this message translates to:
   /// **'Default'**
   String get readingThemeDefault;
 
+  /// No description provided for @readingThemeSepia.
+  ///
   /// In en, this message translates to:
   /// **'Sepia'**
   String get readingThemeSepia;
 
+  /// No description provided for @readingThemeNight.
+  ///
   /// In en, this message translates to:
   /// **'Night'**
   String get readingThemeNight;
 
+  /// No description provided for @readingThemeHighContrast.
+  ///
   /// In en, this message translates to:
   /// **'High contrast'**
   String get readingThemeHighContrast;
 
+  /// No description provided for @readingThemeMaterialYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Material You'**
+  String get readingThemeMaterialYou;
+
+  /// No description provided for @storageUsage.
+  ///
   /// In en, this message translates to:
   /// **'Storage usage'**
   String get storageUsage;
 
+  /// No description provided for @storageTotal.
+  ///
   /// In en, this message translates to:
   /// **'Total used'**
   String get storageTotal;
 
+  /// No description provided for @storageCleanup.
+  ///
   /// In en, this message translates to:
   /// **'Clean up unused files'**
   String get storageCleanup;
 
+  /// No description provided for @storageCleanupHint.
+  ///
   /// In en, this message translates to:
   /// **'Removes leftover folders that contain no game file.'**
   String get storageCleanupHint;
 
+  /// No description provided for @storageCleanupFreed.
+  ///
   /// In en, this message translates to:
   /// **'Reclaimed {size}'**
   String storageCleanupFreed(String size);
 
+  /// No description provided for @storageNothingToClean.
+  ///
   /// In en, this message translates to:
   /// **'Nothing to clean up'**
   String get storageNothingToClean;
 
+  /// No description provided for @storageCalculating.
+  ///
   /// In en, this message translates to:
   /// **'Calculating...'**
   String get storageCalculating;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get apply;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @load.
+  ///
+  /// In en, this message translates to:
+  /// **'Load'**
+  String get load;
+
+  /// No description provided for @input.
+  ///
+  /// In en, this message translates to:
+  /// **'Input'**
+  String get input;
+
+  /// No description provided for @choose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get choose;
+
+  /// No description provided for @run.
+  ///
+  /// In en, this message translates to:
+  /// **'Run'**
+  String get run;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// No description provided for @scan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get scan;
+
+  /// No description provided for @overwrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Overwrite'**
+  String get overwrite;
+
+  /// No description provided for @restore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restore;
+
+  /// No description provided for @maximize.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximize'**
+  String get maximize;
+
+  /// No description provided for @minimize.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimize'**
+  String get minimize;
+
+  /// No description provided for @dismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get dismiss;
+
+  /// No description provided for @lockedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked to {value}'**
+  String lockedTo(String value);
+
+  /// No description provided for @emptyStringValue.
+  ///
+  /// In en, this message translates to:
+  /// **'(empty string)'**
+  String get emptyStringValue;
+
+  /// No description provided for @slotTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Slot {index}'**
+  String slotTitle(int index);
+
+  /// No description provided for @pageOfPages.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} / {total}'**
+  String pageOfPages(int page, int total);
+
+  /// No description provided for @savedGameToSlot.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved game to Slot {index}'**
+  String savedGameToSlot(int index);
+
+  /// No description provided for @teleportedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Teleported to {location}'**
+  String teleportedTo(String location);
+
+  /// No description provided for @editVarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit {name}'**
+  String editVarTitle(String name);
+
+  /// No description provided for @searchVariablesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search variables ({count} found)...'**
+  String searchVariablesHint(int count);
+
+  /// No description provided for @loadingGameWorld.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading game world...'**
+  String get loadingGameWorld;
+
+  /// No description provided for @notFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Not found'**
+  String get notFound;
+
+  /// No description provided for @copiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get copiedToClipboard;
+
+  /// No description provided for @couldNotOpenSaveFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open save file'**
+  String get couldNotOpenSaveFile;
+
+  /// No description provided for @imageOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Image Options'**
+  String get imageOptions;
+
+  /// No description provided for @copyImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy image'**
+  String get copyImage;
+
+  /// No description provided for @saveToGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to gallery'**
+  String get saveToGallery;
+
+  /// No description provided for @searchImageOnYandex.
+  ///
+  /// In en, this message translates to:
+  /// **'Search image on Yandex'**
+  String get searchImageOnYandex;
+
+  /// No description provided for @imageReferenceCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Image reference copied'**
+  String get imageReferenceCopied;
+
+  /// No description provided for @couldNotCopyImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy the image'**
+  String get couldNotCopyImage;
+
+  /// No description provided for @imageSavedToGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Image saved to gallery'**
+  String get imageSavedToGallery;
+
+  /// No description provided for @couldNotSaveImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the image'**
+  String get couldNotSaveImage;
+
+  /// No description provided for @openingYandexSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Yandex image search'**
+  String get openingYandexSearch;
+
+  /// No description provided for @couldNotOpenYandexSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open Yandex search'**
+  String get couldNotOpenYandexSearch;
+
+  /// No description provided for @videoPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Video Preview'**
+  String get videoPreview;
+
+  /// No description provided for @imagePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Image Preview'**
+  String get imagePreview;
+
+  /// No description provided for @options.
+  ///
+  /// In en, this message translates to:
+  /// **'Options'**
+  String get options;
+
+  /// No description provided for @qspConsole.
+  ///
+  /// In en, this message translates to:
+  /// **'QSP Console'**
+  String get qspConsole;
+
+  /// No description provided for @qspCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'QSP code...'**
+  String get qspCodeHint;
+
+  /// No description provided for @qspStatementHint.
+  ///
+  /// In en, this message translates to:
+  /// **'QSP statement...'**
+  String get qspStatementHint;
+
+  /// No description provided for @noOutputYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No output yet'**
+  String get noOutputYet;
+
+  /// No description provided for @qspConsoleReady.
+  ///
+  /// In en, this message translates to:
+  /// **'QSP Console ready.\nEnter statements like: money += 500 or goto \'start\''**
+  String get qspConsoleReady;
+
+  /// No description provided for @restartGameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart game?'**
+  String get restartGameTitle;
+
+  /// No description provided for @restartGameMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved progress will be lost.'**
+  String get restartGameMessage;
+
+  /// No description provided for @engineError.
+  ///
+  /// In en, this message translates to:
+  /// **'Engine Error'**
+  String get engineError;
+
+  /// No description provided for @unknownEngineError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown engine error'**
+  String get unknownEngineError;
+
+  /// No description provided for @errorNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Error #{number}: {description}'**
+  String errorNumber(int number, String description);
+
+  /// No description provided for @errorLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Location: {name}'**
+  String errorLocation(String name);
+
+  /// No description provided for @errorLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Line: {number}'**
+  String errorLine(int number);
+
+  /// No description provided for @errorCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code: {code}'**
+  String errorCode(String code);
+
+  /// No description provided for @noOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'No options'**
+  String get noOptions;
+
+  /// No description provided for @openSaveFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Save File'**
+  String get openSaveFile;
+
+  /// No description provided for @openSaveFileHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an external .sav file to load.'**
+  String get openSaveFileHint;
+
+  /// No description provided for @pickFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick File'**
+  String get pickFile;
+
+  /// No description provided for @message.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get message;
+
+  /// No description provided for @qspInteractiveFiction.
+  ///
+  /// In en, this message translates to:
+  /// **'QSP Interactive Fiction'**
+  String get qspInteractiveFiction;
+
+  /// No description provided for @gameOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Game Options'**
+  String get gameOptions;
+
+  /// No description provided for @saveAndLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and Load'**
+  String get saveAndLoad;
+
+  /// No description provided for @cheatEngineAndEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Cheat Engine and Editor'**
+  String get cheatEngineAndEditor;
+
+  /// No description provided for @restartGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart Game'**
+  String get restartGame;
+
+  /// No description provided for @savesAndSlots.
+  ///
+  /// In en, this message translates to:
+  /// **'Saves and Slots'**
+  String get savesAndSlots;
+
+  /// No description provided for @selectSlotToSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Slot to Save'**
+  String get selectSlotToSave;
+
+  /// No description provided for @selectSlotToLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Slot to Load'**
+  String get selectSlotToLoad;
+
+  /// No description provided for @autoSaveSlot.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-Save Slot'**
+  String get autoSaveSlot;
+
+  /// No description provided for @lastSavedSessionAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Last saved session available'**
+  String get lastSavedSessionAvailable;
+
+  /// No description provided for @noAutoSaveDataFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No auto-save data found'**
+  String get noAutoSaveDataFound;
+
+  /// No description provided for @savedGameState.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved Game State'**
+  String get savedGameState;
+
+  /// No description provided for @emptySlot.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty Slot'**
+  String get emptySlot;
+
+  /// No description provided for @importSav.
+  ///
+  /// In en, this message translates to:
+  /// **'Import .sav'**
+  String get importSav;
+
+  /// No description provided for @exportSav.
+  ///
+  /// In en, this message translates to:
+  /// **'Export .sav'**
+  String get exportSav;
+
+  /// No description provided for @saveImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Save file imported successfully'**
+  String get saveImported;
+
+  /// No description provided for @saveImportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to import save file'**
+  String get saveImportFailed;
+
+  /// No description provided for @noActiveSaveData.
+  ///
+  /// In en, this message translates to:
+  /// **'No active save data to export'**
+  String get noActiveSaveData;
+
+  /// No description provided for @saveFileExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Save file exported'**
+  String get saveFileExported;
+
+  /// No description provided for @exportSaveFileDialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Save File'**
+  String get exportSaveFileDialog;
+
+  /// No description provided for @newValue.
+  ///
+  /// In en, this message translates to:
+  /// **'New Value'**
+  String get newValue;
+
+  /// No description provided for @engineRejectedValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Engine rejected the value'**
+  String get engineRejectedValue;
+
+  /// No description provided for @teleportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Teleport failed'**
+  String get teleportFailed;
+
+  /// No description provided for @itemAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Item added'**
+  String get itemAdded;
+
+  /// No description provided for @couldNotAddItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add item'**
+  String get couldNotAddItem;
+
+  /// No description provided for @couldNotRemoveItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove item'**
+  String get couldNotRemoveItem;
+
+  /// No description provided for @jumpToLocationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to a specific QSP location in the story.'**
+  String get jumpToLocationHint;
+
+  /// No description provided for @locationNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Location name (e.g. start, room, shop)...'**
+  String get locationNameHint;
+
+  /// No description provided for @newItemNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New item name...'**
+  String get newItemNameHint;
+
+  /// No description provided for @addVariableHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add variable to watch...'**
+  String get addVariableHint;
+
+  /// No description provided for @scanAllVariables.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan all game variables'**
+  String get scanAllVariables;
+
+  /// No description provided for @lockValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock value'**
+  String get lockValue;
+
+  /// No description provided for @unlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get unlock;
+
+  /// No description provided for @editValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit value'**
+  String get editValue;
+
+  /// No description provided for @noVariablesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No variables found'**
+  String get noVariablesFound;
+
+  /// No description provided for @noLockedVariables.
+  ///
+  /// In en, this message translates to:
+  /// **'No locked variables active'**
+  String get noLockedVariables;
+
+  /// No description provided for @noSnapshotYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No snapshot yet. Changes will appear here.'**
+  String get noSnapshotYet;
+
+  /// No description provided for @noChangesSinceSnapshot.
+  ///
+  /// In en, this message translates to:
+  /// **'No changes since snapshot'**
+  String get noChangesSinceSnapshot;
+
+  /// No description provided for @consoleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get consoleFailed;
+
+  /// No description provided for @previousSessionCrashed.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous Session Crashed'**
+  String get previousSessionCrashed;
+
+  /// No description provided for @crashIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Questopia encountered an unhandled error in the last run. You can copy the diagnostic details below to report it.'**
+  String get crashIntro;
+
+  /// No description provided for @crashLogCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash log copied to clipboard'**
+  String get crashLogCopied;
+
+  /// No description provided for @copyDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Details'**
+  String get copyDetails;
+
+  /// No description provided for @closeSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Close search'**
+  String get closeSearch;
+
+  /// No description provided for @refreshCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh catalog'**
+  String get refreshCatalog;
+
+  /// No description provided for @showAllGames.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all games'**
+  String get showAllGames;
+
+  /// No description provided for @showFavoritesOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Show favorites only'**
+  String get showFavoritesOnly;
+
+  /// No description provided for @addToFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to favorites'**
+  String get addToFavorites;
+
+  /// No description provided for @removeFromFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites'**
+  String get removeFromFavorites;
+
+  /// No description provided for @deleteGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete game'**
+  String get deleteGame;
+
+  /// No description provided for @removeFromLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from library'**
+  String get removeFromLibrary;
+
+  /// No description provided for @deleteGameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Game'**
+  String get deleteGameTitle;
+
+  /// No description provided for @deleteGameMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete \"{title}\" and all its files from your device?\n\nThis action cannot be undone.'**
+  String deleteGameMessage(String title);
+
+  /// No description provided for @removeFromLibraryMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{title}\" from your library?\n\nNote: Game files on your device will NOT be deleted.'**
+  String removeFromLibraryMessage(String title);
+
+  /// No description provided for @couldNotReachRepository.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the repository.'**
+  String get couldNotReachRepository;
+
+  /// No description provided for @noGamesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No games found'**
+  String get noGamesYet;
+
+  /// No description provided for @noStatusInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'No status information available'**
+  String get noStatusInformation;
+
+  /// No description provided for @inventoryIsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory is empty'**
+  String get inventoryIsEmpty;
+
+  /// No description provided for @sortComments.
+  ///
+  /// In en, this message translates to:
+  /// **'Comments'**
+  String get sortComments;
+
+  /// No description provided for @sortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get sortName;
+
+  /// No description provided for @sortUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated'**
+  String get sortUpdated;
+
+  /// No description provided for @sortCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get sortCreated;
+
+  /// No description provided for @sortLikes.
+  ///
+  /// In en, this message translates to:
+  /// **'Likes'**
+  String get sortLikes;
+
+  /// No description provided for @sortDownloads.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads'**
+  String get sortDownloads;
+
+  /// No description provided for @sortPlays.
+  ///
+  /// In en, this message translates to:
+  /// **'Plays'**
+  String get sortPlays;
+
+  /// No description provided for @gameNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Game Notes'**
+  String get gameNotes;
+
+  /// No description provided for @notesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes yet'**
+  String get notesEmptyTitle;
+
+  /// No description provided for @notesEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write down clues, codes, or puzzle solutions. Notes are kept for this game only.'**
+  String get notesEmptyHint;
+
+  /// No description provided for @notesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your notes here...'**
+  String get notesHint;
+
+  /// No description provided for @notesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes saved'**
+  String get notesSaved;
+
+  /// No description provided for @notesDiscardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved Notes'**
+  String get notesDiscardTitle;
+
+  /// No description provided for @notesDiscardMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You have unsaved changes. Discard them?'**
+  String get notesDiscardMessage;
+
+  /// No description provided for @notesDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get notesDiscard;
+
+  /// No description provided for @notesKeepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get notesKeepEditing;
+
+  /// No description provided for @notesTabDefaultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Note {index}'**
+  String notesTabDefaultTitle(int index);
+
+  /// No description provided for @notesAddTab.
+  ///
+  /// In en, this message translates to:
+  /// **'New note'**
+  String get notesAddTab;
+
+  /// No description provided for @notesRenameTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename note'**
+  String get notesRenameTab;
+
+  /// No description provided for @notesRenameTabTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Note'**
+  String get notesRenameTabTitle;
+
+  /// No description provided for @notesRenameTabHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Note name'**
+  String get notesRenameTabHint;
+
+  /// No description provided for @notesRenameTabEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'A note needs a name'**
+  String get notesRenameTabEmpty;
+
+  /// No description provided for @notesDeleteTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete note'**
+  String get notesDeleteTab;
+
+  /// No description provided for @notesDeleteTabTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Note'**
+  String get notesDeleteTabTitle;
+
+  /// No description provided for @notesDeleteTabMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{title}\" and its text? This cannot be undone.'**
+  String notesDeleteTabMessage(String title);
+
+  /// No description provided for @notesLastTabHint.
+  ///
+  /// In en, this message translates to:
+  /// **'At least one note must stay open'**
+  String get notesLastTabHint;
+
+  /// No description provided for @notesUntitledTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled note'**
+  String get notesUntitledTab;
+
+  /// No description provided for @notesSwitchDiscardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved Changes'**
+  String get notesSwitchDiscardTitle;
+
+  /// No description provided for @notesSwitchDiscardMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This note has unsaved changes. Discard them and switch?'**
+  String get notesSwitchDiscardMessage;
+
+  /// No description provided for @notesSwitchDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch and discard'**
+  String get notesSwitchDiscard;
+
+  /// No description provided for @notesTabSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Note saved'**
+  String get notesTabSaved;
+
+  /// No description provided for @playStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Play Statistics'**
+  String get playStats;
+
+  /// No description provided for @playStatsTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total play time'**
+  String get playStatsTotal;
+
+  /// No description provided for @playStatsLast.
+  ///
+  /// In en, this message translates to:
+  /// **'Last played'**
+  String get playStatsLast;
+
+  /// No description provided for @playStatsNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never played'**
+  String get playStatsNever;
+
+  /// No description provided for @neverPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Never played'**
+  String get neverPlayed;
+
+  /// No description provided for @durationHoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} min'**
+  String durationHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @durationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String durationMinutes(int minutes);
+
+  /// No description provided for @durationSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} s'**
+  String durationSeconds(int seconds);
+
+  /// No description provided for @saveTimeJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get saveTimeJustNow;
+
+  /// No description provided for @saveTimeMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min ago'**
+  String saveTimeMinutesAgo(int minutes);
+
+  /// No description provided for @saveTimeHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h ago'**
+  String saveTimeHoursAgo(int hours);
+
+  /// No description provided for @saveTimeYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get saveTimeYesterday;
+
+  /// No description provided for @saveTimeDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} d ago'**
+  String saveTimeDaysAgo(int days);
+
+  /// No description provided for @emptySlotHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No save data'**
+  String get emptySlotHint;
+
+  /// No description provided for @searchHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent searches'**
+  String get searchHistoryTitle;
+
+  /// No description provided for @searchHistoryClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get searchHistoryClearAll;
+
+  /// No description provided for @searchHistoryClearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Search History'**
+  String get searchHistoryClearTitle;
+
+  /// No description provided for @searchHistoryClearMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all saved search queries from the catalog?'**
+  String get searchHistoryClearMessage;
+
+  /// No description provided for @searchHistoryRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from history'**
+  String get searchHistoryRemove;
+
+  /// No description provided for @searchHistoryCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Search history cleared'**
+  String get searchHistoryCleared;
+
+  /// No description provided for @languageAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get languageAuto;
+
+  /// No description provided for @untitledRemoteGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Game #{id}'**
+  String untitledRemoteGame(String id);
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Questopia'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your home for QSP interactive fiction. Import your games, pick up where you left off, and shape the app the way you like it.'**
+  String get onboardingWelcomeBody;
+
+  /// No description provided for @onboardingLanguageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your language'**
+  String get onboardingLanguageTitle;
+
+  /// No description provided for @onboardingLanguageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change this later in Settings.'**
+  String get onboardingLanguageBody;
+
+  /// No description provided for @onboardingThemeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a theme'**
+  String get onboardingThemeTitle;
+
+  /// No description provided for @onboardingThemeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the look that is easiest on your eyes.'**
+  String get onboardingThemeBody;
+
+  /// No description provided for @onboardingAccentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an accent color'**
+  String get onboardingAccentTitle;
+
+  /// No description provided for @onboardingAccentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic follows your system wallpaper on supported devices.'**
+  String get onboardingAccentBody;
+
+  /// No description provided for @onboardingReadingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading comfort'**
+  String get onboardingReadingTitle;
+
+  /// No description provided for @onboardingReadingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Set how large the game text appears and how the reading surface looks.'**
+  String get onboardingReadingBody;
+
+  /// No description provided for @onboardingReadingFontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size'**
+  String get onboardingReadingFontSize;
+
+  /// No description provided for @onboardingBehaviorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gameplay and helpers'**
+  String get onboardingBehaviorTitle;
+
+  /// No description provided for @onboardingBehaviorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on the reading and input helpers you want from the start.'**
+  String get onboardingBehaviorBody;
+
+  /// No description provided for @onboardingFinishTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You are all set'**
+  String get onboardingFinishTitle;
+
+  /// No description provided for @onboardingFinishBody.
+  ///
+  /// In en, this message translates to:
+  /// **'These choices are saved. You can change any of them later in Settings.'**
+  String get onboardingFinishBody;
+
+  /// No description provided for @getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get getStarted;
+
+  /// No description provided for @onboardingRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Show setup again'**
+  String get onboardingRestart;
+
+  /// No description provided for @onboardingRestartHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Run the first time setup wizard again'**
+  String get onboardingRestartHint;
 }
 
 class _AppLocalizationsDelegate

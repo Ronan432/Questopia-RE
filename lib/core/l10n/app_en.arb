@@ -129,7 +129,6 @@
   "backgroundColor": "Background color",
   "customLinkColor": "Custom link color",
   "linkColor": "Link color",
-  "squarePosters": "Square poster cards",
   "disableImages": "Disable images",
   "showAllImagesDialog": "Show all images in dialog",
   "pinchZoom": "Pinch zoom",
@@ -164,7 +163,6 @@
   "accentTeal": "Teal",
   "accentAmber": "Amber",
   "accentMonochrome": "Monochrome",
-  "accentMonochrome": "Lana Monochrome",
 
   "fontDefaultSystem": "Default system",
   "fontSansSerif": "Sans-serif",
@@ -190,6 +188,7 @@
   "readingThemeSepia": "Sepia",
   "readingThemeNight": "Night",
   "readingThemeHighContrast": "High contrast",
+  "readingThemeMaterialYou": "Material You",
 
   "storageUsage": "Storage usage",
   "storageTotal": "Total used",
@@ -204,5 +203,370 @@
     }
   },
   "storageNothingToClean": "Nothing to clean up",
-  "storageCalculating": "Calculating..."
+  "storageCalculating": "Calculating...",
+
+  "ok": "OK",
+  "apply": "Apply",
+  "remove": "Remove",
+  "save": "Save",
+  "load": "Load",
+  "input": "Input",
+  "choose": "Choose",
+  "run": "Run",
+  "add": "Add",
+  "scan": "Scan",
+  "overwrite": "Overwrite",
+  "restore": "Restore",
+  "maximize": "Maximize",
+  "minimize": "Minimize",
+  "dismiss": "Dismiss",
+  "lockedTo": "Locked to {value}",
+  "@lockedTo": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "emptyStringValue": "(empty string)",
+  "slotTitle": "Slot {index}",
+  "@slotTitle": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "pageOfPages": "Page {page} / {total}",
+  "@pageOfPages": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "savedGameToSlot": "Saved game to Slot {index}",
+  "@savedGameToSlot": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "teleportedTo": "Teleported to {location}",
+  "@teleportedTo": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "editVarTitle": "Edit {name}",
+  "@editVarTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "searchVariablesHint": "Search variables ({count} found)...",
+  "@searchVariablesHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "loadingGameWorld": "Loading game world...",
+  "notFound": "Not found",
+  "copiedToClipboard": "Copied to clipboard",
+  "couldNotOpenSaveFile": "Could not open save file",
+
+  "imageOptions": "Image Options",
+  "copyImage": "Copy image",
+  "saveToGallery": "Save to gallery",
+  "searchImageOnYandex": "Search image on Yandex",
+  "imageReferenceCopied": "Image reference copied",
+  "couldNotCopyImage": "Could not copy the image",
+  "imageSavedToGallery": "Image saved to gallery",
+  "couldNotSaveImage": "Could not save the image",
+  "openingYandexSearch": "Opening Yandex image search",
+  "couldNotOpenYandexSearch": "Could not open Yandex search",
+
+  "videoPreview": "Video Preview",
+  "imagePreview": "Image Preview",
+  "options": "Options",
+  "qspConsole": "QSP Console",
+  "qspCodeHint": "QSP code...",
+  "qspStatementHint": "QSP statement...",
+  "noOutputYet": "No output yet",
+  "qspConsoleReady": "QSP Console ready.\nEnter statements like: money += 500 or goto 'start'",
+  "restartGameTitle": "Restart game?",
+  "restartGameMessage": "Unsaved progress will be lost.",
+  "engineError": "Engine Error",
+  "unknownEngineError": "Unknown engine error",
+  "errorNumber": "Error #{number}: {description}",
+  "@errorNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "description": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLocation": "Location: {name}",
+  "@errorLocation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLine": "Line: {number}",
+  "@errorLine": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "errorCode": "Code: {code}",
+  "@errorCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noOptions": "No options",
+  "openSaveFile": "Open Save File",
+  "openSaveFileHint": "Pick an external .sav file to load.",
+  "pickFile": "Pick File",
+  "message": "Message",
+  "qspInteractiveFiction": "QSP Interactive Fiction",
+
+  "gameOptions": "Game Options",
+  "saveAndLoad": "Save and Load",
+  "cheatEngineAndEditor": "Cheat Engine and Editor",
+  "restartGame": "Restart Game",
+  "savesAndSlots": "Saves and Slots",
+  "selectSlotToSave": "Select Slot to Save",
+  "selectSlotToLoad": "Select Slot to Load",
+  "autoSaveSlot": "Auto-Save Slot",
+  "lastSavedSessionAvailable": "Last saved session available",
+  "noAutoSaveDataFound": "No auto-save data found",
+  "savedGameState": "Saved Game State",
+  "emptySlot": "Empty Slot",
+  "importSav": "Import .sav",
+  "exportSav": "Export .sav",
+  "saveImported": "Save file imported successfully",
+  "saveImportFailed": "Failed to import save file",
+  "noActiveSaveData": "No active save data to export",
+  "saveFileExported": "Save file exported",
+  "exportSaveFileDialog": "Export Save File",
+
+  "newValue": "New Value",
+  "engineRejectedValue": "Engine rejected the value",
+  "teleportFailed": "Teleport failed",
+  "itemAdded": "Item added",
+  "couldNotAddItem": "Could not add item",
+  "couldNotRemoveItem": "Could not remove item",
+  "jumpToLocationHint": "Jump to a specific QSP location in the story.",
+  "locationNameHint": "Location name (e.g. start, room, shop)...",
+  "newItemNameHint": "New item name...",
+  "addVariableHint": "Add variable to watch...",
+  "scanAllVariables": "Scan all game variables",
+  "lockValue": "Lock value",
+  "unlock": "Unlock",
+  "editValue": "Edit value",
+  "noVariablesFound": "No variables found",
+  "noLockedVariables": "No locked variables active",
+  "noSnapshotYet": "No snapshot yet. Changes will appear here.",
+  "noChangesSinceSnapshot": "No changes since snapshot",
+  "consoleFailed": "Failed",
+
+  "previousSessionCrashed": "Previous Session Crashed",
+  "crashIntro": "Questopia encountered an unhandled error in the last run. You can copy the diagnostic details below to report it.",
+  "crashLogCopied": "Crash log copied to clipboard",
+  "copyDetails": "Copy Details",
+
+  "closeSearch": "Close search",
+  "refreshCatalog": "Refresh catalog",
+  "showAllGames": "Show all games",
+  "showFavoritesOnly": "Show favorites only",
+  "addToFavorites": "Add to favorites",
+  "removeFromFavorites": "Remove from favorites",
+  "deleteGame": "Delete game",
+  "removeFromLibrary": "Remove from library",
+  "deleteGameTitle": "Delete Game",
+  "deleteGameMessage": "Permanently delete \"{title}\" and all its files from your device?\n\nThis action cannot be undone.",
+  "@deleteGameMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "removeFromLibraryMessage": "Remove \"{title}\" from your library?\n\nNote: Game files on your device will NOT be deleted.",
+  "@removeFromLibraryMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotReachRepository": "Could not reach the repository.",
+  "noGamesYet": "No games found",
+  "noStatusInformation": "No status information available",
+  "inventoryIsEmpty": "Inventory is empty",
+
+  "sortComments": "Comments",
+  "sortName": "Name",
+  "sortUpdated": "Updated",
+  "sortCreated": "Added",
+  "sortLikes": "Likes",
+  "sortDownloads": "Downloads",
+  "sortPlays": "Plays",
+
+  "gameNotes": "Game Notes",
+  "notesEmptyTitle": "No notes yet",
+  "notesEmptyHint": "Write down clues, codes, or puzzle solutions. Notes are kept for this game only.",
+  "notesHint": "Write your notes here...",
+  "notesSaved": "Notes saved",
+  "notesDiscardTitle": "Unsaved Notes",
+  "notesDiscardMessage": "You have unsaved changes. Discard them?",
+  "notesDiscard": "Discard",
+  "notesKeepEditing": "Keep editing",
+  "notesTabDefaultTitle": "Note {index}",
+  "@notesTabDefaultTitle": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "notesAddTab": "New note",
+  "notesRenameTab": "Rename note",
+  "notesRenameTabTitle": "Rename Note",
+  "notesRenameTabHint": "Note name",
+  "notesRenameTabEmpty": "A note needs a name",
+  "notesDeleteTab": "Delete note",
+  "notesDeleteTabTitle": "Delete Note",
+  "notesDeleteTabMessage": "Delete \"{title}\" and its text? This cannot be undone.",
+  "@notesDeleteTabMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "notesLastTabHint": "At least one note must stay open",
+  "notesUntitledTab": "Untitled note",
+  "notesSwitchDiscardTitle": "Unsaved Changes",
+  "notesSwitchDiscardMessage": "This note has unsaved changes. Discard them and switch?",
+  "notesSwitchDiscard": "Switch and discard",
+  "notesTabSaved": "Note saved",
+
+  "playStats": "Play Statistics",
+  "playStatsTotal": "Total play time",
+  "playStatsLast": "Last played",
+  "playStatsNever": "Never played",
+  "neverPlayed": "Never played",
+
+  "durationHoursMinutes": "{hours} h {minutes} min",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutes": "{minutes} min",
+  "@durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationSeconds": "{seconds} s",
+  "@durationSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+
+  "saveTimeJustNow": "Just now",
+  "saveTimeMinutesAgo": "{minutes} min ago",
+  "@saveTimeMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "saveTimeHoursAgo": "{hours} h ago",
+  "@saveTimeHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "saveTimeYesterday": "Yesterday",
+  "saveTimeDaysAgo": "{days} d ago",
+  "@saveTimeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "emptySlotHint": "No save data",
+
+  "searchHistoryTitle": "Recent searches",
+  "searchHistoryClearAll": "Clear all",
+  "searchHistoryClearTitle": "Clear Search History",
+  "searchHistoryClearMessage": "Remove all saved search queries from the catalog?",
+  "searchHistoryRemove": "Remove from history",
+  "searchHistoryCleared": "Search history cleared",
+  "languageAuto": "Automatic",
+  "untitledRemoteGame": "Game #{id}",
+  "@untitledRemoteGame": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+
+  "onboardingWelcomeTitle": "Welcome to Questopia",
+  "onboardingWelcomeBody": "Your home for QSP interactive fiction. Import your games, pick up where you left off, and shape the app the way you like it.",
+  "onboardingLanguageTitle": "Choose your language",
+  "onboardingLanguageBody": "You can change this later in Settings.",
+  "onboardingThemeTitle": "Pick a theme",
+  "onboardingThemeBody": "Choose the look that is easiest on your eyes.",
+  "onboardingAccentTitle": "Pick an accent color",
+  "onboardingAccentBody": "Dynamic follows your system wallpaper on supported devices.",
+  "onboardingReadingTitle": "Reading comfort",
+  "onboardingReadingBody": "Set how large the game text appears and how the reading surface looks.",
+  "onboardingReadingFontSize": "Text size",
+  "onboardingBehaviorTitle": "Gameplay and helpers",
+  "onboardingBehaviorBody": "Turn on the reading and input helpers you want from the start.",
+  "onboardingFinishTitle": "You are all set",
+  "onboardingFinishBody": "These choices are saved. You can change any of them later in Settings.",
+  "getStarted": "Get Started",
+  "onboardingRestart": "Show setup again",
+  "onboardingRestartHint": "Run the first time setup wizard again"
 }

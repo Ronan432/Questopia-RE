@@ -129,7 +129,6 @@
   "backgroundColor": "Цвет фона",
   "customLinkColor": "Свой цвет ссылок",
   "linkColor": "Цвет ссылок",
-  "squarePosters": "Квадратные постеры",
   "disableImages": "Отключить изображения",
   "showAllImagesDialog": "Все картинки в диалогах",
   "pinchZoom": "Масштабирование жестом",
@@ -171,7 +170,7 @@
   "fontMonospace": "Моноширинный (Monospace)",
   "fontMedium": "Средний (Medium)",
   "fontCursive": "Курсив (Cursive)",
-  "fontLight": "Lüt (Light)",
+  "fontLight": "Тонкий (Light)",
   "fontCondensed": "Сжатый (Condensed)",
   "fontBlack": "Жирный (Black)",
   "fontThin": "Тонкий (Thin)",
@@ -189,6 +188,7 @@
   "readingThemeSepia": "Сепия",
   "readingThemeNight": "Ночь",
   "readingThemeHighContrast": "Высокий контраст",
+  "readingThemeMaterialYou": "Material You",
 
   "storageUsage": "Использование памяти",
   "storageTotal": "Всего занято",
@@ -203,5 +203,363 @@
     }
   },
   "storageNothingToClean": "Нечего очищать",
-  "storageCalculating": "Подсчёт..."
+  "storageCalculating": "Подсчёт...",
+
+  "ok": "ОК",
+  "apply": "Применить",
+  "remove": "Удалить",
+  "save": "Сохранить",
+  "load": "Загрузить",
+  "input": "Ввод",
+  "choose": "Выбор",
+  "run": "Выполнить",
+  "add": "Добавить",
+  "scan": "Сканировать",
+  "overwrite": "Перезаписать",
+  "restore": "Развернуть",
+  "maximize": "Развернуть на весь экран",
+  "minimize": "Свернуть",
+  "dismiss": "Закрыть",
+  "lockedTo": "Зафиксировано: {value}",
+  "@lockedTo": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "emptyStringValue": "(пустая строка)",
+  "slotTitle": "Слот {index}",
+  "@slotTitle": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "pageOfPages": "Страница {page} / {total}",
+  "@pageOfPages": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "savedGameToSlot": "Игра сохранена в слот {index}",
+  "@savedGameToSlot": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "teleportedTo": "Переход выполнен: {location}",
+  "@teleportedTo": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "editVarTitle": "Изменение {name}",
+  "@editVarTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "searchVariablesHint": "Поиск переменных (найдено {count})...",
+  "@searchVariablesHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "loadingGameWorld": "Загрузка игрового мира...",
+  "notFound": "Не найдено",
+  "copiedToClipboard": "Скопировано в буфер обмена",
+  "couldNotOpenSaveFile": "Не удалось открыть файл сохранения",
+
+  "imageOptions": "Действия с изображением",
+  "copyImage": "Скопировать изображение",
+  "saveToGallery": "Сохранить в галерею",
+  "searchImageOnYandex": "Найти изображение в Яндексе",
+  "imageReferenceCopied": "Ссылка на изображение скопирована",
+  "couldNotCopyImage": "Не удалось скопировать изображение",
+  "imageSavedToGallery": "Изображение сохранено в галерею",
+  "couldNotSaveImage": "Не удалось сохранить изображение",
+  "openingYandexSearch": "Открывается поиск изображений в Яндексе",
+  "couldNotOpenYandexSearch": "Не удалось открыть поиск в Яндексе",
+
+  "videoPreview": "Просмотр видео",
+  "imagePreview": "Просмотр изображения",
+  "options": "Действия",
+  "qspConsole": "Консоль QSP",
+  "qspCodeHint": "Код QSP...",
+  "qspStatementHint": "Инструкция QSP...",
+  "noOutputYet": "Вывод пока пуст",
+  "qspConsoleReady": "Консоль QSP готова.\nВведите команды вида: money += 500 или goto 'start'",
+  "restartGameTitle": "Перезапустить игру?",
+  "restartGameMessage": "Несохранённый прогресс будет потерян.",
+  "engineError": "Ошибка движка",
+  "unknownEngineError": "Неизвестная ошибка движка",
+  "errorNumber": "Ошибка №{number}: {description}",
+  "@errorNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "description": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLocation": "Локация: {name}",
+  "@errorLocation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLine": "Строка: {number}",
+  "@errorLine": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "errorCode": "Код: {code}",
+  "@errorCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "noOptions": "Нет вариантов",
+  "openSaveFile": "Открыть файл сохранения",
+  "openSaveFileHint": "Выберите внешний файл .sav для загрузки.",
+  "pickFile": "Выбрать файл",
+  "message": "Сообщение",
+  "qspInteractiveFiction": "Интерактивная проза QSP",
+
+  "gameOptions": "Параметры игры",
+  "saveAndLoad": "Сохранение и загрузка",
+  "cheatEngineAndEditor": "Читы и редактор",
+  "restartGame": "Перезапустить игру",
+  "savesAndSlots": "Сохранения и слоты",
+  "selectSlotToSave": "Выберите слот для сохранения",
+  "selectSlotToLoad": "Выберите слот для загрузки",
+  "autoSaveSlot": "Слот автосохранения",
+  "lastSavedSessionAvailable": "Доступно последнее сохранение",
+  "noAutoSaveDataFound": "Данных автосохранения нет",
+  "savedGameState": "Сохранённое состояние игры",
+  "emptySlot": "Пустой слот",
+  "importSav": "Импорт .sav",
+  "exportSav": "Экспорт .sav",
+  "saveImported": "Файл сохранения импортирован",
+  "saveImportFailed": "Не удалось импортировать файл сохранения",
+  "noActiveSaveData": "Нет активных данных для экспорта",
+  "saveFileExported": "Файл сохранения экспортирован",
+  "exportSaveFileDialog": "Экспорт файла сохранения",
+
+  "newValue": "Новое значение",
+  "engineRejectedValue": "Движок отклонил значение",
+  "teleportFailed": "Не удалось выполнить переход",
+  "itemAdded": "Предмет добавлен",
+  "couldNotAddItem": "Не удалось добавить предмет",
+  "couldNotRemoveItem": "Не удалось удалить предмет",
+  "jumpToLocationHint": "Переход к нужной локации QSP в истории.",
+  "locationNameHint": "Название локации (например, start, room, shop)...",
+  "newItemNameHint": "Название нового предмета...",
+  "addVariableHint": "Добавить переменную для наблюдения...",
+  "scanAllVariables": "Сканировать все переменные игры",
+  "lockValue": "Зафиксировать значение",
+  "unlock": "Снять фиксацию",
+  "editValue": "Изменить значение",
+  "noVariablesFound": "Переменные не найдены",
+  "noLockedVariables": "Нет зафиксированных переменных",
+  "noSnapshotYet": "Снимка ещё нет. Изменения появятся здесь.",
+  "noChangesSinceSnapshot": "Изменений после снимка нет",
+  "consoleFailed": "Ошибка",
+
+  "previousSessionCrashed": "Предыдущий сеанс завершился сбоем",
+  "crashIntro": "В прошлом запуске Questopia столкнулась с необработанной ошибкой. Ниже можно скопировать диагностические данные для отчёта.",
+  "crashLogCopied": "Журнал сбоя скопирован в буфер обмена",
+  "copyDetails": "Копировать данные",
+
+  "closeSearch": "Закрыть поиск",
+  "refreshCatalog": "Обновить каталог",
+  "showAllGames": "Показать все игры",
+  "showFavoritesOnly": "Показать только избранное",
+  "addToFavorites": "Добавить в избранное",
+  "removeFromFavorites": "Убрать из избранного",
+  "deleteGame": "Удалить игру",
+  "removeFromLibrary": "Убрать из библиотеки",
+  "deleteGameTitle": "Удаление игры",
+  "deleteGameMessage": "Безвозвратно удалить игру \"{title}\" и все её файлы с устройства?\n\nЭто действие необратимо.",
+  "@deleteGameMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "removeFromLibraryMessage": "Убрать игру \"{title}\" из библиотеки?\n\nПримечание: файлы игры на устройстве удалены НЕ будут.",
+  "@removeFromLibraryMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotReachRepository": "Не удалось связаться с репозиторием.",
+  "noGamesYet": "Игры не найдены",
+  "noStatusInformation": "Нет данных о состоянии",
+  "inventoryIsEmpty": "Инвентарь пуст",
+
+  "sortComments": "Комментарии",
+  "sortName": "Название",
+  "sortUpdated": "Обновление",
+  "sortCreated": "Добавлено",
+  "sortLikes": "Лайки",
+  "sortDownloads": "Загрузки",
+  "sortPlays": "Запуски",
+
+  "gameNotes": "Заметки к игре",
+  "notesEmptyTitle": "Заметок пока нет",
+  "notesEmptyHint": "Записывайте подсказки, коды и решения головоломок. Заметки сохраняются только для этой игры.",
+  "notesHint": "Напишите заметки здесь...",
+  "notesSaved": "Заметки сохранены",
+  "notesDiscardTitle": "Несохранённые заметки",
+  "notesDiscardMessage": "У вас есть несохранённые изменения. Отменить их?",
+  "notesDiscard": "Отменить",
+  "notesKeepEditing": "Продолжить",
+  "notesTabDefaultTitle": "Заметка {index}",
+  "@notesTabDefaultTitle": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "notesAddTab": "Новая заметка",
+  "notesRenameTab": "Переименовать заметку",
+  "notesRenameTabTitle": "Переименовать заметку",
+  "notesRenameTabHint": "Название заметки",
+  "notesRenameTabEmpty": "У заметки должно быть название",
+  "notesDeleteTab": "Удалить заметку",
+  "notesDeleteTabTitle": "Удалить заметку",
+  "notesDeleteTabMessage": "Удалить «{title}» и её текст? Это действие нельзя отменить.",
+  "@notesDeleteTabMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "notesLastTabHint": "Хотя бы одна заметка должна остаться открытой",
+  "notesUntitledTab": "Заметка без названия",
+  "notesSwitchDiscardTitle": "Несохранённые изменения",
+  "notesSwitchDiscardMessage": "В этой заметке есть несохранённые изменения. Отменить их и переключиться?",
+  "notesSwitchDiscard": "Переключить и отменить",
+  "notesTabSaved": "Заметка сохранена",
+
+  "playStats": "Статистика игры",
+  "playStatsTotal": "Всего наиграно",
+  "playStatsLast": "Последний запуск",
+  "playStatsNever": "Ни разу не запускалась",
+  "neverPlayed": "Ни разу не запускалась",
+
+  "durationHoursMinutes": "{hours} ч {minutes} мин",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutes": "{minutes} мин",
+  "@durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationSeconds": "{seconds} с",
+  "@durationSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+
+  "saveTimeJustNow": "Только что",
+  "saveTimeMinutesAgo": "{minutes} мин назад",
+  "@saveTimeMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "saveTimeHoursAgo": "{hours} ч назад",
+  "@saveTimeHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "saveTimeYesterday": "Вчера",
+  "saveTimeDaysAgo": "{days} дн назад",
+  "@saveTimeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "emptySlotHint": "Нет данных сохранения",
+
+  "searchHistoryTitle": "Недавние запросы",
+  "searchHistoryClearAll": "Очистить всё",
+  "searchHistoryClearTitle": "Очистить историю поиска",
+  "searchHistoryClearMessage": "Удалить все сохранённые поисковые запросы каталога?",
+  "searchHistoryRemove": "Удалить из истории",
+  "searchHistoryCleared": "История поиска очищена",
+  "languageAuto": "Автоматически",
+  "untitledRemoteGame": "Игра №{id}",
+
+  "onboardingWelcomeTitle": "Добро пожаловать в Questopia",
+  "onboardingWelcomeBody": "Ваш дом для интерактивной литературы на QSP. Добавляйте свои игры, продолжайте с места остановки и настройте приложение под себя.",
+  "onboardingLanguageTitle": "Выберите язык",
+  "onboardingLanguageBody": "Это можно изменить позже в настройках.",
+  "onboardingThemeTitle": "Выберите тему",
+  "onboardingThemeBody": "Выберите оформление, которое удобнее для глаз.",
+  "onboardingAccentTitle": "Выберите цвет акцента",
+  "onboardingAccentBody": "Динамический следует за обоями системы на поддерживаемых устройствах.",
+  "onboardingReadingTitle": "Комфорт чтения",
+  "onboardingReadingBody": "Настройте размер текста игры и вид поверхности для чтения.",
+  "onboardingReadingFontSize": "Размер текста",
+  "onboardingBehaviorTitle": "Игра и помощники",
+  "onboardingBehaviorBody": "Включите нужные помощники чтения и ввода сразу.",
+  "onboardingFinishTitle": "Всё готово",
+  "onboardingFinishBody": "Эти настройки сохранены. Их можно изменить позже в настройках.",
+  "getStarted": "Начать",
+  "onboardingRestart": "Показать настройку снова",
+  "onboardingRestartHint": "Запустить мастер первой настройки заново"
 }
