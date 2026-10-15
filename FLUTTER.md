@@ -1,6 +1,6 @@
 # FLUTTER.md — Questopia Flutter Architecture & Handover Documentation
 
-> **Last Update:** October 11, 2026  
+> **Last Update:** October 15, 2026 (session 2)  
 > **Target Framework:** Flutter 3.44.6 / Dart 3.12.2  
 > **Branch:** `master`  
 > **`flutter analyze`:** CLEAN (0 issues)  
@@ -17,7 +17,7 @@ Questopia-RE is a high-performance cross-platform interpreter and library client
 - **Supported Platforms:** Android (API 26+), Windows (x64), Linux, macOS
 - **Engine Bindings:** Native C-API QSP (`libqsp.so` on Android/Linux, `qsp.dll` on Windows) via Dart FFI (`dart:ffi`)
 - **State Management:** Riverpod (`StateNotifierProvider`) with generation counters
-- **Typography:** platform default typeface app wide. No font files are declared in `pubspec.yaml`, so naming a family in the theme only falls back to the platform default. The in-game typeface is user selectable and resolves through `QuestopiaTheme.fontFamilyFor(index)` (see Section 3.7).
+- **Typography:** Platform default typeface app wide. No font files are declared in `pubspec.yaml`; the reading typeface resolves through `QuestopiaTheme.fontFamilyFor(index)`
 - **Design System:** Material 3 Expressive (`material_3_expressive`), dynamic theming (`dynamic_color`), active shape morphing
 - **Localization:** 100% dynamic internationalization via ARB files (`app_en.arb`, `app_ru.arb`)
 
@@ -33,7 +33,7 @@ Questopia-RE is a high-performance cross-platform interpreter and library client
 6. **UNIFIED CONTEXT DIALOG ARCHITECTURE:** All modal pop-ups, confirmation dialogs, input prompts, error alerts, and crash reports must utilize `showQuestopiaDialog` and `QuestopiaDialog` / `QuestopiaConfirmationDialog` with morph-shaping animations and backdrop blur, eliminating raw disparate `AlertDialog` implementations.
 7. **SANDBOX REGISTRY ISOLATION:** Never write metadata, registry entries, or hidden dot-files into external shared storage. All persistent game records must go through `GameRegistry` inside `getApplicationSupportDirectory()`.
 8. **MODULAR HELPER COHESION:** Utility and helper routines must be encapsulated in dedicated helper files under `lib/core/helpers/` (e.g. `sheet_helper.dart`, `dialog_helper.dart`, `path_picker_helper.dart`, `html_processor.dart`).
-9. **EFFECTIVE SETTINGS LINKAGE:** Every setting field in `SettingsState` must have an active consumer and observable effect in the UI or runtime engine (blur, haptics, action height ratio, immersive mode, square posters, font family, reading theme, auto-save, and so on). A setting that no longer has a consumer must be **removed** from `SettingsState`, the settings UI and the ARB files rather than left in place. A visible control that changes nothing is a bug, not a placeholder.
+9. **EFFECTIVE SETTINGS LINKAGE:** Every setting field in `SettingsState` must have an active consumer and observable effect in the UI or runtime engine (blur, haptics, action height ratio, immersive mode, square posters, font family, etc.).
 10. **STANDARDIZED COMMIT FORMAT AND USER-FRIENDLY DESCRIPTIONS:** Commit subject lines must strictly adhere to standardized conventional prefix syntax (e.g. `Feat: <reason>`, `Fix: <reason>`, `Ci: <reason>`). Never put multi-line descriptions or markdown headers in commit titles. Commit descriptions/bodies must be written in plain, easily understandable user-facing English explaining what changed and why. **Every commit body must contain a definitive change list:** one bullet per changed file or behaviour, naming the file and stating exactly what changed in it. A vague summary ("various fixes", "cleanup", "improvements") is not acceptable. If a file was touched, it must appear in the list. See Section 6.2 for the exact format.
 11. **BAN ON `&` SYMBOL:** The ampersand character (`&`) is strictly forbidden across all user-facing UI strings, headers, button labels, documentation, and commit messages. Always use the full word "and" or "ve".
 12. **ON-DEMAND CLEANUP ONLY:** Code cleanup, dead code removal, and refactoring must be performed **only when the user explicitly requests it**. A cleanup is never started on initiative, never bundled into a feature change, and never committed without a separate request. Every removal must be proven by a zero reference count first, and no cleanup may alter runtime behaviour. The full procedure lives in [CLEANUP.md](CLEANUP.md).
@@ -46,90 +46,85 @@ Questopia-RE is a high-performance cross-platform interpreter and library client
 ## 3. Core Architecture and Active Subsystems
 
 ### 3.1. Native QSP FFI Engine and Dual-Width Encoding
+
 - **Windows C-API DLL:** Uses official C-API `qsp.dll` with 50 exports (`QSPInit`, `QSPLoadGameWorldFromData`, `QSPRestartGame`, `QSPGetMainDesc`, `QSPGetActions`, etc.) with statically linked Oniguruma regex.
 - **Dynamic Dual-Width `wchar_t` (`QspUtf16` & `QspFfi`):** Automatically detects 2-byte (Windows MSVC) and 4-byte (Android/Linux Clang) `wchar_t` streams. Compilers configured with `-fshort-wchar` for cross-platform UTF-16 parity.
 - **Correct FFI Types:** `QSP_BOOL` mapped to `Int8`, `QSP_BIGINT` mapped to `Int32`, preventing bit corruption on 64-bit calling conventions.
 
 ### 3.2. Thread-Safe Atomic GameRegistry (`GameRegistry`)
+
 - **Storage Location:** `<app_support_dir>/questopia_games.json`.
 - **Atomic File Lock:** Serialized writes via temporary file and atomic rename (`.tmp -> rename`).
 - **Batch Operations & Ignored List:** Supports `batchUpsert()` and tracks `ignored` IDs to prevent deleted/hidden games from re-appearing during auto-discovery.
 
 ### 3.3. 3-Tier Game Import & Scanning Engine (`GameRepository`)
+
 - **Tier A (Zero-Copy Instant Indexing):** Directly indexes accessible external folders in $<0.005\text{ s}$ without file duplication.
 - **Tier B (Isolate Copy Fallback):** Asynchronous background isolate directory copy when direct reading is restricted on Android 11+ Scoped Storage.
 - **Tier C (Archive Extraction):** Fast extraction for `.zip`, `.aqsp`, `.rar`, `.7z`, `.tar`, `.gz` using Rust FFI decoders, system `bsdtar` (Windows/Linux/macOS), and Dart fallback streams with Zip Slip protection.
 - **Isolate BFS Traversal & Deduplication:** Multi-threaded BFS search detects nested entry files (`.qsp` / `.gam`) up to depth 8. Prunes dead registry entries automatically and deduplicates across canonical absolute file paths and title+filesize signatures to eliminate duplicate entries.
 
 ### 3.4. State Management and Generation Guard (`LibraryProvider`)
+
 - **Generation-Guarded State:** `LibraryNotifier` uses a monotonic `_generation` counter to ensure background file scans never overwrite newly imported games.
 - **Immediate State Injection:** Imported games appear immediately at the head of the library state before background validation.
 - **Lifecycle Optimization:** Constructor runs zero eager network calls; catalog fetching is strictly on-demand.
 
 ### 3.5. Game Player, Media Pipeline, and Modal Dialogs (`GameScreen`)
+
 - **Native Video Decoding & Hardware Acceleration:** Powered by `video_player` (ExoPlayer on Android, Media Foundation on Windows) hardware decoders via `QspMedia` and `QspVideo`, replacing fragile webviews with smooth looping playback while keeping the native decoder payload out of the app bundle.
 - **Ogg Theora Fallback (`QspOgvVideo`):** The hardware decoder cannot read Theora, so `.ogv` and `.ogg` files are routed to the bundled OGV.js WebAssembly decoder. `OgvAssetServer` serves the decoder assets and the media file from `127.0.0.1` because the stream loader requires working byte range requests, which neither a bundled asset nor a data URI can provide. `OgvPlayerPage` renders the hidden player markup.
 - **High-Performance HTML Rendering (`QspHtmlView`):** Native flutter HTML parser rendering rich typography, custom styled interactive links, and embedded asset image/video elements.
 - **Unified Engine Dialog System (`GameDialogsHost`):** Message (`GameMessageDialog`), prompt input (`GameInputDialog`), interactive choice menus (`GameMenuDialog`), runtime error diagnostics (`GameErrorDialog`), image/video preview (`GameImagePreviewDialog`), and QSP console execution (`GameExecutorDialog`) all presented through `showQuestopiaDialog`.
 
 ### 3.6. UI / UX Design System, Morph Shaping, and Modularity
+
 - **Unified Modal Dialog Morph Shaping (`showQuestopiaDialog` & `QuestopiaDialog`):** Dialogs enter with a dynamic curved morph transition interpolating from 40px radius down to 28px standard curvature, combined with scale tweening, and animated Gaussian backdrop blur (`sigma: 8.0`).
 - **Frosted Glass Bottom Sheets (`showQuestopiaSheet`):** Modal bottom sheets feature `SafeArea` enforcement, full-screen background Gaussian blur (`sigma: 10.0`), translucent frosted surfaces, elevated drag handles with animated scaling upon interaction, and centered header pills.
 - **Swipeable Horizontal Navigation:** Both `LibraryScreen` (Local Library, Remote Catalog, Settings) and `SettingsScreen` (Appearance, General, Typography, Media, Sound, Storage, About) feature horizontal swipeable `PageView` animations coordinated with category chips and bottom bars.
 - **Strict File Modularity:** Heavy controllers are broken into clean sub-views (e.g. `LocalGamesView`, `CatalogGamesView`, `AppearanceSection`, `TypographyMediaSection`, `SoundStorageAboutSection`), ensuring all files remain under 300 lines with zero code duplication.
-
-### 3.7. Reading Experience, Auto-Save and Storage Accounting
-- **Reading Themes (`ReadingThemeColors`):** Four presets (`default`, `sepia`, `night`, `contrast`) select the background, text and link colour of the story and status panes. An explicit custom colour always wins over the preset, so the two features stay independent. The inventory keeps the Material surface because its cards are Material widgets.
-- **Real Auto-Save (`GameEngineNotifier`):** Counts engine counter ticks and, once `autosaveInterval` turns have passed, snapshots the game with `saveGameData()` into the `autoSaveData` state field and to `<app support>/questopia_autosave/<game id>.sav`. The snapshot is restored on the next `loadGame()`, so an interrupted session survives a restart.
-- **Save Handler Correctness:** `QSP_CALL_SAVE_GAME_STATUS` writes the snapshot to the requested path. It previously routed into the load path, so in-game saves never reached the disk.
-- **Storage Accounting (`GameRepository.computeStorageStats`, `cleanupOrphanFolders`):** Reports the bytes each game folder occupies and removes leftover folders inside the games directory that hold no game file. Both run in an isolate and are surfaced in the Storage settings section.
-- **Managed vs Referenced Folders (`LocalGame.isManaged`):** Only folders the app created (import copy, archive extraction, download, or a folder inside the games directory) are deleted from disk. A folder the user merely pointed at is unlinked from the library and left untouched. A loose `.qsp` or `.gam` file directly inside the games directory is deleted on its own, never together with its parent folder.
-- **Scoped Media Endpoint (`OgvAssetServer`):** The loopback media server only serves files inside the game folders announced by the player page and answers everything else with `403`.
-- **Live Settings Consumption:** `GameScreen` pushes the audio, auto-save and image-dialog preferences into the engine through `GameEngineNotifier.applySettings()` and reacts to later changes with `ref.listen`. `libraryProvider` reads the games folder on demand, so changing it applies without a restart.
+- **Desktop Sheet Width Clamp (`showQuestopiaSheet`):** A desktop window is far wider than a phone, and a bottom sheet stretched across it reads as a page rather than a sheet. The route constrains width to `(width * 0.6).clamp(360, 560)` on desktop and stays full width on mobile, so phone proportions survive the resize.
+- **Shared Slider Styling (`QuestopiaTheme.sliderTheme`):** Every slider routes through `M3ESlider` with `QuestopiaTheme.m3eThemeDataFrom(theme)`, which pins `pressedHandleWidth` to `4`. The stock token drops the handle from 4px to 2px while pressed, which under a desktop pointer looks like the handle collapses.
+- **First Run Setup Flow (`OnboardingScreen`):** Seven steps — welcome, language, theme, accent, reading comfort, gameplay helpers, finish. Theme uses a four card grid (automatic spans the row, light/dark/AMOLED share the row beneath). The gameplay step exposes immersive mode, auto-scroll, auto-save and the cheat engine, each written straight to the settings notifier.
+- **Diagonal Stats Panel (`LibraryStatsRow`):** The installed games panel is spawned **over** the stats row inside a `Stack`, anchored to the favorites tile, and grows diagonally out of that tile's top right corner through `_DiagonalReveal` (a `SizeTransition` plus a translate from the right and a scale from 0.94). Because it is positioned over the row rather than placed below it, the panel covers the favorites tile and the tile fades behind it, so the favorite button reads as a drawer pulled open across the button instead of a block that pushes the grid down. The panel carries its own width (300px) since a `Positioned` with only `top` and `right` leaves the width unbounded.
+- **Browser Style Note Tabs (`NotesTabStrip`):** Tabs are 46px tall with a close affordance on every tab, a middle click also closes the tab, and the strip scrolls instead of shrinking labels. A trailing collapse control folds the strip to the active tab when many notes are open; because the strip folds horizontally, that control points left and right rather than up and down.
+- **Lifecycle Observer Without Provider Reads (`GameScreen`):** `GameScreen` observes the app lifecycle to start and pause play-time accounting, but the binding broadcasts a lifecycle change to every observer registered when the notification began. A change arriving during teardown therefore reaches an element that is already disposed, and reading a provider there throws `Cannot use "ref" after the widget was disposed`. A `mounted` guard does not prevent it, because the element can be detached while the callback is already queued. The tracker instance is captured once in `initState` into `_playSessionTracker` and cleared in `dispose`, so `didChangeAppLifecycleState` never touches `ref`.
 
 ---
 
 ## 4. Key Project Files and Responsibilities
 
-| File Path | Description |
-| :--- | :--- |
-| `lib/core/native/qsp_ffi.dart` | Low-level Dart FFI bindings to QSP C-API with verified struct layouts and type signatures. |
-| `lib/core/native/qsp_utf16.dart` | Memory-safe UTF-16 / UTF-32 dual-width string converter and native struct populator. |
-| `lib/core/helpers/sheet_helper.dart` | Root-navigator modal bottom sheet engine with Gaussian backdrop blur and interactive drag handle. |
-| `lib/core/helpers/dialog_helper.dart` | Unified modal dialog engine featuring active morph shaping, scale transitions, and Gaussian backdrop blur. |
-| `lib/core/helpers/html_processor.dart` | Sanitizer, video tag converter, and entity decoder for QSP HTML output. |
-| `lib/core/helpers/path_picker_helper.dart` | Platform-aware native file/folder picker and Android Scoped Storage directory resolver. |
-| `lib/core/media/qsp_media.dart` | Unified media rendering widget combining native `video_player` hardware video and image loaders. |
-| `lib/core/media/qsp_ogv_video.dart` | WebAssembly Ogg Theora decoder hosted in a WebView for formats the platform decoder rejects. |
-| `lib/core/theme/game_colors.dart` | Fixed high contrast reading surface colors plus the `ReadingThemeColors` presets for the game text panes. |
-| `lib/core/helpers/byte_format.dart` | Byte count formatter honouring the decimal or binary prefix setting. |
-| `lib/features/library/data/storage_stats.dart` | Storage audit result type holding the per-game byte counts. |
-| `lib/core/media/qsp_html_view.dart` | Native HTML widget renderer with custom widget builder for video and image tags. |
-| `lib/features/library/data/game_repository.dart` | 3-Tier import pipeline (zero-copy, isolate copy, archive unpacker) and isolate BFS scanner. |
-| `lib/features/library/presentation/library_screen.dart` | Modular hub with swipeable PageView navigation connecting library, catalog, and inline settings. |
-| `lib/features/library/presentation/views/local_games_view.dart` | Grid view for installed local games with instant play and context actions. |
-| `lib/features/library/presentation/views/catalog_games_view.dart` | Remote catalog view with sort chips, search filter, and page bar. |
-| `lib/features/settings/presentation/settings_screen.dart` | Expressive M3E settings container with horizontal category chips and swipeable section pages. |
-| `lib/features/game/presentation/dialogs/game_dialogs_host.dart` | Central host dispatcher rendering engine dialogs via `QuestopiaDialog`. |
+| File Path                                                         | Description                                                                                                |
+| :---------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------- |
+| `lib/core/native/qsp_ffi.dart`                                    | Low-level Dart FFI bindings to QSP C-API with verified struct layouts and type signatures.                 |
+| `lib/core/native/qsp_utf16.dart`                                  | Memory-safe UTF-16 / UTF-32 dual-width string converter and native struct populator.                       |
+| `lib/core/helpers/sheet_helper.dart`                              | Root-navigator modal bottom sheet engine with Gaussian backdrop blur and interactive drag handle.          |
+| `lib/core/helpers/dialog_helper.dart`                             | Unified modal dialog engine featuring active morph shaping, scale transitions, and Gaussian backdrop blur. |
+| `lib/core/helpers/html_processor.dart`                            | Sanitizer, video tag converter, and entity decoder for QSP HTML output.                                    |
+| `lib/core/helpers/path_picker_helper.dart`                        | Platform-aware native file/folder picker and Android Scoped Storage directory resolver.                    |
+| `lib/core/media/qsp_media.dart`                                   | Unified media rendering widget combining native `video_player` hardware video and image loaders.           |
+| `lib/core/media/qsp_ogv_video.dart`                               | WebAssembly Ogg Theora decoder hosted in a WebView for formats the platform decoder rejects.               |
+| `lib/core/theme/game_colors.dart`                                 | Fixed high contrast reading surface colors for the game text panes.                                        |
+| `lib/core/media/qsp_html_view.dart`                               | Native HTML widget renderer with custom widget builder for video and image tags.                           |
+| `lib/features/library/data/game_repository.dart`                  | 3-Tier import pipeline (zero-copy, isolate copy, archive unpacker) and isolate BFS scanner.                |
+| `lib/features/library/presentation/library_screen.dart`           | Modular hub with swipeable PageView navigation connecting library, catalog, and inline settings.           |
+| `lib/features/library/presentation/views/local_games_view.dart`   | Grid view for installed local games with instant play and context actions.                                 |
+| `lib/features/library/presentation/views/catalog_games_view.dart` | Remote catalog view with sort chips, search filter, and page bar.                                          |
+| `lib/features/settings/presentation/settings_screen.dart`         | Expressive M3E settings container with horizontal category chips and swipeable section pages.              |
+| `lib/features/game/presentation/dialogs/game_dialogs_host.dart`   | Central host dispatcher rendering engine dialogs via `QuestopiaDialog`.                                    |
+| `lib/features/onboarding/presentation/onboarding_screen.dart`     | Seven step first run setup wizard driving theme, locale, reading and helper preferences.                    |
+| `lib/features/onboarding/presentation/widgets/onboarding_behavior_step.dart` | Helper switches step covering immersive mode, auto-scroll, auto-save and the cheat engine.        |
+| `lib/features/game/presentation/sheets/helpers/notes_tab_strip.dart` | Browser style note tab strip with middle click close and a collapse control.                             |
 
----
-
-## 5. Verification and Quality Assurance
-
-All features must maintain 0 static analysis issues before commit:
-
-```powershell
-flutter analyze
-```
-
----
 
 ## 6. Git and Commit Message Standards
 
 All commits in the repository must adhere to the following standards:
 
 ### 6.1. Subject Line Format
+
 The first line (subject) must be concise and use standard conventional prefixes:
+
 - `Feat: <short summary of new feature/capability>`
 - `Fix: <short summary of bug fix or issue resolution>`
 - `Ci: <short summary of CI/CD or workflow adjustments>`
@@ -140,6 +135,7 @@ The first line (subject) must be concise and use standard conventional prefixes:
 > **Rule:** Never use markdown headers, hashes, or multi-line paragraphs in the commit subject line.
 
 ### 6.2. Commit Description / Body
+
 - Must be separated from the subject line by a single blank line.
 - Written strictly in **simple, accessible, plain English** using clear user-facing language.
 - Use concise bullet points to explain what was changed and the user-facing benefit or reason.
@@ -148,6 +144,7 @@ The first line (subject) must be concise and use standard conventional prefixes:
 - A vague or partial description (for example "various fixes", "code cleanup", "performance improvements", "updated files") is a failed commit and must be rewritten before it is recorded.
 
 #### Example:
+
 ```text
 Refactor: Unified context dialogs and morph-shaping animations
 
@@ -211,14 +208,14 @@ This section exists because agents repeatedly ignored explicit prohibitions, rep
 
 Standing prohibitions recorded here apply to every future session. Agents must read this ledger before starting a task and must append a new row whenever the user says "never", "do not", or "stop doing" about something that is not already listed.
 
-| No | Prohibition | Applies to |
-| :--- | :--- | :--- |
-| P1 | Never run `flutter test`. | All tasks |
-| P2 | Never start a cleanup or refactor pass without an explicit request. | All tasks |
-| P3 | Never create two variants or duplicate designs for one request. | All UI tasks |
-| P4 | Never redo or re-apply work that is already finished. | All tasks |
-| P5 | Never add features, restyling, or edits that were not requested. | All tasks |
-| P6 | Never use the ampersand character in UI strings, docs, or commits. | All text |
+| No | Prohibition                                                             | Applies to   |
+| :- | :---------------------------------------------------------------------- | :----------- |
+| P1 | Never run `flutter test`.                                               | All tasks    |
+| P2 | Never start a cleanup or refactor pass without an explicit request.     | All tasks    |
+| P3 | Never create two variants or duplicate designs for one request.         | All UI tasks |
+| P4 | Never redo or re-apply work that is already finished.                   | All tasks    |
+| P5 | Never add features, restyling, or edits that were not requested.        | All tasks    |
+| P6 | Never use the ampersand character in UI strings, docs, or commits.      | All text     |
 | P7 | Never revert to or repeat a rejected design variation when a fix fails. | All UI tasks |
 
 > New rows go below P6. Never delete or weaken an existing row unless the user explicitly asks.

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:questopia_re/core/audio/game_audio.dart';
@@ -70,11 +72,18 @@ void main() {
       expect(state.messageText, 'Hello');
     });
 
-    test('show image opens the preview dialog', () {
-      notifier.handleEngineEvent(const QspShowImageEvent('pic.jpg'));
+    test('show image opens the preview dialog', () async {
+      // The notifier only raises the preview dialog once the resolved path is
+      // verifiably readable, so the fixture must be a real file on disk.
+      final dir = await Directory.systemTemp.createTemp('questopia_preview');
+      addTearDown(() => dir.delete(recursive: true));
+      final image = File('${dir.path}${Platform.pathSeparator}pic.jpg');
+      await image.writeAsBytes(const <int>[0xFF, 0xD8, 0xFF, 0xE0]);
+
+      notifier.handleEngineEvent(QspShowImageEvent(image.path));
       final state = container.read(gameEngineProvider);
       expect(state.activeDialog, GameDialogType.imagePreview);
-      expect(state.previewImageUrl, 'pic.jpg');
+      expect(state.previewImageUrl, image.path);
     });
 
     test('set timer arms the interval without a native engine', () {

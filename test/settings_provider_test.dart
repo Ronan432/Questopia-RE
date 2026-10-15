@@ -25,9 +25,11 @@ void main() {
     expect(settings.isAutosaveEnabled, isFalse);
     expect(settings.isCheatsEnabled, isFalse);
     expect(settings.isVideoMute, isTrue);
-    expect(settings.useGameBackgroundColor, isTrue);
+    // These two default to false so the story pane keeps the theme's own
+    // colors until the reader opts into the legacy per-game palette.
+    expect(settings.useGameBackgroundColor, isFalse);
     expect(settings.gameBackColor, 0xFFE0E0E0);
-    expect(settings.useGameLinkColor, isTrue);
+    expect(settings.useGameLinkColor, isFalse);
     expect(settings.gameLinkColor, 0xFF0000FF);
     expect(settings.isAutoWidth, isTrue);
     expect(settings.customWidthImage, 400);

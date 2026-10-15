@@ -7,7 +7,11 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
-    SharedPreferences.setMockInitialValues({});
+    // The onboarding gate only opens the library on a fresh install, so the
+    // tests mark the setup as finished to reach the screens under test.
+    SharedPreferences.setMockInitialValues({
+      'pref_onboarding_completed': true,
+    });
   });
 
   testWidgets('library screen renders both tabs and app bar actions',
@@ -19,9 +23,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
 
     expect(find.text('Questopia'), findsWidgets);
-    expect(find.text('Library'), findsOneWidget);
+    // The first bottom-bar destination is labelled "Home"; "Catalog" is the
+    // second. The app bar title mirrors the selected tab.
+    expect(find.text('Home'), findsOneWidget);
     expect(find.text('Catalog'), findsOneWidget);
-    expect(find.byTooltip('Import game folder'), findsOneWidget);
+    expect(find.byTooltip('Import game'), findsOneWidget);
     expect(find.byTooltip('Settings'), findsOneWidget);
   });
 
@@ -36,7 +42,9 @@ void main() {
     await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Settings'), findsOneWidget);
+    // "Settings" shows both as the app-bar title and as the third bottom-bar
+    // destination label, so more than one match is expected.
+    expect(find.text('Settings'), findsWidgets);
     expect(find.text('Appearance'), findsWidgets);
     expect(find.text('Color accent'), findsOneWidget);
 
