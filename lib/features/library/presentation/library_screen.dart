@@ -168,9 +168,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             onToggleFavoritesOnly: () => setState(
               () => _showFavoritesOnly = !_showFavoritesOnly,
             ),
+            miuix: shouldUseMiuixDesign(settings),
           );
         case 1:
-          return CatalogGamesView(games: filteredRemoteGames);
+          return CatalogGamesView(
+            games: filteredRemoteGames,
+            miuix: shouldUseMiuixDesign(settings),
+          );
         case 2:
           return const SettingsScreen(isInline: true);
         default:

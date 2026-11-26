@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
@@ -8,8 +9,8 @@ import '../../../../core/helpers/sheet_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/media/poster_menu_sheet.dart';
 import '../../data/remote_game.dart';
-import 'game_card_frame.dart';
 import 'game_poster.dart';
+import 'miuix_game_card.dart';
 
 class RemoteGameCard extends ConsumerWidget {
   const RemoteGameCard({
@@ -21,6 +22,7 @@ class RemoteGameCard extends ConsumerWidget {
     this.isInstalled = false,
     this.onPlay,
     this.isCompact = false,
+    this.miuix = false,
   });
 
   final RemoteGame game;
@@ -30,6 +32,7 @@ class RemoteGameCard extends ConsumerWidget {
   final bool isInstalled;
   final VoidCallback? onPlay;
   final bool isCompact;
+  final bool miuix;
 
   /// Title shown on the card and in the details sheet.
   ///
@@ -139,7 +142,8 @@ class RemoteGameCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final title = _title(l10n);
 
-    return GameCardFrame(
+    return AdaptiveGameCardFrame(
+      miuix: miuix,
       contentPadding: isCompact
           ? const EdgeInsets.fromLTRB(8, 6, 8, 6)
           : const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -237,7 +241,10 @@ class RemoteGameCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  LinearProgressIndicator(value: progress),
+                  if (miuix)
+                    MiuixLinearProgressIndicator(progress: progress)
+                  else
+                    LinearProgressIndicator(value: progress),
                   const SizedBox(height: 4),
                   Text(
                     progress == null
@@ -247,31 +254,17 @@ class RemoteGameCard extends ConsumerWidget {
                   ),
                 ],
               )
-            : (isInstalled
-                ? M3EButton.icon(
-                    onPressed: onPlay,
-                    icon: Icon(Icons.play_arrow_rounded,
-                        size: isCompact ? 16 : 18),
-                    label: Text(
-                      AppLocalizations.of(context)!.play,
-                      style: TextStyle(fontSize: isCompact ? 11.5 : 13),
-                    ),
-                    style: M3EButtonStyle.filled,
-                    size: M3EButtonSize.sm,
-                    shape: M3EButtonShape.round,
-                  )
-                : M3EButton.icon(
-                    onPressed: onDownload,
-                    icon:
-                        Icon(Icons.download_rounded, size: isCompact ? 16 : 18),
-                    label: Text(
-                      AppLocalizations.of(context)!.download,
-                      style: TextStyle(fontSize: isCompact ? 11.5 : 13),
-                    ),
-                    style: M3EButtonStyle.filled,
-                    size: M3EButtonSize.sm,
-                    shape: M3EButtonShape.round,
-                  )),
+            : AdaptiveGameActionButton(
+                miuix: miuix,
+                icon: isInstalled
+                    ? Icons.play_arrow_rounded
+                    : Icons.download_rounded,
+                label: isInstalled
+                    ? AppLocalizations.of(context)!.play
+                    : AppLocalizations.of(context)!.download,
+                onPressed: isInstalled ? onPlay : onDownload,
+                compact: isCompact,
+              ),
       ),
     );
   }

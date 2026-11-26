@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
 
 import '../../../../core/helpers/dialog_helper.dart';
@@ -12,8 +10,8 @@ import '../../../../core/l10n/app_localizations.dart';
 import '../../data/local_game.dart';
 import '../../data/play_stats_store.dart';
 import '../../providers/play_stats_provider.dart';
-import 'game_card_frame.dart';
 import 'game_poster.dart';
+import 'miuix_game_card.dart';
 
 class LocalGameCard extends ConsumerWidget {
   const LocalGameCard({
@@ -23,6 +21,7 @@ class LocalGameCard extends ConsumerWidget {
     required this.onRemove,
     required this.onToggleFavorite,
     this.isCompact = false,
+    this.miuix = false,
   });
 
   final LocalGame game;
@@ -30,6 +29,7 @@ class LocalGameCard extends ConsumerWidget {
   final VoidCallback onRemove;
   final VoidCallback onToggleFavorite;
   final bool isCompact;
+  final bool miuix;
 
   Future<void> _showMenuSheet(
     BuildContext context,
@@ -236,7 +236,8 @@ class LocalGameCard extends ConsumerWidget {
     final playStats =
         ref.watch(playStatsProvider(game.id)).valueOrNull ?? const PlayStats();
 
-    return GameCardFrame(
+    return AdaptiveGameCardFrame(
+      miuix: miuix,
       contentPadding: isCompact
           ? const EdgeInsets.fromLTRB(8, 6, 8, 6)
           : const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -268,16 +269,12 @@ class LocalGameCard extends ConsumerWidget {
       ),
       actionsWidget: SizedBox(
         width: double.infinity,
-        child: M3EButton.icon(
+        child: AdaptiveGameActionButton(
+          miuix: miuix,
+          icon: Icons.play_arrow_rounded,
+          label: l10n.play,
           onPressed: onPlay,
-          icon: Icon(Icons.play_arrow_rounded, size: isCompact ? 16 : 18),
-          label: Text(
-            l10n.play,
-            style: TextStyle(fontSize: isCompact ? 11.5 : 13),
-          ),
-          style: M3EButtonStyle.filled,
-          size: M3EButtonSize.sm,
-          shape: M3EButtonShape.round,
+          compact: isCompact,
         ),
       ),
     );

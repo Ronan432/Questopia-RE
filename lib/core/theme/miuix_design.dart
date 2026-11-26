@@ -15,14 +15,26 @@ class MiuixDesignTheme extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final materialTheme = Theme.of(context);
-    final seed = materialTheme.colorScheme.primary;
+    final miuixData = MiuixThemeData.of(materialTheme.brightness);
+    final colors = miuixData.colors;
+    final scheme = ColorScheme.fromSeed(
+      seedColor: colors.primary,
+      brightness: materialTheme.brightness,
+    ).copyWith(
+      primary: colors.primary,
+      onPrimary: colors.onPrimary,
+      surface: colors.surface,
+      onSurface: colors.onSurface,
+      error: colors.error,
+      onError: colors.onError,
+      outline: colors.outline,
+    );
     return MiuixTheme(
-      data: MiuixThemeData.of(
-        materialTheme.brightness,
-        lightColors: miuixColorsFromSeed(seed: seed, dark: false),
-        darkColors: miuixColorsFromSeed(seed: seed, dark: true),
+      data: miuixData,
+      child: Theme(
+        data: materialTheme.copyWith(colorScheme: scheme),
+        child: child,
       ),
-      child: child,
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/helpers/platform_helper.dart';
@@ -17,9 +18,10 @@ import '../widgets/remote_game_card.dart';
 
 /// Remote catalog games view with filter bar, grid, and pagination.
 class CatalogGamesView extends ConsumerWidget {
-  const CatalogGamesView({super.key, required this.games});
+  const CatalogGamesView({super.key, required this.games, this.miuix = false});
 
   final List<RemoteGame> games;
+  final bool miuix;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -50,9 +52,13 @@ class CatalogGamesView extends ConsumerWidget {
     if (state.isLoadingRemote && games.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        children: const [
-          SizedBox(height: 120),
-          Center(child: CircularProgressIndicator()),
+        children: [
+          const SizedBox(height: 120),
+          Center(
+            child: miuix
+                ? const MiuixCircularProgressIndicator()
+                : const CircularProgressIndicator(),
+          ),
         ],
       );
     }
@@ -79,13 +85,28 @@ class CatalogGamesView extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Center(
-            child: FilledButton.icon(
-              onPressed: () => ref
-                  .read(libraryProvider.notifier)
-                  .refreshRemoteCatalog(force: true),
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(AppLocalizations.of(context)!.retry),
-            ),
+            child: miuix
+                ? MiuixButton(
+                    onPressed: () => ref
+                        .read(libraryProvider.notifier)
+                        .refreshRemoteCatalog(force: true),
+                    colors: MiuixButtonDefaults.buttonColorsPrimary(context),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.refresh_rounded, size: 20),
+                        const SizedBox(width: 8),
+                        Text(AppLocalizations.of(context)!.retry),
+                      ],
+                    ),
+                  )
+                : FilledButton.icon(
+                    onPressed: () => ref
+                        .read(libraryProvider.notifier)
+                        .refreshRemoteCatalog(force: true),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: Text(AppLocalizations.of(context)!.retry),
+                  ),
           ),
         ],
       );
@@ -144,6 +165,7 @@ class CatalogGamesView extends ConsumerWidget {
         return RemoteGameCard(
           game: remoteGame,
           isCompact: isCompact,
+          miuix: miuix,
           isDownloading: isDownloading,
           progress: progress,
           isInstalled: installed != null,

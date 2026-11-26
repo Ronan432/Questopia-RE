@@ -59,20 +59,48 @@ class MiuixLibraryShell extends StatelessWidget {
     );
   }
 
+  Widget _buildSearchBar(
+    BuildContext context,
+    AppLocalizations l10n,
+    MiuixThemeData miuixTheme,
+  ) {
+    return MiuixSearchBar(
+      expanded: true,
+      onExpandedChange: (expanded) {
+        if (!expanded) onCloseSearch();
+      },
+      outsideEndAction: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onCloseSearch,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Text(
+            l10n.cancel,
+            style: TextStyle(color: miuixTheme.colors.primary),
+          ),
+        ),
+      ),
+      inputField: MiuixInputField(
+        query: searchQuery,
+        onQueryChange: onSearchChanged,
+        onSearch: onSearchSubmitted,
+        expanded: true,
+        onExpandedChange: (_) {},
+        focusNode: searchFocusNode,
+        label: l10n.search,
+      ),
+      content: const SizedBox.shrink(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final miuixTheme = MiuixTheme.of(context);
-    final sectionTitle = switch (selectedTab) {
-      0 => l10n.home,
-      1 => l10n.catalog,
-      _ => l10n.settings,
-    };
 
     return MiuixScaffold(
       topBar: MiuixTopAppBar(
-        title: l10n.appTitle,
-        subtitle: sectionTitle,
+        title: selectedTab == 2 ? l10n.settings : l10n.appTitle,
         actions: [
           _action(
             label: l10n.search,
@@ -100,38 +128,27 @@ class MiuixLibraryShell extends StatelessWidget {
               onPressed: onRefreshCatalog,
             ),
         ],
-        bottomContent: isSearchOpen
-            ? MiuixSearchBar(
-                expanded: true,
-                onExpandedChange: (expanded) {
-                  if (!expanded) onCloseSearch();
-                },
-                outsideEndAction: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: onCloseSearch,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    child: Text(
-                      l10n.cancel,
-                      style: TextStyle(color: miuixTheme.colors.primary),
-                    ),
-                  ),
+        bottomContent: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 280),
+          reverseDuration: const Duration(milliseconds: 220),
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: SizeTransition(
+              sizeFactor: animation,
+              axisAlignment: -1,
+              child: child,
+            ),
+          ),
+          child: isSearchOpen
+              ? KeyedSubtree(
+                  key: const ValueKey('miuix-search-open'),
+                  child: _buildSearchBar(context, l10n, miuixTheme),
+                )
+              : const KeyedSubtree(
+                  key: ValueKey('miuix-search-closed'),
+                  child: SizedBox(width: double.infinity, height: 0),
                 ),
-                inputField: MiuixInputField(
-                  query: searchQuery,
-                  onQueryChange: onSearchChanged,
-                  onSearch: onSearchSubmitted,
-                  expanded: true,
-                  onExpandedChange: (_) {},
-                  focusNode: searchFocusNode,
-                  label: l10n.search,
-                ),
-                content: const SizedBox.shrink(),
-              )
-            : null,
+        ),
       ),
       content: (padding) => Padding(
         padding: padding,

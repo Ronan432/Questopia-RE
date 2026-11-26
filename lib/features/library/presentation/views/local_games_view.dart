@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/helpers/platform_helper.dart';
@@ -23,6 +24,7 @@ class LocalGamesView extends ConsumerWidget {
     required this.allGames,
     required this.showFavoritesOnly,
     required this.onToggleFavoritesOnly,
+    this.miuix = false,
   });
 
   final List<LocalGame> games;
@@ -32,6 +34,7 @@ class LocalGamesView extends ConsumerWidget {
   final List<LocalGame> allGames;
   final bool showFavoritesOnly;
   final VoidCallback onToggleFavoritesOnly;
+  final bool miuix;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -56,11 +59,24 @@ class LocalGamesView extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Center(
-            child: QuestopiaMorphButton.filled(
-              onPressed: onImportFolder,
-              icon: const Icon(Icons.add_rounded, size: 20),
-              child: Text(l10n.addGame),
-            ),
+            child: miuix
+                ? MiuixButton(
+                    onPressed: onImportFolder,
+                    colors: MiuixButtonDefaults.buttonColorsPrimary(context),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.add_rounded, size: 20),
+                        const SizedBox(width: 8),
+                        Text(l10n.addGame),
+                      ],
+                    ),
+                  )
+                : QuestopiaMorphButton.filled(
+                    onPressed: onImportFolder,
+                    icon: const Icon(Icons.add_rounded, size: 20),
+                    child: Text(l10n.addGame),
+                  ),
           ),
         ],
       );
@@ -111,6 +127,7 @@ class LocalGamesView extends ConsumerWidget {
               return LocalGameCard(
                 game: game,
                 isCompact: isCompact,
+                miuix: miuix,
                 onPlay: () async {
                   final f = File(game.gameFilePath);
                   if (!await f.exists()) {
