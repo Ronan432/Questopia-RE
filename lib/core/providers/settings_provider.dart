@@ -28,6 +28,7 @@ const kThemeColorOptions = <String>[
 class SettingsState {
   final ThemeModeOption themeMode;
   final String themeColor;
+  final bool isMiuixDesignEnabled;
   final String readingTheme;
   final double fontSize;
   final int typefaceIndex;
@@ -67,6 +68,7 @@ class SettingsState {
   const SettingsState({
     this.themeMode = ThemeModeOption.system,
     this.themeColor = 'dynamic',
+    this.isMiuixDesignEnabled = false,
     this.readingTheme = 'default',
     this.fontSize = 16.0,
     this.typefaceIndex = 0,
@@ -105,6 +107,7 @@ class SettingsState {
   SettingsState copyWith({
     ThemeModeOption? themeMode,
     String? themeColor,
+    bool? isMiuixDesignEnabled,
     String? readingTheme,
     double? fontSize,
     int? typefaceIndex,
@@ -142,6 +145,7 @@ class SettingsState {
     return SettingsState(
       themeMode: themeMode ?? this.themeMode,
       themeColor: themeColor ?? this.themeColor,
+      isMiuixDesignEnabled: isMiuixDesignEnabled ?? this.isMiuixDesignEnabled,
       readingTheme: readingTheme ?? this.readingTheme,
       fontSize: fontSize ?? this.fontSize,
       typefaceIndex: typefaceIndex ?? this.typefaceIndex,
@@ -189,6 +193,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
   static const _kThemeMode = 'pref_theme_mode';
   static const _kThemeColor = 'pref_theme_color';
+  static const _kMiuixDesign = 'pref_miuix_design';
   static const _kReadingTheme = 'pref_reading_theme';
   static const _kFontSize = 'pref_font_size';
   static const _kTypeface = 'pref_typeface';
@@ -246,6 +251,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       themeColor: prefs.getString(_kThemeColor) ??
           _legacyString(prefs, 'themeColor') ??
           'dynamic',
+      isMiuixDesignEnabled: prefs.getBool(_kMiuixDesign) ?? false,
       readingTheme: prefs.getString(_kReadingTheme) ?? 'default',
       fontSize: prefs.getDouble(_kFontSize) ??
           double.tryParse(_legacyString(prefs, 'fontSize') ?? '') ??
@@ -460,6 +466,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     if (!kThemeColorOptions.contains(color)) return;
     state = state.copyWith(themeColor: color);
     await _set(_kThemeColor, color);
+  }
+
+  Future<void> setMiuixDesignEnabled(bool value) async {
+    state = state.copyWith(isMiuixDesignEnabled: value);
+    await _set(_kMiuixDesign, value);
   }
 
   Future<void> setReadingTheme(String theme) async {

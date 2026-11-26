@@ -25,6 +25,7 @@ void main() {
     expect(settings.isAutosaveEnabled, isFalse);
     expect(settings.isCheatsEnabled, isFalse);
     expect(settings.isVideoMute, isTrue);
+    expect(settings.isMiuixDesignEnabled, isFalse);
     // These two default to false so the story pane keeps the theme's own
     // colors until the reader opts into the legacy per-game palette.
     expect(settings.useGameBackgroundColor, isFalse);
@@ -54,6 +55,7 @@ void main() {
     await notifier.setAutoHeight(false);
     await notifier.setCustomHeightImage(600);
     await notifier.setNavBarBlur(true);
+    await notifier.setMiuixDesignEnabled(true);
 
     final settings = container.read(settingsProvider);
     expect(settings.useGameBackgroundColor, isFalse);
@@ -65,12 +67,14 @@ void main() {
     expect(settings.isAutoHeight, isFalse);
     expect(settings.customHeightImage, 600);
     expect(settings.isNavBarBlur, isTrue);
+    expect(settings.isMiuixDesignEnabled, isTrue);
 
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool('pref_use_game_back_color'), isFalse);
     expect(prefs.getInt('pref_game_back_color'), 0xFF112233);
     expect(prefs.getInt('pref_custom_width_image'), 800);
     expect(prefs.getBool('pref_nav_bar_blur'), isTrue);
+    expect(prefs.getBool('pref_miuix_design'), isTrue);
   });
 
   test('legacy KMP keys migrate to new settings', () async {

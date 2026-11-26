@@ -1,3 +1,4 @@
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:questopia_re/main.dart';
@@ -29,6 +30,7 @@ void main() {
     expect(find.text('Catalog'), findsOneWidget);
     expect(find.byTooltip('Import game'), findsOneWidget);
     expect(find.byTooltip('Settings'), findsOneWidget);
+    expect(find.byType(MiuixNavigationBar), findsNothing);
   });
 
   testWidgets('settings screen opens with theme and accent rows',
@@ -59,5 +61,30 @@ void main() {
 
     expect(find.text('Storage'), findsWidgets);
     expect(find.text('Games folder'), findsOneWidget);
+  });
+
+  testWidgets('Miuix design is opt-in for the library and settings', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'pref_onboarding_completed': true,
+      'pref_miuix_design': true,
+    });
+    await tester.pumpWidget(
+      const ProviderScope(child: QuestopiaApp()),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(find.byType(MiuixNavigationBar), findsOneWidget);
+    final settingsTab = find.descendant(
+      of: find.byType(MiuixNavigationBar),
+      matching: find.text('Settings'),
+    );
+    await tester.tap(settingsTab);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Miuix design'), findsOneWidget);
+    expect(find.text('Color accent'), findsOneWidget);
   });
 }

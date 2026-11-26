@@ -506,6 +506,18 @@ abstract class AppLocalizations {
   /// **'Color accent'**
   String get colorAccent;
 
+  /// No description provided for @miuixDesign.
+  ///
+  /// In en, this message translates to:
+  /// **'Miuix design'**
+  String get miuixDesign;
+
+  /// No description provided for @miuixDesignSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the Miuix style for the main menu and settings on Android'**
+  String get miuixDesignSummary;
+
   /// No description provided for @language.
   ///
   /// In en, this message translates to:

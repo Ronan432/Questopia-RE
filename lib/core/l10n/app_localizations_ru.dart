@@ -226,6 +226,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get colorAccent => 'Цветовой акцент';
 
   @override
+  String get miuixDesign => 'Дизайн Miuix';
+
+  @override
+  String get miuixDesignSummary =>
+      'Использовать стиль Miuix для главного меню и настроек на Android';
+
+  @override
   String get language => 'Язык';
 
   @override

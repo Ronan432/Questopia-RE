@@ -6,8 +6,10 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../../../core/theme/miuix_design.dart';
 import '../../../core/theme/questopia_theme.dart';
 import '../../../core/widgets/questopia_scaffold.dart';
+import 'miuix_settings_screen.dart';
 import 'sections/appearance_general_section.dart';
 import 'sections/sound_storage_about_section.dart';
 import 'sections/typography_media_section.dart';
@@ -89,6 +91,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
+    if (shouldUseMiuixDesign(settings)) {
+      return MiuixSettingsScreen(isInline: widget.isInline);
+    }
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final sections = _sections(context);

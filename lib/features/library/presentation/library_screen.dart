@@ -8,6 +8,7 @@ import '../../../core/helpers/path_picker_helper.dart';
 import '../../../core/helpers/platform_helper.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../../../core/theme/miuix_design.dart';
 import '../../../core/theme/questopia_theme.dart';
 import '../../../core/widgets/questopia_frosted_overlay.dart';
 import '../../../core/widgets/questopia_scaffold.dart';
@@ -24,6 +25,7 @@ import 'widgets/catalog_pagination_bar.dart';
 import 'widgets/library_desktop_view.dart';
 import 'widgets/library_mobile_app_bar.dart';
 import 'widgets/library_mobile_bottom_bar.dart';
+import 'widgets/miuix_library_shell.dart';
 
 /// Main hub containing the local game library, remote catalog, and inline settings.
 class LibraryScreen extends ConsumerStatefulWidget {
@@ -138,6 +140,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(libraryProvider);
+    final settings = ref.watch(settingsProvider);
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDesktop = isDesktopPlatform;
@@ -188,6 +191,50 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         mainContentFor(2),
       ],
     );
+
+    if (shouldUseMiuixDesign(settings)) {
+      return MiuixDesignTheme(
+        child: PopScope(
+          canPop: !_isSearchOpen && _selectedTab == 0,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+            if (_isSearchOpen) {
+              _closeSearch();
+              return;
+            }
+            if (_selectedTab != 0) _onTabChanged(0);
+          },
+          child: MiuixLibraryShell(
+            selectedTab: _selectedTab,
+            onTabChanged: _onTabChanged,
+            isSearchOpen: _isSearchOpen,
+            searchQuery: _searchQuery,
+            searchFocusNode: _searchFocusNode,
+            onSearchChanged: (value) {
+              _searchController.value = TextEditingValue(
+                text: value,
+                selection: TextSelection.collapsed(offset: value.length),
+              );
+              setState(() => _searchQuery = value);
+            },
+            onSearchSubmitted: _rememberCatalogSearch,
+            onOpenSearch: _openSearch,
+            onCloseSearch: _closeSearch,
+            onImportGame: _importGameFolder,
+            showFavoritesOnly: _showFavoritesOnly,
+            onToggleFavorites: () =>
+                setState(() => _showFavoritesOnly = !_showFavoritesOnly),
+            onRefreshCatalog: () => ref
+                .read(libraryProvider.notifier)
+                .refreshRemoteCatalog(force: true),
+            pagination: _selectedTab == 1 && state.totalPages > 1
+                ? const CatalogPaginationBar(isInsideOverlay: true)
+                : null,
+            child: pageViews,
+          ),
+        ),
+      );
+    }
 
     return M3ETheme(
       data: QuestopiaTheme.m3eThemeDataFrom(Theme.of(context)),
@@ -270,10 +317,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   child: mainContentFor(_selectedTab),
                 )
               : SafeArea(
-                  bottom: !ref.watch(settingsProvider).isNavBarBlur,
+                  bottom: !settings.isNavBarBlur,
                   child: pageViews,
                 ),
-          extendBody: !isDesktop && ref.watch(settingsProvider).isNavBarBlur,
+          extendBody: !isDesktop && settings.isNavBarBlur,
           bottomNavigationBar: isDesktop
               ? null
               : QuestopiaFrostedOverlay(

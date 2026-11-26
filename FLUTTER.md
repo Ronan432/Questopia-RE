@@ -217,5 +217,7 @@ Standing prohibitions recorded here apply to every future session. Agents must r
 | P5 | Never add features, restyling, or edits that were not requested.        | All tasks    |
 | P6 | Never use the ampersand character in UI strings, docs, or commits.      | All text     |
 | P7 | Never revert to or repeat a rejected design variation when a fix fails. | All UI tasks |
+| P8 | Never run `git push` or publish remote changes without explicit user request. | All tasks |
+| P9 | Do not run Flutter build commands for Questopia-RE during this design testing phase. | All tasks |
 
 > New rows go below P6. Never delete or weaken an existing row unless the user explicitly asks.

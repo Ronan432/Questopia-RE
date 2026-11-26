@@ -226,6 +226,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get colorAccent => 'Color accent';
 
   @override
+  String get miuixDesign => 'Miuix design';
+
+  @override
+  String get miuixDesignSummary =>
+      'Use the Miuix style for the main menu and settings on Android';
+
+  @override
   String get language => 'Language';
 
   @override

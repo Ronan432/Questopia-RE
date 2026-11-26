@@ -108,6 +108,8 @@
   "sectionAbout": "О программе",
 
   "colorAccent": "Цветовой акцент",
+  "miuixDesign": "Дизайн Miuix",
+  "miuixDesignSummary": "Использовать стиль Miuix для главного меню и настроек на Android",
   "language": "Язык",
   "followSystem": "Как в системе",
   "immersiveMode": "Полноэкранный режим",

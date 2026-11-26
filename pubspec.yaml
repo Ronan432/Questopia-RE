@@ -31,6 +31,7 @@ dependencies:
   http_parser: ^4.0.0
   material_segmented_list: ^1.0.5
   material_3_expressive: ^1.0.9
+  flutter_miuix: ^1.4.0
   window_manager: ^0.5.2
   extended_image: ^10.1.0
   flutter_svg: ^2.3.0

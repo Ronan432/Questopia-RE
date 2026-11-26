@@ -17,3 +17,8 @@ bool get isDesktopPlatform {
       defaultTargetPlatform == TargetPlatform.macOS ||
       defaultTargetPlatform == TargetPlatform.linux;
 }
+
+bool get isAndroidPlatform {
+  if (kIsWeb) return false;
+  return defaultTargetPlatform == TargetPlatform.android;
+}

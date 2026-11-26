@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
 
+import '../../../../core/helpers/platform_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/providers/settings_provider.dart';
 import '../sheets/settings_picker_sheets.dart';
@@ -69,6 +70,13 @@ class AppearanceSection extends StatelessWidget {
                 settings,
               ),
             ),
+            if (isAndroidPlatform)
+              SettingsTiles.switchTile(
+                icon: Icons.auto_awesome_outlined,
+                title: l10n.miuixDesign,
+                value: settings.isMiuixDesignEnabled,
+                onChanged: notifier.setMiuixDesignEnabled,
+              ),
           ],
         ),
       ],

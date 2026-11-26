@@ -108,6 +108,8 @@
   "sectionAbout": "About",
 
   "colorAccent": "Color accent",
+  "miuixDesign": "Miuix design",
+  "miuixDesignSummary": "Use the Miuix style for the main menu and settings on Android",
   "language": "Language",
   "followSystem": "Follow system",
   "immersiveMode": "Immersive mode",
