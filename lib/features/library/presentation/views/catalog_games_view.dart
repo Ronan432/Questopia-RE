@@ -28,11 +28,28 @@ class CatalogGamesView extends ConsumerWidget {
     final state = ref.watch(libraryProvider);
     final isDesktop = isDesktopPlatform;
 
+    final grid = _buildRemoteGrid(context, ref, games, state);
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       children: [
         CatalogFilterBar(miuix: miuix),
         Expanded(
-          child: _buildRemoteGrid(context, ref, games, state),
+          child: miuix
+              ? MiuixPullToRefresh(
+                  isRefreshing: state.isLoadingRemote,
+                  onRefresh: () => ref
+                      .read(libraryProvider.notifier)
+                      .refreshRemoteCatalog(force: true),
+                  refreshTexts: [
+                    l10n.pullToRefreshPull,
+                    l10n.pullToRefreshRelease,
+                    l10n.pullToRefreshRefreshing,
+                    l10n.pullToRefreshComplete,
+                  ],
+                  child: grid,
+                )
+              : grid,
         ),
         // Desktop has no bottom navigation bar, so pagination lives here.
         if (isDesktop && state.totalPages > 1)

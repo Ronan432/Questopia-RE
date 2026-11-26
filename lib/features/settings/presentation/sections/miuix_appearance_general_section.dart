@@ -74,6 +74,13 @@ class MiuixAppearanceSection extends StatelessWidget {
               value: settings.isMiuixDesignEnabled,
               onChanged: notifier.setMiuixDesignEnabled,
             ),
+            miuixSwitchPreference(
+              title: l10n.miuixDynamicColor,
+              summary: l10n.miuixDynamicColorSummary,
+              icon: Icons.color_lens_outlined,
+              value: settings.isMiuixDynamicColor,
+              onChanged: notifier.setMiuixDynamicColor,
+            ),
           ],
         ),
       ],

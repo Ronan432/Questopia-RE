@@ -38,6 +38,7 @@ Questopia-RE is a high-performance cross-platform interpreter and library client
 11. **BAN ON `&` SYMBOL:** The ampersand character (`&`) is strictly forbidden across all user-facing UI strings, headers, button labels, documentation, and commit messages. Always use the full word "and" or "ve".
 12. **ON-DEMAND CLEANUP ONLY:** Code cleanup, dead code removal, and refactoring must be performed **only when the user explicitly requests it**. A cleanup is never started on initiative, never bundled into a feature change, and never committed without a separate request. Every removal must be proven by a zero reference count first, and no cleanup may alter runtime behaviour. The full procedure lives in [CLEANUP.md](CLEANUP.md).
 13. **AI AGENT BEHAVIOR PROTOCOL:** Every AI agent working in this repository must follow Section 7 in full. Section 7 overrides any default habit of the agent. A violation of Section 7 counts as a failed task even if the code compiles.
+14. **RELEASE APK OUTPUT AND CLEANUP RULE:** Every release APK build must be placed in the `buildler/` directory. Before running any new release build, delete any previously compiled APK in `buildler/` and `build/app/outputs/flutter-apk/`.
 
 > ⚠️ **Do not begin a cleanup pass unless the user asks for one.** If a cleanup is not requested, work only on the task at hand and report findings instead of acting on them.
 

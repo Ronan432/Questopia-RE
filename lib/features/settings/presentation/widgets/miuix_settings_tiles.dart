@@ -12,16 +12,7 @@ class MiuixSettingsGroup extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var i = 0; i < children.length; i++) ...[
-            if (i > 0)
-              const Padding(
-                padding: EdgeInsets.only(left: 56),
-                child: MiuixHorizontalDivider(),
-              ),
-            children[i],
-          ],
-        ],
+        children: children,
       ),
     );
   }
@@ -79,6 +70,7 @@ MiuixSliderPreference miuixSliderPreference({
     min: min,
     max: max,
     steps: steps,
+    showKeyPoints: true,
     valueText: valueText,
     onValueChange: onChanged,
   );

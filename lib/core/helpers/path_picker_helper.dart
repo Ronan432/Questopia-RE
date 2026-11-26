@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
@@ -145,8 +146,83 @@ class PathPickerHelper {
   /// the user to select between importing a game file/archive or selecting an extracted game folder.
   static Future<String?> pickGame(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
+    final miuix = MiuixTheme.maybeOf(context);
 
-    final option = await showQuestopiaSheet<int>(
+    final int? option;
+    if (miuix != null) {
+      option = await showModalBottomSheet<int>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: miuix.colors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (ctx) => MiuixTheme(
+          data: miuix,
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: MiuixText(
+                      l10n.importGame,
+                      textAlign: TextAlign.center,
+                      style: miuix.textStyles.title4.copyWith(
+                        color: miuix.colors.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  MiuixCard(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        MiuixArrowPreference(
+                          title: l10n.fileOrArchive,
+                          summary: l10n.fileOrArchiveHint,
+                          startAction: Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: Icon(
+                              Icons.insert_drive_file_outlined,
+                              color: miuix.colors.primary,
+                              size: 22,
+                            ),
+                          ),
+                          onClick: () => Navigator.pop(ctx, 1),
+                        ),
+                        MiuixArrowPreference(
+                          title: l10n.gameFolder,
+                          startAction: Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: MiuixIcon(
+                              vector: MiuixIcons.os4.folder,
+                              tint: miuix.colors.primary,
+                              size: 22,
+                            ),
+                          ),
+                          onClick: () => Navigator.pop(ctx, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  MiuixTextButton(
+                    l10n.cancel,
+                    onPressed: () => Navigator.pop(ctx, 0),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    } else {
+      option = await showQuestopiaSheet<int>(
       context: context,
       builder: (ctx) {
         return M3ETheme(
@@ -196,6 +272,7 @@ class PathPickerHelper {
         );
       },
     );
+    }
 
     if (!context.mounted || option == null || option == 0) return null;
 

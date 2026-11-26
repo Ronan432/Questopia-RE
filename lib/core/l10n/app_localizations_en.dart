@@ -233,6 +233,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use the Miuix style for the main menu and settings on Android';
 
   @override
+  String get miuixDynamicColor => 'Dynamic color';
+
+  @override
+  String get miuixDynamicColorSummary =>
+      'Use Miuix Monet dynamic colors from wallpaper';
+
+  @override
+  String get pullToRefreshPull => 'Pull down to refresh';
+
+  @override
+  String get pullToRefreshRelease => 'Release to refresh';
+
+  @override
+  String get pullToRefreshRefreshing => 'Refreshing...';
+
+  @override
+  String get pullToRefreshComplete => 'Refreshed';
+
+  @override
   String get language => 'Language';
 
   @override
@@ -251,7 +270,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get edgeFeedback => 'Edge feedback';
 
   @override
-  String get navBarBlur => 'Navigation bar blur';
+  String get navBarBlur => 'Blur';
 
   @override
   String get autoSaveInterval => 'Auto-save interval';

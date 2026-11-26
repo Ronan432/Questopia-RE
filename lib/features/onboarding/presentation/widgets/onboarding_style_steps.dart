@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_miuix/miuix.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/providers/settings_provider.dart';
@@ -85,50 +84,38 @@ class OnboardingReadingStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Card(
-            elevation: 0,
-            color: colors.surfaceContainerHigh,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${l10n.onboardingReadingFontSize}: '
-                    '${settings.fontSize.toStringAsFixed(0)} pt',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: colors.primary,
-                    ),
+          MiuixCard(
+            insideMargin: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${l10n.onboardingReadingFontSize}: '
+                  '${settings.fontSize.toStringAsFixed(0)} pt',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: MiuixTheme.of(context).colors.primary,
                   ),
-                  MiuixTheme.maybeOf(context) != null
-                      ? MiuixSlider(
-                          value: settings.fontSize.clamp(12.0, 28.0),
-                          min: 12.0,
-                          max: 28.0,
-                          onValueChanged: onFontSizeChanged,
-                        )
-                      : M3ESlider(
-                          value: settings.fontSize.clamp(12.0, 28.0),
-                          min: 12.0,
-                          max: 28.0,
-                          divisions: 8,
-                          haptic: M3EHapticFeedback.light,
-                          onChanged: onFontSizeChanged,
-                        ),
-                  Text(
-                    l10n.livePreviewText,
-                    style: TextStyle(
-                      fontSize: settings.fontSize,
-                      color: colors.onSurface,
-                    ),
+                ),
+                const SizedBox(height: 8),
+                MiuixSlider(
+                  value: settings.fontSize.clamp(12.0, 28.0),
+                  min: 12.0,
+                  max: 28.0,
+                  steps: 8,
+                  showKeyPoints: true,
+                  onValueChanged: onFontSizeChanged,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.livePreviewText,
+                  style: TextStyle(
+                    fontSize: settings.fontSize,
+                    color: MiuixTheme.of(context).colors.onSurface,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),

@@ -518,6 +518,24 @@ abstract class AppLocalizations {
   /// **'Use the Miuix style for the main menu and settings on Android'**
   String get miuixDesignSummary;
 
+  /// No description provided for @miuixDynamicColor.
+  String get miuixDynamicColor;
+
+  /// No description provided for @miuixDynamicColorSummary.
+  String get miuixDynamicColorSummary;
+
+  /// No description provided for @pullToRefreshPull.
+  String get pullToRefreshPull;
+
+  /// No description provided for @pullToRefreshRelease.
+  String get pullToRefreshRelease;
+
+  /// No description provided for @pullToRefreshRefreshing.
+  String get pullToRefreshRefreshing;
+
+  /// No description provided for @pullToRefreshComplete.
+  String get pullToRefreshComplete;
+
   /// No description provided for @language.
   ///
   /// In en, this message translates to:

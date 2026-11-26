@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 
-/// A tappable card used by the setup steps for exclusive choices.
+/// A tappable Miuix card used by the setup steps for exclusive choices.
 class OnboardingOptionCard extends StatelessWidget {
   const OnboardingOptionCard({
     super.key,
@@ -20,85 +20,42 @@ class OnboardingOptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final miuix = MiuixTheme.of(context);
+    final colors = miuix.colors;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 3),
-      child: Material(
-        color: isSelected ? colors.secondaryContainer : colors.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: () {
-            HapticFeedback.lightImpact();
-            onTap();
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isSelected
-                    ? colors.primary
-                    : colors.outlineVariant.withValues(alpha: 0.5),
-                width: isSelected ? 2 : 1,
-              ),
+      padding: const EdgeInsets.only(bottom: 8),
+      child: MiuixCard(
+        colors: isSelected
+            ? MiuixCardColors(
+                color: colors.primary.withValues(alpha: 0.12),
+                contentColor: colors.onSurface,
+              )
+            : null,
+        onPressed: onTap,
+        child: MiuixBasicComponent(
+          title: title,
+          summary: subtitle,
+          startAction: leading != null
+              ? Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: leading!,
+                )
+              : null,
+          endActions: [
+            MiuixRadioButton(
+              selected: isSelected,
+              onChanged: (_) => onTap(),
             ),
-            child: Row(
-              children: [
-                if (leading != null) ...[
-                  leading!,
-                  const SizedBox(width: 14),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.w500,
-                          color: isSelected
-                              ? colors.onSecondaryContainer
-                              : colors.onSurface,
-                        ),
-                      ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitle!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isSelected
-                                ? colors.onSecondaryContainer
-                                    .withValues(alpha: 0.8)
-                                : colors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                Icon(
-                  isSelected
-                      ? Icons.check_circle_rounded
-                      : Icons.circle_outlined,
-                  color: isSelected ? colors.primary : colors.outline,
-                ),
-              ],
-            ),
-          ),
+          ],
+          onClick: onTap,
         ),
       ),
     );
   }
 }
 
-/// A compact vertical card for exclusive choices laid out in a row, where a
-/// full width [OnboardingOptionCard] would waste the horizontal space.
+/// A compact vertical card for exclusive choices laid out in a row.
 class OnboardingChoiceCard extends StatelessWidget {
   const OnboardingChoiceCard({
     super.key,
@@ -115,55 +72,40 @@ class OnboardingChoiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final miuix = MiuixTheme.of(context);
+    final colors = miuix.colors;
 
-    return Material(
-      color:
-          isSelected ? colors.secondaryContainer : colors.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isSelected
-                  ? colors.primary
-                  : colors.outlineVariant.withValues(alpha: 0.5),
-              width: isSelected ? 2 : 1,
+    return MiuixCard(
+      colors: isSelected
+          ? MiuixCardColors(
+              color: colors.primary.withValues(alpha: 0.14),
+              contentColor: colors.primary,
+            )
+          : null,
+      onPressed: onTap,
+      insideMargin: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 26,
+            color: isSelected
+                ? colors.primary
+                : colors.onSurfaceVariantActions,
+          ),
+          const SizedBox(height: 8),
+          MiuixText(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: miuix.textStyles.footnote1.copyWith(
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              color: isSelected ? colors.primary : colors.onSurface,
             ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 26,
-                color: isSelected ? colors.primary : colors.onSurfaceVariant,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight:
-                      isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isSelected
-                      ? colors.onSecondaryContainer
-                      : colors.onSurface,
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }

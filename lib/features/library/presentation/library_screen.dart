@@ -232,7 +232,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 .read(libraryProvider.notifier)
                 .refreshRemoteCatalog(force: true),
             pagination: _selectedTab == 1 && state.totalPages > 1
-                ? const CatalogPaginationBar(isInsideOverlay: true)
+                ? const CatalogPaginationBar(isInsideOverlay: true, miuix: true)
                 : null,
             child: pageViews,
           ),

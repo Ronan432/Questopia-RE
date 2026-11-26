@@ -75,7 +75,21 @@ class _MiuixSettingsScreenState extends ConsumerState<MiuixSettingsScreen> {
     if (widget.isInline) return content;
 
     return MiuixScaffold(
-      topBar: MiuixTopAppBar(title: l10n.settings),
+      topBar: MiuixGlassTopAppBar(
+        title: l10n.settings,
+        progressiveBlur: false,
+        bandBlurRadius: 0,
+        navigationIcon: Navigator.of(context).canPop()
+            ? MiuixGlassIconButton(
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                onPressed: () => Navigator.of(context).maybePop(),
+                child: MiuixIcon(
+                  vector: MiuixIcons.os4.back,
+                  size: 22,
+                ),
+              )
+            : null,
+      ),
       content: (padding) => Padding(
         padding: padding,
         child: content,

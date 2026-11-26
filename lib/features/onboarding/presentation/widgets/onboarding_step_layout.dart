@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 
 /// Shared layout for a single setup step: a centered icon badge, a title,
 /// a short description and the step body.
@@ -18,10 +19,11 @@ class OnboardingStepLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final miuix = MiuixTheme.of(context);
+    final colors = miuix.colors;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
@@ -40,23 +42,21 @@ class OnboardingStepLayout extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Text(
+              MiuixText(
                 title,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 24,
+                style: miuix.textStyles.title2.copyWith(
                   fontWeight: FontWeight.w600,
                   color: colors.onSurface,
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
+              MiuixText(
                 description,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
+                style: miuix.textStyles.body2.copyWith(
                   height: 1.4,
-                  color: colors.onSurfaceVariant,
+                  color: colors.onSurfaceVariantSummary,
                 ),
               ),
               const SizedBox(height: 24),

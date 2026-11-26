@@ -136,16 +136,7 @@ abstract final class SettingsPickerSheets {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var i = 0; i < items.length; i++) ...[
-            if (i > 0)
-              const Padding(
-                padding: EdgeInsets.only(left: 52),
-                child: MiuixHorizontalDivider(),
-              ),
-            items[i],
-          ],
-        ],
+        children: items,
       ),
     );
   }

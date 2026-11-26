@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/providers/settings_provider.dart';
-import '../../../core/widgets/questopia_morph_button.dart';
+import '../../../core/theme/miuix_design.dart';
 import 'widgets/onboarding_basic_steps.dart';
 import 'widgets/onboarding_behavior_step.dart';
 import 'widgets/onboarding_style_steps.dart';
 
 /// First run setup flow shown once, until the user finishes or skips it.
-///
-/// Every choice is written straight to [settingsProvider], so the MaterialApp
-/// above rebuilds with the new theme, locale and colors on each tap. Only the
-/// completion flag is written at the end, by [_finish].
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -86,61 +83,64 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
     final l10n = AppLocalizations.of(context)!;
-    final colors = Theme.of(context).colorScheme;
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
     final isLastStep = _currentStep == _stepCount - 1;
 
-    return Scaffold(
-      backgroundColor: colors.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildProgressRow(colors, l10n),
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: const ClampingScrollPhysics(),
-                onPageChanged: (index) => setState(() => _currentStep = index),
-                children: _buildSteps(settings),
+    return MiuixDesignTheme(
+      child: Builder(
+        builder: (miuixCtx) {
+          final miuix = MiuixTheme.of(miuixCtx);
+          return MiuixScaffold(
+            content: (padding) => SafeArea(
+              child: Column(
+                children: [
+                  _buildProgressRow(miuix, l10n),
+                  Expanded(
+                    child: PageView(
+                      controller: _pageController,
+                      physics: const ClampingScrollPhysics(),
+                      onPageChanged: (index) =>
+                          setState(() => _currentStep = index),
+                      children: _buildSteps(settings),
+                    ),
+                  ),
+                  _buildNavigationRow(miuixCtx, miuix, l10n, isLastStep),
+                ],
               ),
             ),
-            _buildNavigationRow(l10n, colors, bottomInset, isLastStep),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildProgressRow(ColorScheme colors, AppLocalizations l10n) {
+  Widget _buildProgressRow(MiuixThemeData miuix, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Row(
         children: [
           Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: (_currentStep + 1) / _stepCount,
-                minHeight: 5,
-                backgroundColor: colors.surfaceContainerHighest,
-              ),
+            child: MiuixLinearProgressIndicator(
+              progress: (_currentStep + 1) / _stepCount,
             ),
           ),
           const SizedBox(width: 12),
-          Text(
+          MiuixText(
             '${_currentStep + 1} / $_stepCount',
-            style: TextStyle(
-              fontSize: 12,
+            style: miuix.textStyles.footnote1.copyWith(
               fontWeight: FontWeight.w600,
-              color: colors.onSurfaceVariant,
+              color: miuix.colors.onSurfaceVariantSummary,
             ),
           ),
           const SizedBox(width: 4),
-          IconButton(
-            tooltip: l10n.dismiss,
-            icon: const Icon(Icons.close_rounded, size: 20),
-            visualDensity: VisualDensity.compact,
+          MiuixIconButton(
             onPressed: _finish,
+            minWidth: 40,
+            minHeight: 40,
+            child: MiuixIcon(
+              vector: MiuixIcons.os4.close,
+              size: 20,
+              contentDescription: l10n.dismiss,
+            ),
           ),
         ],
       ),
@@ -148,33 +148,39 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _buildNavigationRow(
+    BuildContext context,
+    MiuixThemeData miuix,
     AppLocalizations l10n,
-    ColorScheme colors,
-    double bottomInset,
     bool isLastStep,
   ) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, 8, 16, 16 + bottomInset),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Row(
         children: [
           if (_currentStep > 0)
-            QuestopiaMorphButton.outlined(
+            MiuixTextButton(
+              l10n.prev,
               onPressed: () => _goTo(_currentStep - 1),
-              child: Text(l10n.prev),
             ),
           const Spacer(),
-          if (isLastStep)
-            QuestopiaMorphButton.filled(
-              icon: const Icon(Icons.rocket_launch_rounded),
-              onPressed: _finish,
-              child: Text(l10n.getStarted),
-            )
-          else
-            QuestopiaMorphButton.filled(
-              icon: const Icon(Icons.arrow_forward_rounded),
-              onPressed: () => _goTo(_currentStep + 1),
-              child: Text(l10n.next),
+          MiuixButton(
+            onPressed: isLastStep ? _finish : () => _goTo(_currentStep + 1),
+            colors: MiuixButtonDefaults.buttonColorsPrimary(context),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(isLastStep ? l10n.getStarted : l10n.next),
+                const SizedBox(width: 6),
+                Icon(
+                  isLastStep
+                      ? Icons.rocket_launch_rounded
+                      : Icons.arrow_forward_rounded,
+                  size: 18,
+                  color: miuix.colors.onPrimary,
+                ),
+              ],
             ),
+          ),
         ],
       ),
     );
@@ -188,7 +194,8 @@ class OnboardingFinishStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = Theme.of(context).colorScheme;
+    final miuix = MiuixTheme.of(context);
+    final colors = miuix.colors;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
@@ -211,23 +218,21 @@ class OnboardingFinishStep extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              Text(
+              MiuixText(
                 l10n.onboardingFinishTitle,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 24,
+                style: miuix.textStyles.title2.copyWith(
                   fontWeight: FontWeight.w600,
                   color: colors.onSurface,
                 ),
               ),
               const SizedBox(height: 10),
-              Text(
+              MiuixText(
                 l10n.onboardingFinishBody,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
+                style: miuix.textStyles.body2.copyWith(
                   height: 1.4,
-                  color: colors.onSurfaceVariant,
+                  color: colors.onSurfaceVariantSummary,
                 ),
               ),
             ],

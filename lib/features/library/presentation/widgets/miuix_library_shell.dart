@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_miuix/miuix.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
-import '../../../../core/widgets/questopia_frosted_overlay.dart';
+import '../../../../core/providers/settings_provider.dart';
 
-class MiuixLibraryShell extends StatelessWidget {
+class MiuixLibraryShell extends ConsumerStatefulWidget {
   const MiuixLibraryShell({
     super.key,
     required this.selectedTab,
@@ -40,57 +41,68 @@ class MiuixLibraryShell extends StatelessWidget {
   final VoidCallback onRefreshCatalog;
   final Widget? pagination;
 
+  @override
+  ConsumerState<MiuixLibraryShell> createState() => _MiuixLibraryShellState();
+}
+
+class _MiuixLibraryShellState extends ConsumerState<MiuixLibraryShell> {
+  final MiuixLayerBackdrop _backdrop = MiuixLayerBackdrop();
+
+  @override
+  void dispose() {
+    _backdrop.dispose();
+    super.dispose();
+  }
+
   Widget _action({
     required String label,
-    required String iconName,
+    required MiuixVectorIcon icon,
     required VoidCallback onPressed,
   }) {
-    return Semantics(
-      button: true,
-      label: label,
-      child: MiuixIconButton(
-        onPressed: onPressed,
-        minWidth: 48,
-        minHeight: 48,
-        child: MiuixIcon(
-          vector: MiuixIcons.extended.byName(iconName)!,
-          size: 24,
-        ),
-      ),
+    return MiuixGlassIconButton(
+      tooltip: label,
+      semanticLabel: label,
+      onPressed: onPressed,
+      child: MiuixIcon(vector: icon, size: 22),
     );
   }
 
-  Widget _buildSearchBar(
-    BuildContext context,
-    AppLocalizations l10n,
-    MiuixThemeData miuixTheme,
-  ) {
-    return MiuixSearchBar(
-      expanded: true,
-      onExpandedChange: (expanded) {
-        if (!expanded) onCloseSearch();
-      },
-      outsideEndAction: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onCloseSearch,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Text(
+  Widget _buildSearchBar(AppLocalizations l10n, MiuixThemeData miuixTheme) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: MiuixSearchBar(
+        expanded: widget.isSearchOpen,
+        onExpandedChange: (expanded) {
+          if (expanded) {
+            widget.onOpenSearch();
+          } else {
+            widget.onCloseSearch();
+          }
+        },
+        outsideEndAction: Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: MiuixTextButton(
             l10n.cancel,
-            style: TextStyle(color: miuixTheme.colors.primary),
+            onPressed: widget.onCloseSearch,
           ),
         ),
+        inputField: MiuixInputField(
+          query: widget.searchQuery,
+          onQueryChange: widget.onSearchChanged,
+          onSearch: widget.onSearchSubmitted,
+          expanded: widget.isSearchOpen,
+          onExpandedChange: (expanded) {
+            if (expanded) {
+              widget.onOpenSearch();
+            } else {
+              widget.onCloseSearch();
+            }
+          },
+          focusNode: widget.searchFocusNode,
+          label: l10n.search,
+        ),
+        content: const SizedBox.shrink(),
       ),
-      inputField: MiuixInputField(
-        query: searchQuery,
-        onQueryChange: onSearchChanged,
-        onSearch: onSearchSubmitted,
-        expanded: true,
-        onExpandedChange: (_) {},
-        focusNode: searchFocusNode,
-        label: l10n.search,
-      ),
-      content: const SizedBox.shrink(),
     );
   }
 
@@ -98,111 +110,105 @@ class MiuixLibraryShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final miuixTheme = MiuixTheme.of(context);
+    final settings = ref.watch(settingsProvider);
+    final blurEnabled = settings.isNavBarBlur;
+    final blurSigma =
+        (settings.navBarBlurPercent.clamp(10.0, 100.0) / 100.0) * 24.0;
 
     return MiuixScaffold(
-      topBar: MiuixSmallTopAppBar(
-        title: selectedTab == 2 ? l10n.settings : l10n.appTitle,
+      topBar: MiuixGlassTopAppBar(
+        title: widget.selectedTab == 2 ? l10n.settings : l10n.appTitle,
+        backdrop: blurEnabled ? _backdrop : null,
+        progressiveBlur: blurEnabled,
+        bandBlurRadius: blurEnabled ? blurSigma : 0,
         actions: [
-          _action(
-            label: l10n.search,
-            iconName: 'search',
-            onPressed: onOpenSearch,
-          ),
-          if (selectedTab == 0)
+          if (widget.selectedTab == 0)
             _action(
-              label: l10n.importGameTooltip,
-              iconName: 'add',
-              onPressed: onImportGame,
-            ),
-          if (selectedTab == 0)
-            _action(
-              label: showFavoritesOnly
+              label: widget.showFavoritesOnly
                   ? l10n.showAllGames
                   : l10n.showFavoritesOnly,
-              iconName: 'favoritesFill',
-              onPressed: onToggleFavorites,
+              icon: widget.showFavoritesOnly
+                  ? MiuixIcons.os4.favoritesFill
+                  : MiuixIcons.os4.favorites,
+              onPressed: widget.onToggleFavorites,
             ),
-          if (selectedTab == 1)
+          if (widget.selectedTab == 1)
             _action(
               label: l10n.refreshCatalog,
-              iconName: 'refresh',
-              onPressed: onRefreshCatalog,
+              icon: MiuixIcons.os4.refresh,
+              onPressed: widget.onRefreshCatalog,
             ),
         ],
-        bottomContent: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 280),
-          reverseDuration: const Duration(milliseconds: 220),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeInCubic,
-          transitionBuilder: (child, animation) => ClipRect(
-            child: FadeTransition(
-              opacity: animation,
-              child: SizeTransition(
-                sizeFactor: animation,
-                axisAlignment: -1,
-                child: child,
-              ),
-            ),
+        bottomContent: widget.selectedTab != 2
+            ? _buildSearchBar(l10n, miuixTheme)
+            : null,
+      ),
+      content: (padding) => MiuixLayerBackdropCapture(
+        backdrop: _backdrop,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            padding.left,
+            padding.top,
+            padding.right,
+            0,
           ),
-          child: isSearchOpen
-              ? KeyedSubtree(
-                  key: const ValueKey('miuix-search-open'),
-                  child: _buildSearchBar(context, l10n, miuixTheme),
-                )
-              : const KeyedSubtree(
-                  key: ValueKey('miuix-search-closed'),
-                  child: SizedBox(width: double.infinity, height: 0),
-                ),
+          child: widget.child,
         ),
       ),
-      content: (padding) => Padding(
+      floatingActionButton: widget.selectedTab == 0
+          ? MiuixFloatingActionButton(
+              onPressed: widget.onImportGame,
+              child: MiuixIcon(
+                vector: MiuixIcons.os4.add,
+                tint: miuixTheme.colors.onPrimary,
+                contentDescription: l10n.importGameTooltip,
+              ),
+            )
+          : null,
+      bottomBar: Padding(
         padding: EdgeInsets.fromLTRB(
-          padding.left,
-          padding.top,
-          padding.right,
+          16,
           0,
+          16,
+          MediaQuery.paddingOf(context).bottom + 8,
         ),
-        child: child,
-      ),
-      bottomBar: QuestopiaFrostedOverlay(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (pagination != null) pagination!,
-            MiuixNavigationBar(
-              color: Colors.transparent,
-              children: [
-              MiuixNavigationBarItem(
-                selected: selectedTab == 0,
-                onPressed: () => onTabChanged(0),
-                icon: MiuixIcon(
-                  vector: MiuixIcons.extended.byName('home')!,
-                  size: 26,
-                ),
-                label: l10n.home,
-              ),
-              MiuixNavigationBarItem(
-                selected: selectedTab == 1,
-                onPressed: () => onTabChanged(1),
-                icon: MiuixIcon(
-                  vector: MiuixIcons.extended.byName('gridView')!,
-                  size: 26,
-                ),
-                label: l10n.catalog,
-              ),
-              MiuixNavigationBarItem(
-                selected: selectedTab == 2,
-                onPressed: () => onTabChanged(2),
-                icon: MiuixIcon(
-                  vector: MiuixIcons.extended.byName('settings')!,
-                  size: 26,
-                ),
-                label: l10n.settings,
-              ),
+            if (widget.pagination != null) ...[
+              widget.pagination!,
+              const SizedBox(height: 8),
             ],
-          ),
-        ],
-      ),
+            MiuixGlassNavigationBar(
+              backdrop: blurEnabled ? _backdrop : null,
+              selectedIndex: widget.selectedTab,
+              onSelect: widget.onTabChanged,
+              items: [
+                MiuixGlassNavigationItem(
+                  icon: MiuixIcon(
+                    vector: MiuixIcons.extended.byName('home')!,
+                    size: 24,
+                  ),
+                  label: l10n.home,
+                ),
+                MiuixGlassNavigationItem(
+                  icon: MiuixIcon(
+                    vector: MiuixIcons.os4.gridView,
+                    size: 24,
+                  ),
+                  label: l10n.catalog,
+                ),
+                MiuixGlassNavigationItem(
+                  icon: MiuixIcon(
+                    vector: MiuixIcons.os4.settings,
+                    size: 24,
+                  ),
+                  label: l10n.settings,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

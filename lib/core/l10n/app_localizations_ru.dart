@@ -233,6 +233,25 @@ class AppLocalizationsRu extends AppLocalizations {
       'Использовать стиль Miuix для главного меню и настроек на Android';
 
   @override
+  String get miuixDynamicColor => 'Динамические цвета';
+
+  @override
+  String get miuixDynamicColorSummary =>
+      'Использовать палитру Miuix Monet из обоев';
+
+  @override
+  String get pullToRefreshPull => 'Потяните для обновления';
+
+  @override
+  String get pullToRefreshRelease => 'Отпустите для обновления';
+
+  @override
+  String get pullToRefreshRefreshing => 'Обновление...';
+
+  @override
+  String get pullToRefreshComplete => 'Обновлено';
+
+  @override
   String get language => 'Язык';
 
   @override
@@ -251,7 +270,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get edgeFeedback => 'Вибрация на границах';
 
   @override
-  String get navBarBlur => 'Размытие навигации';
+  String get navBarBlur => 'Размытие';
 
   @override
   String get autoSaveInterval => 'Интервал автосохранения';

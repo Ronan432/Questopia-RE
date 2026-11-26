@@ -14,6 +14,7 @@ import '../../data/local_game.dart';
 import '../../providers/library_provider.dart';
 import '../widgets/library_stats_row.dart';
 import '../widgets/local_game_card.dart';
+import '../widgets/miuix_local_game_row.dart';
 
 /// Local installed games view with empty placeholder and adaptive grid layout.
 class LocalGamesView extends ConsumerWidget {
@@ -36,49 +37,97 @@ class LocalGamesView extends ConsumerWidget {
   final VoidCallback onToggleFavoritesOnly;
   final bool miuix;
 
+  Future<void> _launchGame(
+    BuildContext context,
+    WidgetRef ref,
+    LocalGame game,
+    AppLocalizations l10n,
+  ) async {
+    final f = File(game.gameFilePath);
+    if (!await f.exists()) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.gameFileNotFound(game.gameFilePath))),
+        );
+      }
+      return;
+    }
+    ref.read(gameEngineProvider.notifier).loadGame(game);
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).push(
+        MaterialPageRoute<void>(
+          builder: (_) => GameScreen(title: game.title),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final state = ref.watch(libraryProvider);
+
+    Widget wrapPullToRefresh(Widget child) {
+      if (!miuix) return child;
+      return MiuixPullToRefresh(
+        isRefreshing: state.isLoadingLocal,
+        onRefresh: () =>
+            ref.read(libraryProvider.notifier).refreshLocalGames(force: true),
+        refreshTexts: [
+          l10n.pullToRefreshPull,
+          l10n.pullToRefreshRelease,
+          l10n.pullToRefreshRefreshing,
+          l10n.pullToRefreshComplete,
+        ],
+        child: child,
+      );
+    }
 
     if (games.isEmpty) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          const SizedBox(height: 120),
-          Icon(
-            Icons.sports_esports_outlined,
-            size: 56,
-            color: Theme.of(context).colorScheme.outline,
-          ),
-          const SizedBox(height: 12),
-          Center(
-            child: Text(
-              l10n.emptyLibraryHint,
-              textAlign: TextAlign.center,
+      return wrapPullToRefresh(
+        ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            const SizedBox(height: 120),
+            Icon(
+              Icons.sports_esports_outlined,
+              size: 56,
+              color: Theme.of(context).colorScheme.outline,
             ),
-          ),
-          const SizedBox(height: 16),
-          Center(
-            child: miuix
-                ? MiuixButton(
-                    onPressed: onImportFolder,
-                    colors: MiuixButtonDefaults.buttonColorsPrimary(context),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.add_rounded, size: 20),
-                        const SizedBox(width: 8),
-                        Text(l10n.addGame),
-                      ],
+            const SizedBox(height: 12),
+            Center(
+              child: Text(
+                l10n.emptyLibraryHint,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: miuix
+                  ? MiuixButton(
+                      onPressed: onImportFolder,
+                      colors: MiuixButtonDefaults.buttonColorsPrimary(context),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          MiuixIcon(
+                            vector: MiuixIcons.os4.add,
+                            size: 20,
+                            tint: MiuixTheme.of(context).colors.onPrimary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(l10n.addGame),
+                        ],
+                      ),
+                    )
+                  : QuestopiaMorphButton.filled(
+                      onPressed: onImportFolder,
+                      icon: const Icon(Icons.add_rounded, size: 20),
+                      child: Text(l10n.addGame),
                     ),
-                  )
-                : QuestopiaMorphButton.filled(
-                    onPressed: onImportFolder,
-                    icon: const Icon(Icons.add_rounded, size: 20),
-                    child: Text(l10n.addGame),
-                  ),
-          ),
-        ],
+            ),
+          ],
+        ),
       );
     }
 
@@ -89,80 +138,90 @@ class LocalGamesView extends ConsumerWidget {
 
     final horizontalPadding = isCompact ? 12.0 : 20.0;
 
-    return CustomScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      slivers: [
-        SliverPadding(
-          padding: EdgeInsets.fromLTRB(
-            horizontalPadding,
-            10,
-            horizontalPadding,
-            12,
-          ),
-          sliver: SliverToBoxAdapter(
-            child: LibraryStatsRow(
-              games: allGames,
-              showFavoritesOnly: showFavoritesOnly,
-              onToggleFavoritesOnly: onToggleFavoritesOnly,
-              miuix: miuix,
+    return wrapPullToRefresh(
+      CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              10,
+              horizontalPadding,
+              12,
             ),
-          ),
-        ),
-        SliverPadding(
-          padding: EdgeInsets.fromLTRB(
-            horizontalPadding,
-            0,
-            horizontalPadding,
-            isNavBarBlur ? 90 : (isCompact ? 20 : 24),
-          ),
-          sliver: SliverGrid.builder(
-            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: isCompact ? 200 : 320,
-              mainAxisExtent: isCompact ? 208 : 245,
-              crossAxisSpacing: isCompact ? 10 : 14,
-              mainAxisSpacing: isCompact ? 10 : 14,
-            ),
-            itemCount: games.length,
-            itemBuilder: (context, index) {
-              final game = games[index];
-              return LocalGameCard(
-                game: game,
-                isCompact: isCompact,
+            sliver: SliverToBoxAdapter(
+              child: LibraryStatsRow(
+                games: allGames,
+                showFavoritesOnly: showFavoritesOnly,
+                onToggleFavoritesOnly: onToggleFavoritesOnly,
                 miuix: miuix,
-                onPlay: () async {
-                  final f = File(game.gameFilePath);
-                  if (!await f.exists()) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            l10n.gameFileNotFound(game.gameFilePath),
-                          ),
-                        ),
-                      );
-                    }
-                    return;
-                  }
-                  ref.read(gameEngineProvider.notifier).loadGame(game);
-                  if (context.mounted) {
-                    Navigator.of(context, rootNavigator: true).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => GameScreen(title: game.title),
-                      ),
-                    );
-                  }
-                },
-                onRemove: () {
-                  ref.read(libraryProvider.notifier).removeGameFromLibrary(game);
-                },
-                onToggleFavorite: () {
-                  ref.read(libraryProvider.notifier).toggleFavorite(game);
-                },
-              );
-            },
+              ),
+            ),
           ),
-        ),
-      ],
+          if (miuix)
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                0,
+                horizontalPadding,
+                100,
+              ),
+              sliver: SliverList.builder(
+                itemCount: games.length,
+                itemBuilder: (context, index) {
+                  final game = games[index];
+                  return MiuixLocalGameRow(
+                    game: game,
+                    onPlay: () => _launchGame(context, ref, game, l10n),
+                    onRemove: () {
+                      ref
+                          .read(libraryProvider.notifier)
+                          .removeGameFromLibrary(game);
+                    },
+                    onToggleFavorite: () {
+                      ref.read(libraryProvider.notifier).toggleFavorite(game);
+                    },
+                  );
+                },
+              ),
+            )
+          else
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                0,
+                horizontalPadding,
+                isNavBarBlur ? 90 : (isCompact ? 20 : 24),
+              ),
+              sliver: SliverGrid.builder(
+                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: isCompact ? 200 : 320,
+                  mainAxisExtent: isCompact ? 208 : 245,
+                  crossAxisSpacing: isCompact ? 10 : 14,
+                  mainAxisSpacing: isCompact ? 10 : 14,
+                ),
+                itemCount: games.length,
+                itemBuilder: (context, index) {
+                  final game = games[index];
+                  return LocalGameCard(
+                    game: game,
+                    isCompact: isCompact,
+                    miuix: false,
+                    onPlay: () => _launchGame(context, ref, game, l10n),
+                    onRemove: () {
+                      ref
+                          .read(libraryProvider.notifier)
+                          .removeGameFromLibrary(game);
+                    },
+                    onToggleFavorite: () {
+                      ref.read(libraryProvider.notifier).toggleFavorite(game);
+                    },
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
 import 'onboarding_step_layout.dart';
 
 /// Behavior step: the helper switches that are worth deciding before the first
 /// game is opened, including the cheat engine.
-///
-/// Each entry writes straight through [onChanged], so the value the user sees
-/// is the value stored by [settingsProvider].
 class OnboardingBehaviorStep extends StatelessWidget {
   const OnboardingBehaviorStep({
     super.key,
@@ -39,104 +36,47 @@ class OnboardingBehaviorStep extends StatelessWidget {
       icon: Icons.tune_rounded,
       title: l10n.onboardingBehaviorTitle,
       description: l10n.onboardingBehaviorBody,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _ToggleCard(
-            icon: Icons.fullscreen_rounded,
-            title: l10n.immersiveMode,
-            value: isImmersiveMode,
-            onChanged: onImmersiveModeChanged,
-          ),
-          _ToggleCard(
-            icon: Icons.vertical_align_bottom_rounded,
-            title: l10n.autoscroll,
-            value: isUseAutoscroll,
-            onChanged: onAutoscrollChanged,
-          ),
-          _ToggleCard(
-            icon: Icons.save_outlined,
-            title: l10n.autoSave,
-            value: isAutosaveEnabled,
-            onChanged: onAutosaveChanged,
-          ),
-          _ToggleCard(
-            icon: Icons.bug_report_outlined,
-            title: l10n.cheatEngine,
-            value: isCheatsEnabled,
-            onChanged: onCheatsChanged,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// A single switch row shaped like the surrounding onboarding cards, so the
-/// step keeps the same visual language as the exclusive choice steps.
-class _ToggleCard extends StatelessWidget {
-  const _ToggleCard({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final IconData icon;
-  final String title;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 3),
-      child: Material(
-        color: value ? colors.secondaryContainer : colors.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: () {
-            HapticFeedback.lightImpact();
-            onChanged(!value);
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: value
-                    ? colors.primary
-                    : colors.outlineVariant.withValues(alpha: 0.5),
-                width: value ? 2 : 1,
+      child: MiuixCard(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            MiuixSwitchPreference(
+              title: l10n.immersiveMode,
+              startAction: const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: Icon(Icons.fullscreen_rounded, size: 22),
               ),
+              value: isImmersiveMode,
+              onChanged: onImmersiveModeChanged,
             ),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  size: 22,
-                  color: value ? colors.primary : colors.onSurfaceVariant,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(fontSize: 15),
-                  ),
-                ),
-                Switch(
-                  value: value,
-                  onChanged: (next) {
-                    HapticFeedback.lightImpact();
-                    onChanged(next);
-                  },
-                ),
-              ],
+            MiuixSwitchPreference(
+              title: l10n.autoscroll,
+              startAction: const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: Icon(Icons.vertical_align_bottom_rounded, size: 22),
+              ),
+              value: isUseAutoscroll,
+              onChanged: onAutoscrollChanged,
             ),
-          ),
+            MiuixSwitchPreference(
+              title: l10n.autoSave,
+              startAction: const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: Icon(Icons.save_outlined, size: 22),
+              ),
+              value: isAutosaveEnabled,
+              onChanged: onAutosaveChanged,
+            ),
+            MiuixSwitchPreference(
+              title: l10n.cheatEngine,
+              startAction: const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: Icon(Icons.bug_report_outlined, size: 22),
+              ),
+              value: isCheatsEnabled,
+              onChanged: onCheatsChanged,
+            ),
+          ],
         ),
       ),
     );

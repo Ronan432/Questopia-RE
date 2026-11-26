@@ -21,11 +21,21 @@ class QuestopiaFrostedOverlay extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final colors = Theme.of(context).colorScheme;
 
-    if (!settings.isNavBarBlur) return child;
+    if (!settings.isNavBarBlur) {
+      return DecoratedBox(
+        decoration: BoxDecoration(color: colors.surface),
+        child: child,
+      );
+    }
 
     final percent = settings.navBarBlurPercent.clamp(10.0, 100.0);
     final sigma = (percent / 100.0) * 24.0;
-    if (sigma <= 0) return child;
+    if (sigma <= 0) {
+      return DecoratedBox(
+        decoration: BoxDecoration(color: colors.surface),
+        child: child,
+      );
+    }
 
     return ClipRect(
       child: BackdropFilter(

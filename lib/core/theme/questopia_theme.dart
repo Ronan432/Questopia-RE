@@ -283,7 +283,6 @@ abstract final class QuestopiaTheme {
   static ThemeData _themeWithScheme(Brightness brightness, ColorScheme scheme) {
     return ThemeData(
       useMaterial3: true,
-      fontFamily: 'MiSans',
       splashFactory: InkSparkle.splashFactory,
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,

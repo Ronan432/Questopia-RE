@@ -273,102 +273,77 @@ class _MiuixStatsRow extends StatelessWidget {
     final miuix = MiuixTheme.of(context);
     final colors = miuix.colors;
 
-    return Row(
-      children: [
-        Expanded(
-          child: MiuixCard(
-            onPressed: onDeleteAll,
-            insideMargin:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.library_books_outlined,
-                  size: 22,
-                  color: colors.primary,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '$gamesCount',
-                        style: miuix.textStyles.title4.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colors.onSurface,
-                        ),
-                      ),
-                      Text(
-                        l10n.installedGames,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: miuix.textStyles.body2.copyWith(
-                          color: colors.onSurfaceVariantSummary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          MiuixIcon(
+            vector: MiuixIcons.os4.folder,
+            size: 18,
+            tint: colors.primary,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: MiuixText(
+              '$gamesCount ${l10n.installedGames}',
+              style: miuix.textStyles.subtitle.copyWith(
+                color: colors.onSurface,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: MiuixCard(
-            colors: showFavoritesOnly
-                ? MiuixCardColors(
-                    color: colors.primary.withValues(alpha: 0.14),
-                    contentColor: colors.primary,
-                  )
-                : null,
+          MiuixButton(
             onPressed: onToggleFavoritesOnly,
-            insideMargin:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            colors: showFavoritesOnly
+                ? MiuixButtonDefaults.buttonColorsPrimary(context)
+                : MiuixButtonDefaults.buttonColors(context),
+            minHeight: 36,
+            insideMargin: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 6,
+            ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.favorite_rounded,
-                  size: 22,
-                  color: showFavoritesOnly
-                      ? colors.primary
-                      : colors.onSurfaceVariantActions,
+                MiuixIcon(
+                  vector: showFavoritesOnly
+                      ? MiuixIcons.os4.favoritesFill
+                      : MiuixIcons.os4.favorites,
+                  size: 16,
+                  tint: showFavoritesOnly
+                      ? colors.onPrimary
+                      : colors.onSecondary,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '$favoriteCount',
-                        style: miuix.textStyles.title4.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: showFavoritesOnly
-                              ? colors.primary
-                              : colors.onSurface,
-                        ),
-                      ),
-                      Text(
-                        l10n.favoriteGames,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: miuix.textStyles.body2.copyWith(
-                          color: showFavoritesOnly
-                              ? colors.primary
-                              : colors.onSurfaceVariantSummary,
-                        ),
-                      ),
-                    ],
+                const SizedBox(width: 6),
+                Text(
+                  '${l10n.favoriteGames} ($favoriteCount)',
+                  style: miuix.textStyles.footnote1.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: showFavoritesOnly
+                        ? colors.onPrimary
+                        : colors.onSecondary,
                   ),
                 ),
               ],
             ),
           ),
-        ),
-      ],
+          if (onDeleteAll != null) ...[
+            const SizedBox(width: 6),
+            MiuixIconButton(
+              onPressed: onDeleteAll,
+              minWidth: 38,
+              minHeight: 38,
+              child: MiuixIcon(
+                vector: MiuixIcons.os4.delete,
+                size: 20,
+                tint: colors.error,
+                contentDescription: l10n.deleteAll,
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

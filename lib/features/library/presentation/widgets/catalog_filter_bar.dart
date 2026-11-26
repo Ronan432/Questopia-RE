@@ -287,8 +287,7 @@ class _CatalogFilterBarState extends ConsumerState<CatalogFilterBar> {
                       children: [
                         for (var i = 0;
                             i < CatalogSortOption.values.length;
-                            i++) ...[
-                          if (i > 0) const MiuixHorizontalDivider(),
+                            i++)
                           MiuixBasicComponent(
                             title: _sortLabel(l10n, CatalogSortOption.values[i]),
                             endActions: [
@@ -310,7 +309,6 @@ class _CatalogFilterBarState extends ConsumerState<CatalogFilterBar> {
                               );
                             },
                           ),
-                        ],
                       ],
                     ),
                   ),
