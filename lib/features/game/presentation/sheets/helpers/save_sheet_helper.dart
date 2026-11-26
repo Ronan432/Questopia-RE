@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
@@ -19,24 +16,26 @@ class SaveImportExportRow extends StatelessWidget {
   Future<void> _handleImport(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
     final navigator = Navigator.of(context);
-    FilePickerResult? result;
+    PlatformFile? pickedFile;
     try {
-      result = await FilePicker.platform.pickFiles(
+      pickedFile = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: ['sav'],
-        withData: true,
       );
     } catch (_) {
-      result = await FilePicker.platform.pickFiles(type: FileType.any, withData: true);
+      pickedFile = await FilePicker.pickFile(type: FileType.any);
     }
 
-    if (result != null && result.files.isNotEmpty) {
-      final pickedFile = result.files.single;
+    if (pickedFile != null) {
       bool ok = false;
-      if (pickedFile.bytes != null && pickedFile.bytes!.isNotEmpty) {
-        ok = engineNotifier.restoreSaveSnapshot(pickedFile.bytes!);
-      } else if (pickedFile.path != null && pickedFile.path!.isNotEmpty) {
-        ok = await engineNotifier.importSaveFile(pickedFile.path!);
+      final path = pickedFile.path;
+      if (path != null && path.isNotEmpty) {
+        ok = await engineNotifier.importSaveFile(path);
+      } else {
+        final bytes = await pickedFile.readAsBytes();
+        if (bytes.isNotEmpty) {
+          ok = engineNotifier.restoreSaveSnapshot(bytes);
+        }
       }
 
       if (context.mounted) {
@@ -56,32 +55,14 @@ class SaveImportExportRow extends StatelessWidget {
       showSheetSnackBar(context, l10n.noActiveSaveData);
       return;
     }
-    String? result;
-    try {
-      result = await FilePicker.platform.saveFile(
-        dialogTitle: l10n.exportSaveFileDialog,
-        fileName: 'game_save.sav',
-        type: FileType.custom,
-        allowedExtensions: ['sav'],
-        bytes: bytes,
-      );
-    } catch (_) {
-      result = await FilePicker.platform.saveFile(
-        dialogTitle: l10n.exportSaveFileDialog,
-        fileName: 'game_save.sav',
-        type: FileType.any,
-        bytes: bytes,
-      );
-    }
+    final result = await FilePicker.saveFile(
+      dialogTitle: l10n.exportSaveFileDialog,
+      fileName: 'game_save.sav',
+      bytes: bytes,
+    );
 
-    if (result != null && result.isNotEmpty) {
-      if (!kIsWeb) {
-        try {
-          final file = File(result);
-          await file.writeAsBytes(bytes, flush: true);
-        } catch (_) {}
-      }
-      if (context.mounted) showSheetSnackBar(context, l10n.saveFileExported);
+    if (result != null && context.mounted) {
+      showSheetSnackBar(context, l10n.saveFileExported);
     }
   }
 

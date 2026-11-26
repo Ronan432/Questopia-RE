@@ -216,11 +216,11 @@ class GameFileLoadDialog extends StatelessWidget {
         ),
         QuestopiaMorphButton.filled(
           onPressed: () async {
-            final result = await FilePicker.platform.pickFiles(
+            final file = await FilePicker.pickFile(
               type: FileType.custom,
               allowedExtensions: ['sav'],
             );
-            final path = result?.files.singleOrNull?.path;
+            final path = file?.path;
             if (path != null && path.isNotEmpty) onPick(path);
           },
           child: Text(l10n.pickFile),

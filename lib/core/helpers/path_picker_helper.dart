@@ -59,35 +59,34 @@ class PathPickerHelper {
     debugPrint('[QUESTOPIA_IMPORT] [PICKER] pickGameFile called');
     await ensureStoragePermissions();
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final file = await FilePicker.pickFile(
         type: FileType.any,
-        allowMultiple: false,
         dialogTitle: l10n.selectGameFileOrArchive,
       );
 
-      if (result == null || result.files.isEmpty) {
+      if (file == null) {
         debugPrint(
-            '[QUESTOPIA_IMPORT] [PICKER] pickGameFile cancelled by user (result is null/empty)');
+            '[QUESTOPIA_IMPORT] [PICKER] pickGameFile cancelled by user');
         return null;
       }
 
-      final file = result.files.single;
       debugPrint(
-          '[QUESTOPIA_IMPORT] [PICKER] File picked: name="${file.name}", path="${file.path}", size=${file.size}, bytes=${file.bytes != null}');
+          '[QUESTOPIA_IMPORT] [PICKER] File picked: name="${file.name}", path="${file.path}", size=${file.lengthSync()}');
 
-      String? pickedPath;
+      String pickedPath;
       if (file.path != null && file.path!.trim().isNotEmpty) {
         pickedPath = file.path!.trim();
-      } else if (file.bytes != null) {
+      } else {
+        final bytes = await file.readAsBytes();
         final tempDir = await getTemporaryDirectory();
         final tempFile = File(p.join(tempDir.path, file.name));
-        await tempFile.writeAsBytes(file.bytes!);
+        await tempFile.writeAsBytes(bytes);
         pickedPath = tempFile.path;
         debugPrint(
             '[QUESTOPIA_IMPORT] [PICKER] Wrote in-memory bytes to temporary file: $pickedPath');
       }
 
-      if (pickedPath != null && pickedPath.isNotEmpty) {
+      if (pickedPath.isNotEmpty) {
         final ext = p.extension(pickedPath).replaceFirst('.', '').toLowerCase();
         debugPrint(
             '[QUESTOPIA_IMPORT] [PICKER] Resolved file path: "$pickedPath" with extension: "$ext"');
@@ -125,7 +124,7 @@ class PathPickerHelper {
     await ensureStoragePermissions();
 
     try {
-      final selectedPath = await FilePicker.platform.getDirectoryPath(
+      final selectedPath = await FilePicker.getDirectoryPath(
         dialogTitle: title ?? l10n.selectFolder,
         initialDirectory: currentPath.isNotEmpty ? currentPath : null,
       );
