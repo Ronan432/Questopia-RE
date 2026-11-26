@@ -121,11 +121,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
   void initState() {
     super.initState();
     final settings = ref.read(settingsProvider);
-    SystemChrome.setEnabledSystemUIMode(
-      settings.isImmersiveMode
-          ? SystemUiMode.immersiveSticky
-          : SystemUiMode.edgeToEdge,
-    );
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    _isHeaderVisible = !settings.isImmersiveMode;
     _applyEngineSettings(settings);
     _playSessionTracker = ref.read(playSessionTrackerProvider);
     WidgetsBinding.instance.addObserver(this);

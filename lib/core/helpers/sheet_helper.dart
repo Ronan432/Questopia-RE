@@ -23,7 +23,9 @@ Future<T?> showQuestopiaSheet<T>({
   final maxSheetHeight = (mediaQuery.size.height - topPadding)
       .clamp(200.0, mediaQuery.size.height);
   final colors = Theme.of(context).colorScheme;
-  final sheetBgColor = backgroundColor ?? colors.surfaceContainerLowest;
+  final miuixColors = MiuixTheme.maybeOf(context)?.colors;
+  final sheetBgColor =
+      backgroundColor ?? miuixColors?.background ?? colors.surface;
   final isDark =
       ThemeData.estimateBrightnessForColor(sheetBgColor) == Brightness.dark;
 
@@ -88,17 +90,11 @@ Future<T?> showQuestopiaSheet<T>({
                   color: sheetBgColor,
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(28)),
-                  border: Border(
-                    top: BorderSide(
-                      color: colors.outlineVariant.withValues(alpha: 0.25),
-                      width: 0.5,
-                    ),
-                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.25),
-                      blurRadius: 18,
-                      offset: const Offset(0, -4),
+                      color: Colors.black.withValues(alpha: 0.22),
+                      blurRadius: 24,
+                      offset: const Offset(0, -6),
                     ),
                   ],
                 ),
@@ -155,7 +151,7 @@ class _BlurredModalBottomSheetRoute<T> extends ModalBottomSheetRoute<T> {
   ImageFilter? get filter => ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0);
 }
 
-/// Centered header pill styling for Miuix modal bottom sheets.
+/// Centered Miuix style title row for modal bottom sheets.
 class QuestopiaSheetHeaderPill extends StatelessWidget {
   const QuestopiaSheetHeaderPill({
     super.key,
@@ -174,36 +170,32 @@ class QuestopiaSheetHeaderPill extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final onSurface = miuix?.colors.onSurface ?? colors.onSurface;
     final primary = miuix?.colors.primary ?? colors.primary;
+    final textStyle =
+        (miuix?.textStyles.title4 ?? const TextStyle(fontSize: 17)).copyWith(
+      fontWeight: FontWeight.w500,
+      color: onSurface,
+    );
 
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.only(top: 4, bottom: 14),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        decoration: ShapeDecoration(
-          color: (miuix?.colors.surfaceContainerHigh ??
-                  colors.secondaryContainer)
-              .withValues(alpha: 0.85),
-          shape: MiuixSquircleBorder(cornerRadius: 18),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (miuixVectorIcon != null) ...[
-              MiuixIcon(vector: miuixVectorIcon, size: 16, tint: primary),
-              const SizedBox(width: 8),
-            ],
-            Text(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 6, 24, 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (miuixVectorIcon != null) ...[
+            MiuixIcon(vector: miuixVectorIcon, size: 18, tint: primary),
+            const SizedBox(width: 8),
+          ] else if (icon != null) ...[
+            Icon(icon, size: 18, color: primary),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Text(
               title,
               textAlign: TextAlign.center,
-              style: (miuix?.textStyles.subtitle ??
-                      const TextStyle(fontSize: 14))
-                  .copyWith(
-                fontWeight: FontWeight.w600,
-                color: onSurface,
-              ),
+              style: textStyle,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -223,32 +215,29 @@ class _InteractiveDragHandleState extends State<_InteractiveDragHandle> {
 
   @override
   Widget build(BuildContext context) {
+    final baseColor = widget.isDark
+        ? Colors.white.withValues(alpha: 0.20)
+        : Colors.black.withValues(alpha: 0.20);
     final activeColor = widget.isDark
-        ? Colors.white.withValues(alpha: 0.95)
-        : Colors.black.withValues(alpha: 0.85);
-    final idleColor = widget.isDark
         ? Colors.white.withValues(alpha: 0.35)
-        : Colors.black.withValues(alpha: 0.25);
+        : Colors.black.withValues(alpha: 0.35);
 
     return Listener(
-      onPointerDown: (_) {
-        HapticFeedback.selectionClick();
-        setState(() => _isPressed = true);
-      },
+      onPointerDown: (_) => setState(() => _isPressed = true),
       onPointerUp: (_) => setState(() => _isPressed = false),
       onPointerCancel: (_) => setState(() => _isPressed = false),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-          color: Colors.transparent,
+      child: SizedBox(
+        height: 24,
+        width: double.infinity,
+        child: Center(
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
-            width: _isPressed ? 52 : 36,
-            height: _isPressed ? 6 : 4,
+            width: _isPressed ? 55 : 45,
+            height: _isPressed ? 4.6 : 4,
             decoration: BoxDecoration(
-              color: _isPressed ? activeColor : idleColor,
-              borderRadius: BorderRadius.circular(_isPressed ? 3 : 2),
+              color: _isPressed ? activeColor : baseColor,
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
         ),
@@ -256,5 +245,3 @@ class _InteractiveDragHandleState extends State<_InteractiveDragHandle> {
     );
   }
 }
-
-

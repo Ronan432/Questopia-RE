@@ -129,7 +129,7 @@ class MiuixGeneralSection extends StatelessWidget {
                 value: settings.navBarBlurPercent,
                 min: 10,
                 max: 100,
-                steps: 18,
+                steps: 9,
                 valueText: '${settings.navBarBlurPercent.round()}%',
                 onChanged: notifier.setNavBarBlurPercent,
               ),

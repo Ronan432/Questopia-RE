@@ -50,16 +50,56 @@ const EdgeInsets _kCompactRowMargin = EdgeInsets.symmetric(
   vertical: 11,
 );
 
+/// HyperOS style accent colors for the rounded settings icon tiles.
+const Map<String, Color> _kSettingsIconColors = {
+  'theme': Color(0xFF8A5CF6),
+  'image': Color(0xFF8A5CF6),
+  'screenMirroring': Color(0xFF8A5CF6),
+  'memoryFunction': Color(0xFF8A5CF6),
+  'translate': Color(0xFF3B82F6),
+  'link': Color(0xFF3B82F6),
+  'lock': Color(0xFF3B82F6),
+  'search': Color(0xFF3B82F6),
+  'timer': Color(0xFF3B82F6),
+  'refresh': Color(0xFF3B82F6),
+  'edit': Color(0xFF3B82F6),
+  'book': Color(0xFFF59E0B),
+  'file': Color(0xFFF59E0B),
+  'folder': Color(0xFFF59E0B),
+  'save': Color(0xFFF59E0B),
+  'backup': Color(0xFFF59E0B),
+  'volumeUp': Color(0xFF22C55E),
+  'volumeOff': Color(0xFF22C55E),
+  'delete': Color(0xFFEF4444),
+  'info': Color(0xFF64748B),
+  'layers': Color(0xFF14B8A6),
+  'listView': Color(0xFF14B8A6),
+  'horizontalSplit': Color(0xFF14B8A6),
+  'verticalSplit': Color(0xFF14B8A6),
+  'tune': Color(0xFF64748B),
+  'expandMore': Color(0xFF64748B),
+};
+
 Widget miuixSettingsIcon(BuildContext context, String iconName,
     {MiuixVectorIcon? fallback}) {
-  final colors = MiuixTheme.of(context).colors;
+  final color = _kSettingsIconColors[iconName] ??
+      MiuixTheme.of(context).colors.primary;
   return Padding(
-    padding: const EdgeInsets.only(right: 10),
-    child: miuixIcon(
-      iconName,
-      size: 20,
-      tint: colors.onSurfaceVariantActions,
-      fallback: fallback,
+    padding: const EdgeInsets.only(right: 12),
+    child: Container(
+      width: 30,
+      height: 30,
+      alignment: Alignment.center,
+      decoration: ShapeDecoration(
+        color: color,
+        shape: MiuixSquircleBorder(cornerRadius: 9),
+      ),
+      child: miuixIcon(
+        iconName,
+        size: 18,
+        tint: Colors.white,
+        fallback: fallback,
+      ),
     ),
   );
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -118,47 +117,37 @@ class _MiuixPageButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final miuix = MiuixTheme.of(context);
     final colors = miuix.colors;
-    final fg = enabled ? colors.primary : colors.disabledOnSurface;
-    final bg = enabled
-        ? colors.primary.withValues(alpha: 0.12)
-        : colors.surfaceContainer.withValues(alpha: 0.6);
+    final fg = enabled
+        ? colors.onSecondaryVariant
+        : colors.disabledOnSecondaryVariant;
 
-    return MiuixPressable(
+    return MiuixButton(
+      onPressed: enabled ? onPressed : null,
       enabled: enabled,
-      onPressed: enabled
-          ? () {
-              HapticFeedback.selectionClick();
-              onPressed();
-            }
-          : null,
-      shape: MiuixSquircleBorder(cornerRadius: 16),
-      child: Container(
-        height: 36,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: ShapeDecoration(
-          color: bg,
-          shape: MiuixSquircleBorder(cornerRadius: 16),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (iconLeading) ...[
-              MiuixIcon(vector: icon, size: 15, tint: fg),
-              const SizedBox(width: 5),
-            ],
-            MiuixText(
-              label,
-              style: miuix.textStyles.footnote1.copyWith(
-                fontWeight: FontWeight.w600,
-                color: fg,
-              ),
-            ),
-            if (!iconLeading) ...[
-              const SizedBox(width: 5),
-              MiuixIcon(vector: icon, size: 15, tint: fg),
-            ],
+      minWidth: 88,
+      minHeight: 40,
+      cornerRadius: 16,
+      insideMargin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (iconLeading) ...[
+            MiuixIcon(vector: icon, size: 16, tint: fg),
+            const SizedBox(width: 6),
           ],
-        ),
+          MiuixText(
+            label,
+            style: miuix.textStyles.footnote1.copyWith(
+              fontWeight: FontWeight.w600,
+              color: fg,
+            ),
+          ),
+          if (!iconLeading) ...[
+            const SizedBox(width: 6),
+            MiuixIcon(vector: icon, size: 16, tint: fg),
+          ],
+        ],
       ),
     );
   }

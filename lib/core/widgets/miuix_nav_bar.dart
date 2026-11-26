@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_miuix/miuix.dart';
 
 import '../theme/glass_effect.dart';
@@ -18,8 +17,8 @@ class MiuixNavBarItem {
   final bool showBadge;
 }
 
-/// Floating Miuix bottom navigation bar with advanced-texture blur,
-/// tap/swipe haptics, and 10% active-pill shrink on press or drag.
+/// Floating Miuix bottom navigation bar with advanced-texture blur and a
+/// neutral active pill that shrinks on press or drag.
 class MiuixNavBar extends StatefulWidget {
   const MiuixNavBar({
     super.key,
@@ -41,7 +40,7 @@ class MiuixNavBar extends StatefulWidget {
 }
 
 class _MiuixNavBarState extends State<MiuixNavBar> {
-  static const double _barHeight = 62.0;
+  static const double _barHeight = 58.0;
   bool _isInteracting = false;
 
   int _indexForDx(double dx, double totalWidth) {
@@ -57,7 +56,6 @@ class _MiuixNavBarState extends State<MiuixNavBar> {
 
   void _selectIndex(int index) {
     if (index < 0 || index >= widget.items.length) return;
-    HapticFeedback.selectionClick();
     if (index != widget.selectedIndex) {
       widget.onSelect(index);
     }
@@ -79,13 +77,9 @@ class _MiuixNavBarState extends State<MiuixNavBar> {
       ),
     );
 
-    final baseSurface = isDark
-        ? colors.surfaceContainerHigh
-        : colors.surfaceContainer;
+    final baseSurface = colors.surfaceContainer;
 
-    final pillColor = _isInteracting
-        ? colors.primary.withValues(alpha: isDark ? 0.24 : 0.18)
-        : colors.primary.withValues(alpha: isDark ? 0.16 : 0.12);
+    final pillColor = colors.secondaryContainer;
 
     return GlassEffect.wrap(
       context,
@@ -212,7 +206,8 @@ class _NavBarItemContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = selected ? colors.primary : colors.onSurfaceVariantActions;
+    final tint =
+        selected ? colors.onSecondaryContainer : colors.onSurfaceVariantActions;
     final vector = selected ? (item.activeIcon ?? item.icon) : item.icon;
 
     return Semantics(
@@ -227,7 +222,7 @@ class _NavBarItemContent extends StatelessWidget {
             children: [
               MiuixIcon(
                 vector: vector,
-                size: 22,
+                size: 24,
                 tint: tint,
               ),
               if (item.showBadge)

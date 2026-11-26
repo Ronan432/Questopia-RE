@@ -54,8 +54,8 @@ class MiuixLibraryShell extends ConsumerWidget {
 
     return GlassEffect.wrap(
       context,
-      enabled: settings.isNavBarBlur,
-      percent: settings.navBarBlurPercent,
+      enabled: settings.isNavBarBlur || selectedTab == 2,
+      percent: settings.isNavBarBlur ? settings.navBarBlurPercent : 70.0,
       baseColor: colors.surface,
       border: Border(
         bottom: BorderSide(
@@ -108,14 +108,16 @@ class MiuixLibraryShell extends ConsumerWidget {
             if (selectedTab != 2) ...[
               const SizedBox(height: 6),
               _MiuixSearchField(
-                controller: searchController,
                 focusNode: searchFocusNode,
                 hintText: selectedTab == 1
                     ? l10n.searchOnlineCatalog
                     : l10n.search,
                 query: searchQuery,
+                isExpanded: isSearchOpen,
+                cancelLabel: l10n.cancel,
                 onChanged: onSearchChanged,
                 onSubmitted: onSearchSubmitted,
+                onOpen: onOpenSearch,
                 onClear: () {
                   searchController.clear();
                   onSearchChanged('');
@@ -205,83 +207,67 @@ class MiuixLibraryShell extends ConsumerWidget {
 
 class _MiuixSearchField extends StatelessWidget {
   const _MiuixSearchField({
-    required this.controller,
     required this.focusNode,
     required this.hintText,
     required this.query,
+    required this.isExpanded,
+    required this.cancelLabel,
     required this.onChanged,
     required this.onSubmitted,
+    required this.onOpen,
     required this.onClear,
   });
 
-  final TextEditingController controller;
   final FocusNode focusNode;
   final String hintText;
   final String query;
+  final bool isExpanded;
+  final String cancelLabel;
   final ValueChanged<String> onChanged;
   final ValueChanged<String> onSubmitted;
+  final VoidCallback onOpen;
   final VoidCallback onClear;
+
+  void _onExpandedChanged(bool expanded) {
+    if (expanded) {
+      onOpen();
+    } else {
+      onClear();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final miuix = MiuixTheme.of(context);
     final colors = miuix.colors;
 
-    return Container(
-      height: 42,
-      decoration: ShapeDecoration(
+    return MiuixSearchBar(
+      expanded: isExpanded,
+      insideMargin: EdgeInsets.zero,
+      onExpandedChange: _onExpandedChanged,
+      inputField: MiuixInputField(
+        query: query,
+        onQueryChange: onChanged,
+        onSearch: onSubmitted,
+        expanded: isExpanded,
+        onExpandedChange: _onExpandedChanged,
+        label: hintText,
+        focusNode: focusNode,
         color: colors.surfaceContainerHigh,
-        shape: MiuixSquircleBorder(
-          cornerRadius: 21,
-          side: BorderSide(
-            color: colors.outline.withValues(alpha: 0.16),
-            width: 0.5,
-          ),
+        leadingIcon: MiuixIcon(
+          vector: MiuixIcons.basic.search,
+          size: 20,
+          tint: colors.onSurfaceVariantActions,
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      child: Row(
-        children: [
-          MiuixIcon(
-            vector: MiuixIcons.basic.search,
-            size: 18,
-            tint: colors.onSurfaceVariantActions,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              focusNode: focusNode,
-              onChanged: onChanged,
-              onSubmitted: onSubmitted,
-              textInputAction: TextInputAction.search,
-              style: miuix.textStyles.body2.copyWith(
-                color: colors.onSurface,
-              ),
-              cursorColor: colors.primary,
-              decoration: InputDecoration(
-                isCollapsed: true,
-                border: InputBorder.none,
-                hintText: hintText,
-                hintStyle: miuix.textStyles.body2.copyWith(
-                  color: colors.onSurfaceVariantSummary,
-                ),
-              ),
-            ),
-          ),
-          if (query.isNotEmpty)
-            MiuixIconButton(
-              minWidth: 32,
-              minHeight: 32,
-              onPressed: onClear,
-              child: MiuixIcon(
-                vector: MiuixIcons.os4.close,
-                size: 16,
-                tint: colors.onSurfaceVariantActions,
-              ),
-            ),
-        ],
+      outsideEndAction: Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: MiuixTextButton(
+          cancelLabel,
+          onPressed: onClear,
+        ),
       ),
+      content: const SizedBox.shrink(),
     );
   }
 }

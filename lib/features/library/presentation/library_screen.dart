@@ -52,6 +52,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   void initState() {
     super.initState();
     _desktopSearchFocusNode.addListener(_onDesktopFocusChanged);
+    if (!isDesktopPlatform) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       CrashDialogHelper.offerCrashReport(context);
       if (defaultTargetPlatform == TargetPlatform.android) {
