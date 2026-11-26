@@ -1,4 +1,4 @@
-# FLUTTER.md — Questopia Flutter Architecture & Handover Documentation
+# AGENTS.md — Questopia Flutter Architecture & Handover Documentation
 
 > **Last Update:** October 15, 2026 (session 2)  
 > **Target Framework:** Flutter 3.44.6 / Dart 3.12.2  

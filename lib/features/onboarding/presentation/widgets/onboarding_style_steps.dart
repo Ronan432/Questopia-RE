@@ -27,7 +27,7 @@ class OnboardingAccentStep extends StatelessWidget {
     final labels = SettingsPickerSheets.accentLabels(context);
 
     return OnboardingStepLayout(
-      icon: Icons.color_lens_outlined,
+      icon: MiuixIcons.os4.theme,
       title: l10n.onboardingAccentTitle,
       description: l10n.onboardingAccentBody,
       child: Column(
@@ -78,7 +78,7 @@ class OnboardingReadingStep extends StatelessWidget {
     final brightness = Theme.of(context).brightness;
 
     return OnboardingStepLayout(
-      icon: Icons.menu_book_outlined,
+      icon: MiuixIcons.os4.book,
       title: l10n.onboardingReadingTitle,
       description: l10n.onboardingReadingBody,
       child: Column(

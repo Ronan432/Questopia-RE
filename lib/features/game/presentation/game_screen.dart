@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
@@ -12,12 +12,13 @@ import '../../../core/media/qsp_path_resolver.dart';
 import '../../../core/native/qsp_models.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/theme/game_colors.dart';
+import '../../../core/theme/miuix_icons_helper.dart';
 import '../../../core/theme/questopia_theme.dart';
 import '../../../core/helpers/dialog_helper.dart';
 import '../../../core/helpers/html_processor.dart';
 import '../../../core/helpers/sheet_helper.dart';
 import '../../../core/l10n/app_localizations.dart';
-import '../../../core/widgets/questopia_scaffold.dart';
+import '../../../core/widgets/miuix_nav_bar.dart';
 import '../../library/providers/play_session_tracker.dart';
 import '../providers/game_engine_provider.dart';
 import 'dialogs/game_dialogs_host.dart';
@@ -345,7 +346,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           confirmLabel: l10n.close,
           cancelLabel: l10n.cancel,
           isDestructive: true,
-          icon: Icons.exit_to_app_rounded,
+          miuixVectorIcon: MiuixIcons.os4.back,
         ),
       );
       if (!mounted) return false;
@@ -363,52 +364,63 @@ class _GameScreenState extends ConsumerState<GameScreen>
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: systemOverlay,
-        child: QuestopiaScaffold(
-          isAppBarVisible: _isHeaderVisible,
-          title: engineState.activeGame?.title ?? widget.title,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-            onPressed: () async {
-              final exit = await confirmExit();
-              if (exit && context.mounted) {
-                Navigator.of(context).pop();
-              }
-            },
-          ),
-          titleWidget: Text(engineState.activeGame?.title ?? widget.title),
-          actions: [
-            IconButton(
-              onPressed: _showOptionsMenu,
-              icon: const Icon(Icons.more_vert_rounded),
-              tooltip: AppLocalizations.of(context)!.gameOptionsTooltip,
-            ),
-          ],
-          body: NotificationListener<ScrollNotification>(
+        child: MiuixScaffold(
+          topBar: _isHeaderVisible
+              ? MiuixSmallTopAppBar(
+                  title: engineState.activeGame?.title ?? widget.title,
+                  navigationIcon: MiuixIconButton(
+                    onPressed: () async {
+                      final exit = await confirmExit();
+                      if (exit && context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    child: MiuixIcon(
+                      vector: MiuixIcons.os4.back,
+                      size: 22,
+                      contentDescription:
+                          MaterialLocalizations.of(context).backButtonTooltip,
+                    ),
+                  ),
+                  actions: [
+                    MiuixIconButton(
+                      onPressed: _showOptionsMenu,
+                      child: miuixIcon(
+                        'more',
+                        size: 22,
+                        contentDescription: l10n.gameOptionsTooltip,
+                      ),
+                    ),
+                  ],
+                )
+              : null,
+          content: (padding) => NotificationListener<ScrollNotification>(
             onNotification: (notification) {
               _onScrollNotification(notification);
               return false;
             },
             child: ExcludeSemantics(
-              child: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  padding.left,
+                  padding.top,
+                  padding.right,
+                  0,
+                ),
                 child: engineState.isLoading
                     ? Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const CircularProgressIndicator(),
+                            const MiuixCircularProgressIndicator(),
                             const SizedBox(height: 16),
-                            Text(
-                              AppLocalizations.of(context)!
-                                  .loadingGameWorld,
-                            ),
+                            MiuixText(l10n.loadingGameWorld),
                           ],
                         ),
                       )
                     : IndexedStack(
                         index: _activeTab,
                         children: [
-                          // Tab 0: Story (Main Desc + Actions + Input)
                           _buildStoryTab(
                             context,
                             mainHtml,
@@ -416,14 +428,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
                             engineNotifier,
                             settings,
                           ),
-                          // Tab 1: Status / Vars
                           _buildVarsTab(
                             context,
                             varsHtml,
                             engineState,
                             settings,
                           ),
-                          // Tab 2: Inventory / Objects
                           _buildObjectsTab(
                             context,
                             engineState,
@@ -435,113 +445,45 @@ class _GameScreenState extends ConsumerState<GameScreen>
               ),
             ),
           ),
-          extendBody: settings.isNavBarBlur,
-          bottomNavigationBar: settings.isNavBarBlur
-              ? ClipRect(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(
-                      sigmaX:
-                          (settings.navBarBlurPercent.clamp(10.0, 100.0) / 100.0) *
-                              24.0,
-                      sigmaY:
-                          (settings.navBarBlurPercent.clamp(10.0, 100.0) / 100.0) *
-                              24.0,
-                    ),
-                    child: NavigationBar(
-                      backgroundColor: Theme.of(context)
-                          .colorScheme
-                          .surface
-                          .withValues(alpha: 0.70),
-                      selectedIndex: _activeTab,
-                      onDestinationSelected: (index) {
-                        HapticFeedback.lightImpact();
-                        debugPrint('[GameScreen] Switching tab to $index');
-                        setState(() {
-                          _activeTab = index;
-                          _isHeaderVisible = true;
-                        });
-                      },
-                      destinations: [
-                        NavigationDestination(
-                          icon: Badge(
-                            isLabelVisible:
-                                engineState.gameState.isMainDescChanged
-                                    ? (_activeTab != 0)
-                                    : false,
-                            child: const Icon(Icons.article_outlined),
-                          ),
-                          selectedIcon: const Icon(Icons.article_rounded),
-                          label: l10n.tabGame,
-                        ),
-                        NavigationDestination(
-                          icon: Badge(
-                            isLabelVisible:
-                                engineState.gameState.isVarsDescChanged
-                                    ? (_activeTab != 1)
-                                    : false,
-                            child: const Icon(Icons.tune_rounded),
-                          ),
-                          selectedIcon: const Icon(Icons.tune_rounded),
-                          label: l10n.tabStatus,
-                        ),
-                        NavigationDestination(
-                          icon: Badge(
-                            isLabelVisible:
-                                engineState.gameState.isObjectsChanged
-                                    ? (_activeTab != 2)
-                                    : false,
-                            child: const Icon(Icons.backpack_outlined),
-                          ),
-                          selectedIcon: const Icon(Icons.backpack_rounded),
-                          label: l10n.tabInventory,
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              : NavigationBar(
-                  selectedIndex: _activeTab,
-                  onDestinationSelected: (index) {
-                    HapticFeedback.lightImpact();
-                    debugPrint('[GameScreen] Switching tab to $index');
-                    setState(() {
-                      _activeTab = index;
-                      _isHeaderVisible = true;
-                    });
-                  },
-                  destinations: [
-                    NavigationDestination(
-                      icon: Badge(
-                        isLabelVisible: engineState.gameState.isMainDescChanged
-                            ? (_activeTab != 0)
-                            : false,
-                        child: const Icon(Icons.article_outlined),
-                      ),
-                      selectedIcon: const Icon(Icons.article_rounded),
-                      label: l10n.tabGame,
-                    ),
-                    NavigationDestination(
-                      icon: Badge(
-                        isLabelVisible: engineState.gameState.isVarsDescChanged
-                            ? (_activeTab != 1)
-                            : false,
-                        child: const Icon(Icons.tune_rounded),
-                      ),
-                      selectedIcon: const Icon(Icons.tune_rounded),
-                      label: l10n.tabStatus,
-                    ),
-                    NavigationDestination(
-                      icon: Badge(
-                        isLabelVisible: engineState.gameState.isObjectsChanged
-                            ? (_activeTab != 2)
-                            : false,
-                        child: const Icon(Icons.backpack_outlined),
-                      ),
-                      selectedIcon: const Icon(Icons.backpack_rounded),
-                      label: l10n.tabInventory,
-                    ),
-                  ],
+          bottomBar: Padding(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              0,
+              16,
+              MediaQuery.paddingOf(context).bottom + 8,
+            ),
+            child: MiuixNavBar(
+              selectedIndex: _activeTab,
+              blurEnabled: settings.isNavBarBlur,
+              blurPercent: settings.navBarBlurPercent,
+              onSelect: (index) {
+                setState(() {
+                  _activeTab = index;
+                  _isHeaderVisible = true;
+                });
+              },
+              items: [
+                MiuixNavBarItem(
+                  icon: miuixVector('read', fallback: MiuixIcons.os4.read),
+                  label: l10n.tabGame,
+                  showBadge:
+                      engineState.gameState.isMainDescChanged && _activeTab != 0,
                 ),
+                MiuixNavBarItem(
+                  icon: miuixVector('tune', fallback: MiuixIcons.os4.tune),
+                  label: l10n.tabStatus,
+                  showBadge:
+                      engineState.gameState.isVarsDescChanged && _activeTab != 1,
+                ),
+                MiuixNavBarItem(
+                  icon: miuixVector('layers', fallback: MiuixIcons.os4.layers),
+                  label: l10n.tabInventory,
+                  showBadge:
+                      engineState.gameState.isObjectsChanged && _activeTab != 2,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -809,10 +751,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.tune_rounded,
+            MiuixIcon(
+              vector: MiuixIcons.os4.tune,
               size: 48,
-              color: Theme.of(context).colorScheme.outline,
+              tint: Theme.of(context).colorScheme.outline,
             ),
             const SizedBox(height: 12),
             Text(
@@ -883,10 +825,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.backpack_outlined,
+            MiuixIcon(
+              vector: MiuixIcons.os4.layers,
               size: 48,
-              color: colors.outline,
+              tint: colors.outline,
             ),
             const SizedBox(height: 12),
             Text(
@@ -950,9 +892,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     item.file!,
                     fit: BoxFit.contain,
                     gaplessPlayback: true,
-                    errorBuilder: (_, __, ___) => Icon(
-                      Icons.inventory_2_outlined,
-                      color: colors.outline,
+                    errorBuilder: (_, __, ___) => MiuixIcon(
+                      vector: MiuixIcons.os4.layers,
+                      tint: colors.outline,
                     ),
                   ),
                 ),
@@ -1002,17 +944,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       item.file!,
                       fit: BoxFit.contain,
                       gaplessPlayback: true,
-                      errorBuilder: (_, __, ___) => Icon(
-                        Icons.inventory_2_outlined,
-                        color: colors.outline,
+                      errorBuilder: (_, __, ___) => MiuixIcon(
+                        vector: MiuixIcons.os4.layers,
+                        tint: colors.outline,
                       ),
                     ),
                   )
                 : CircleAvatar(
                     backgroundColor: colors.secondaryContainer,
-                    child: Icon(
-                      Icons.inventory_2_outlined,
-                      color: colors.onSecondaryContainer,
+                    child: MiuixIcon(
+                      vector: MiuixIcons.os4.layers,
+                      tint: colors.onSecondaryContainer,
                     ),
                   ),
             title: Text(

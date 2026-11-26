@@ -1125,4 +1125,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get onboardingRestartHint =>
       'Запустить мастер первой настройки заново';
+
+  @override
+  String get filters => 'Фильтры';
+
+  @override
+  String get filterLanguage => 'Язык';
 }

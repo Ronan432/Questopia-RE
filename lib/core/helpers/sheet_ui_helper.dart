@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 
 import '../l10n/app_localizations.dart';
@@ -39,11 +39,13 @@ class QuestopiaSheetContainer extends StatelessWidget {
 class QuestopiaSheetEmptyState extends StatelessWidget {
   const QuestopiaSheetEmptyState({
     super.key,
-    required this.icon,
+    this.icon,
+    this.miuixVectorIcon,
     required this.message,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final MiuixVectorIcon? miuixVectorIcon;
   final String message;
 
   @override
@@ -53,7 +55,10 @@ class QuestopiaSheetEmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 40, color: colors.outline),
+          if (miuixVectorIcon != null)
+            MiuixIcon(vector: miuixVectorIcon!, size: 40, tint: colors.outline)
+          else if (icon != null)
+            Icon(icon, size: 40, color: colors.outline),
           const SizedBox(height: 8),
           Text(
             message,
@@ -86,7 +91,10 @@ class QuestopiaSheetSearchBar extends StatelessWidget {
       controller: controller,
       decoration: InputDecoration(
         hintText: hintText,
-        prefixIcon: const Icon(Icons.search_rounded),
+        prefixIcon: Padding(
+          padding: const EdgeInsets.all(12),
+          child: MiuixIcon(vector: MiuixIcons.basic.search, size: 18),
+        ),
         isDense: true,
         filled: true,
         fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.4),
@@ -120,16 +128,22 @@ class QuestopiaSheetPageNav extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
-        M3EButton.icon(
+        MiuixButton(
           onPressed: onPrev,
-          size: M3EButtonSize.sm,
-          style: M3EButtonStyle.outlined,
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
-          label: Text(l10n.prev),
+          minHeight: 36,
+          insideMargin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              MiuixIcon(vector: MiuixIcons.os4.back, size: 14),
+              const SizedBox(width: 4),
+              Text(l10n.prev),
+            ],
+          ),
         ),
         Expanded(
           child: Center(
-            child: Text(
+            child: MiuixText(
               l10n.pageOfPages(currentPage + 1, totalPages),
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
@@ -137,12 +151,18 @@ class QuestopiaSheetPageNav extends StatelessWidget {
             ),
           ),
         ),
-        M3EButton.icon(
+        MiuixButton(
           onPressed: onNext,
-          size: M3EButtonSize.sm,
-          style: M3EButtonStyle.outlined,
-          icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
-          label: Text(l10n.next),
+          minHeight: 36,
+          insideMargin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.next),
+              const SizedBox(width: 4),
+              MiuixIcon(vector: MiuixIcons.basic.arrowRight, size: 14),
+            ],
+          ),
         ),
       ],
     );

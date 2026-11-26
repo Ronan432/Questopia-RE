@@ -69,7 +69,7 @@ class SettingsState {
   const SettingsState({
     this.themeMode = ThemeModeOption.system,
     this.themeColor = 'dynamic',
-    this.isMiuixDesignEnabled = false,
+    this.isMiuixDesignEnabled = true,
     this.isMiuixDynamicColor = true,
     this.readingTheme = 'default',
     this.fontSize = 16.0,
@@ -256,7 +256,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       themeColor: prefs.getString(_kThemeColor) ??
           _legacyString(prefs, 'themeColor') ??
           'dynamic',
-      isMiuixDesignEnabled: prefs.getBool(_kMiuixDesign) ?? false,
+      isMiuixDesignEnabled: prefs.getBool(_kMiuixDesign) ?? true,
       isMiuixDynamicColor: prefs.getBool(_kMiuixDynamicColor) ?? true,
       readingTheme: prefs.getString(_kReadingTheme) ?? 'default',
       fontSize: prefs.getDouble(_kFontSize) ??

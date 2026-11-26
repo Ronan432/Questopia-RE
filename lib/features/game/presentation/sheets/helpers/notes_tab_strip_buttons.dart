@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 
 /// Trailing chip that appends a new note tab.
 class AddNoteTabChip extends StatelessWidget {
@@ -37,10 +38,10 @@ class AddNoteTabChip extends StatelessWidget {
               width: 1,
             ),
           ),
-          child: Icon(
-            Icons.add_rounded,
-            size: 22,
-            color: colors.onPrimaryContainer,
+          child: MiuixIcon(
+            vector: MiuixIcons.os4.add,
+            size: 20,
+            tint: colors.onPrimaryContainer,
           ),
         ),
       ),
@@ -86,10 +87,10 @@ class NoteTabCollapseButton extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           // The strip folds horizontally, so the affordance points sideways.
           turns: isCollapsed ? 0.5 : 0,
-          child: Icon(
-            Icons.keyboard_arrow_right_rounded,
-            size: 22,
-            color: colors.onSurfaceVariant,
+          child: MiuixIcon(
+            vector: MiuixIcons.os4.chevronForward,
+            size: 20,
+            tint: colors.onSurfaceVariant,
           ),
         ),
       ),

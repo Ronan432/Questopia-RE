@@ -1,6 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_miuix/miuix.dart';
 
+import '../../../../core/theme/miuix_icons_helper.dart';
+
+class MiuixSettingsSectionTitle extends StatelessWidget {
+  const MiuixSettingsSectionTitle(this.title, {super.key});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final miuix = MiuixTheme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 6),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: MiuixText(
+          title,
+          style: miuix.textStyles.footnote1.copyWith(
+            fontWeight: FontWeight.w400,
+            color: miuix.colors.onSurfaceVariantSummary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class MiuixSettingsGroup extends StatelessWidget {
   const MiuixSettingsGroup({super.key, required this.children});
 
@@ -9,6 +35,7 @@ class MiuixSettingsGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MiuixCard(
+      cornerRadius: 20,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -18,28 +45,47 @@ class MiuixSettingsGroup extends StatelessWidget {
   }
 }
 
-Widget miuixSettingsIcon(IconData icon) => Padding(
-      padding: const EdgeInsets.only(right: 12),
-      child: Icon(icon, size: 22),
-    );
+const EdgeInsets _kCompactRowMargin = EdgeInsets.symmetric(
+  horizontal: 14,
+  vertical: 11,
+);
+
+Widget miuixSettingsIcon(BuildContext context, String iconName,
+    {MiuixVectorIcon? fallback}) {
+  final colors = MiuixTheme.of(context).colors;
+  return Padding(
+    padding: const EdgeInsets.only(right: 10),
+    child: miuixIcon(
+      iconName,
+      size: 20,
+      tint: colors.onSurfaceVariantActions,
+      fallback: fallback,
+    ),
+  );
+}
 
 MiuixArrowPreference miuixArrowPreference({
+  required BuildContext context,
   required String title,
-  required IconData icon,
+  required String iconName,
+  MiuixVectorIcon? fallbackIcon,
   String? summary,
   required VoidCallback onClick,
 }) {
   return MiuixArrowPreference(
     title: title,
     summary: summary,
-    startAction: miuixSettingsIcon(icon),
+    insideMargin: _kCompactRowMargin,
+    startAction: miuixSettingsIcon(context, iconName, fallback: fallbackIcon),
     onClick: onClick,
   );
 }
 
 MiuixSwitchPreference miuixSwitchPreference({
+  required BuildContext context,
   required String title,
-  required IconData icon,
+  required String iconName,
+  MiuixVectorIcon? fallbackIcon,
   String? summary,
   required bool value,
   required ValueChanged<bool> onChanged,
@@ -47,15 +93,18 @@ MiuixSwitchPreference miuixSwitchPreference({
   return MiuixSwitchPreference(
     title: title,
     summary: summary,
-    startAction: miuixSettingsIcon(icon),
+    insideMargin: _kCompactRowMargin,
+    startAction: miuixSettingsIcon(context, iconName, fallback: fallbackIcon),
     value: value,
     onChanged: onChanged,
   );
 }
 
 MiuixSliderPreference miuixSliderPreference({
+  required BuildContext context,
   required String title,
-  required IconData icon,
+  required String iconName,
+  MiuixVectorIcon? fallbackIcon,
   required double value,
   required double min,
   required double max,
@@ -65,7 +114,8 @@ MiuixSliderPreference miuixSliderPreference({
 }) {
   return MiuixSliderPreference(
     title: title,
-    startAction: miuixSettingsIcon(icon),
+    insideMargin: _kCompactRowMargin,
+    startAction: miuixSettingsIcon(context, iconName, fallback: fallbackIcon),
     value: value,
     min: min,
     max: max,
@@ -77,8 +127,10 @@ MiuixSliderPreference miuixSliderPreference({
 }
 
 MiuixBasicComponent miuixInfoPreference({
+  required BuildContext context,
   required String title,
-  required IconData icon,
+  required String iconName,
+  MiuixVectorIcon? fallbackIcon,
   String? summary,
   Widget? endAction,
   VoidCallback? onClick,
@@ -86,7 +138,8 @@ MiuixBasicComponent miuixInfoPreference({
   return MiuixBasicComponent(
     title: title,
     summary: summary,
-    startAction: miuixSettingsIcon(icon),
+    insideMargin: _kCompactRowMargin,
+    startAction: miuixSettingsIcon(context, iconName, fallback: fallbackIcon),
     endActions: [if (endAction != null) endAction],
     onClick: onClick,
   );

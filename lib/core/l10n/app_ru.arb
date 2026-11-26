@@ -569,5 +569,7 @@
   "onboardingFinishBody": "Эти настройки сохранены. Их можно изменить позже в настройках.",
   "getStarted": "Начать",
   "onboardingRestart": "Показать настройку снова",
-  "onboardingRestartHint": "Запустить мастер первой настройки заново"
+  "onboardingRestartHint": "Запустить мастер первой настройки заново",
+  "filters": "Фильтры",
+  "filterLanguage": "Язык"
 }

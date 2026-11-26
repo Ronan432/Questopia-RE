@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 
 import 'platform_helper.dart';
 
@@ -154,43 +155,51 @@ class _BlurredModalBottomSheetRoute<T> extends ModalBottomSheetRoute<T> {
   ImageFilter? get filter => ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0);
 }
 
-/// Centered header pill styling for modal bottom sheets.
+/// Centered header pill styling for Miuix modal bottom sheets.
 class QuestopiaSheetHeaderPill extends StatelessWidget {
   const QuestopiaSheetHeaderPill({
     super.key,
     required this.title,
     this.icon,
+    this.miuixVectorIcon,
   });
 
   final String title;
   final IconData? icon;
+  final MiuixVectorIcon? miuixVectorIcon;
 
   @override
   Widget build(BuildContext context) {
+    final miuix = MiuixTheme.maybeOf(context);
     final colors = Theme.of(context).colorScheme;
+    final onSurface = miuix?.colors.onSurface ?? colors.onSurface;
+    final primary = miuix?.colors.primary ?? colors.primary;
+
     return Center(
       child: Container(
-        margin: const EdgeInsets.only(top: 4, bottom: 16),
+        margin: const EdgeInsets.only(top: 4, bottom: 14),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        decoration: BoxDecoration(
-          color: colors.secondaryContainer.withValues(alpha: 0.7),
-          borderRadius: BorderRadius.circular(20),
+        decoration: ShapeDecoration(
+          color: (miuix?.colors.surfaceContainerHigh ??
+                  colors.secondaryContainer)
+              .withValues(alpha: 0.85),
+          shape: MiuixSquircleBorder(cornerRadius: 18),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (icon != null) ...[
-              Icon(icon, size: 16, color: colors.onSecondaryContainer),
+            if (miuixVectorIcon != null) ...[
+              MiuixIcon(vector: miuixVectorIcon, size: 16, tint: primary),
               const SizedBox(width: 8),
             ],
             Text(
               title,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: colors.onSecondaryContainer,
-                letterSpacing: 0.2,
+              style: (miuix?.textStyles.subtitle ??
+                      const TextStyle(fontSize: 14))
+                  .copyWith(
+                fontWeight: FontWeight.w600,
+                color: onSurface,
               ),
             ),
           ],

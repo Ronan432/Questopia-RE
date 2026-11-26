@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 
 import '../../../data/note_tab.dart';
 import 'notes_tab_strip_buttons.dart';
@@ -229,10 +230,10 @@ class _TabDeleteButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(6),
-          child: Icon(
-            Icons.close_rounded,
-            size: 17,
-            color: colors.onSecondaryContainer,
+          child: MiuixIcon(
+            vector: MiuixIcons.os4.close,
+            size: 16,
+            tint: colors.onSecondaryContainer,
           ),
         ),
       ),

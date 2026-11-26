@@ -66,7 +66,7 @@ class OnboardingChoiceCard extends StatelessWidget {
   });
 
   final String title;
-  final IconData icon;
+  final MiuixVectorIcon icon;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -87,10 +87,10 @@ class OnboardingChoiceCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
+          MiuixIcon(
+            vector: icon,
             size: 26,
-            color: isSelected
+            tint: isSelected
                 ? colors.primary
                 : colors.onSurfaceVariantActions,
           ),

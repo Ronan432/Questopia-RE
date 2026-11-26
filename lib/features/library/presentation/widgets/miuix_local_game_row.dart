@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/helpers/dialog_helper.dart';
 import '../../../../core/helpers/duration_format.dart';
 import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/theme/miuix_icons_helper.dart';
 import '../../data/local_game.dart';
 import '../../data/play_stats_store.dart';
 import '../../providers/play_stats_provider.dart';
@@ -114,7 +115,11 @@ class MiuixLocalGameRow extends ConsumerWidget {
                           summary: formatPlayDuration(l10n, Duration(seconds: playStats.totalSeconds)),
                           startAction: Padding(
                             padding: const EdgeInsets.only(right: 12),
-                            child: Icon(Icons.schedule_rounded, color: mColors.onSurfaceVariantActions, size: 22),
+                            child: miuixIcon(
+                              'timer',
+                              size: 20,
+                              tint: mColors.onSurfaceVariantActions,
+                            ),
                           ),
                           endActions: [
                             Text(
@@ -153,7 +158,7 @@ class MiuixLocalGameRow extends ConsumerWidget {
                           final confirmed = await showQuestopiaDialog<bool>(
                             context: context,
                             builder: (ctx) => QuestopiaConfirmationDialog(
-                              icon: isRepo ? Icons.delete_forever_rounded : Icons.delete_outline_rounded,
+                              miuixVectorIcon: MiuixIcons.os4.delete,
                               isDestructive: true,
                               title: isRepo ? l10n.deleteGameTitle : l10n.removeFromLibrary,
                               message: isRepo ? l10n.deleteGameMessage(game.title) : l10n.removeFromLibraryMessage(game.title),
@@ -252,10 +257,10 @@ class MiuixLocalGameRow extends ConsumerWidget {
               onPressed: () => _showMenuSheet(context, playStats),
               minWidth: 40,
               minHeight: 40,
-              child: Icon(
-                Icons.more_vert_rounded,
+              child: miuixIcon(
+                'more',
                 size: 20,
-                color: colors.onSurfaceVariantActions,
+                tint: colors.onSurfaceVariantActions,
               ),
             ),
             MiuixIconButton(

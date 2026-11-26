@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
@@ -50,7 +51,7 @@ class _SaveSlotsSheetState extends ConsumerState<SaveSlotsSheet> {
                   style: isSaveMode
                       ? M3EButtonStyle.filled
                       : M3EButtonStyle.outlined,
-                  icon: const Icon(Icons.save_outlined, size: 18),
+                  icon: MiuixIcon(vector: MiuixIcons.os4.save, size: 18),
                   label: Text(l10n.save),
                 ),
               ),
@@ -62,7 +63,7 @@ class _SaveSlotsSheetState extends ConsumerState<SaveSlotsSheet> {
                   style: !isSaveMode
                       ? M3EButtonStyle.filled
                       : M3EButtonStyle.outlined,
-                  icon: const Icon(Icons.download_rounded, size: 18),
+                  icon: MiuixIcon(vector: MiuixIcons.os4.download, size: 18),
                   label: Text(l10n.load),
                 ),
               ),
@@ -151,7 +152,7 @@ class _SaveSlotsSheetState extends ConsumerState<SaveSlotsSheet> {
         SegmentedListSection(
           children: [
             SegmentedListTile(
-              leading: Icon(Icons.autorenew_rounded, color: colors.primary),
+              leading: MiuixIcon(vector: MiuixIcons.os4.refresh, tint: colors.primary),
               title: Text(l10n.autoSaveSlot),
               subtitle: engineState.autoSaveData != null
                   ? _buildSlotSubtitle(
@@ -174,7 +175,7 @@ class _SaveSlotsSheetState extends ConsumerState<SaveSlotsSheet> {
                       },
                       size: M3EButtonSize.sm,
                       style: M3EButtonStyle.tonal,
-                      icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                      icon: MiuixIcon(vector: MiuixIcons.os4.play, size: 18),
                       label: Text(l10n.load),
                     )
                   : null,
@@ -263,7 +264,7 @@ class _SaveSlotsSheetState extends ConsumerState<SaveSlotsSheet> {
               },
               size: M3EButtonSize.sm,
               style: hasData ? M3EButtonStyle.outlined : M3EButtonStyle.filled,
-              icon: const Icon(Icons.save_outlined, size: 18),
+              icon: MiuixIcon(vector: MiuixIcons.os4.save, size: 18),
               label: Text(hasData ? l10n.overwrite : l10n.save),
             )
           : (hasData
@@ -274,7 +275,7 @@ class _SaveSlotsSheetState extends ConsumerState<SaveSlotsSheet> {
                   },
                   size: M3EButtonSize.sm,
                   style: M3EButtonStyle.filled,
-                  icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                  icon: MiuixIcon(vector: MiuixIcons.os4.play, size: 18),
                   label: Text(l10n.load),
                 )
               : null),

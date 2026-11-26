@@ -8,6 +8,7 @@ import '../../../../core/helpers/dialog_helper.dart';
 import '../../../../core/helpers/path_picker_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/providers/settings_provider.dart';
+import '../../../../core/theme/miuix_icons_helper.dart';
 import '../../../library/providers/library_provider.dart';
 import '../widgets/miuix_settings_tiles.dart';
 
@@ -27,18 +28,20 @@ class MiuixSoundSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MiuixSmallTitle(l10n.sectionSound),
+        MiuixSettingsSectionTitle(l10n.sectionSound),
         MiuixSettingsGroup(
           children: [
             miuixSwitchPreference(
+              context: context,
               title: l10n.playSound,
-              icon: Icons.volume_up_outlined,
+              iconName: 'volumeUp',
               value: settings.isSoundEnabled,
               onChanged: notifier.setSoundEnabled,
             ),
             miuixSwitchPreference(
+              context: context,
               title: l10n.muteVideoAudio,
-              icon: Icons.volume_off_outlined,
+              iconName: 'volumeOff',
               value: settings.isVideoMute,
               onChanged: notifier.setVideoMute,
             ),
@@ -91,7 +94,7 @@ class _MiuixStorageSectionState extends ConsumerState<MiuixStorageSection> {
     final confirmed = await showQuestopiaDialog<bool>(
       context: context,
       builder: (ctx) => QuestopiaConfirmationDialog(
-        icon: Icons.cleaning_services_rounded,
+        miuixVectorIcon: miuixVector('delete', fallback: MiuixIcons.os4.delete),
         title: l10n.storageCleanup,
         message: l10n.storageCleanupHint,
         confirmLabel: l10n.storageCleanup,
@@ -125,29 +128,34 @@ class _MiuixStorageSectionState extends ConsumerState<MiuixStorageSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MiuixSmallTitle(l10n.sectionStorage),
+        MiuixSettingsSectionTitle(l10n.sectionStorage),
         MiuixSettingsGroup(
           children: [
             miuixArrowPreference(
+              context: context,
               title: l10n.gamesFolder,
-              icon: Icons.folder_outlined,
+              iconName: 'folder',
+              fallbackIcon: MiuixIcons.os4.folder,
               summary: widget.settings.gamesDirectory.isNotEmpty
                   ? widget.settings.gamesDirectory
                   : l10n.defaultInternalFolder,
               onClick: _pickFolder,
             ),
             miuixInfoPreference(
+              context: context,
               title: l10n.storageUsage,
-              icon: Icons.sd_storage_outlined,
+              iconName: 'backup',
               summary: library.isLoadingStorage
                   ? l10n.storageCalculating
                   : '${l10n.storageTotal}: '
                       '${formatBytes(stats.totalBytes, binaryPrefix: prefix)}',
-              endAction: Text('${stats.gameCount}'),
+              endAction: MiuixText('${stats.gameCount}'),
             ),
             miuixArrowPreference(
+              context: context,
               title: l10n.storageCleanup,
-              icon: Icons.cleaning_services_rounded,
+              iconName: 'delete',
+              fallbackIcon: MiuixIcons.os4.delete,
               summary: l10n.storageCleanupHint,
               onClick: _cleanup,
             ),
@@ -177,26 +185,31 @@ class MiuixAboutSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MiuixSmallTitle(l10n.sectionAbout),
+        MiuixSettingsSectionTitle(l10n.sectionAbout),
         MiuixSettingsGroup(
           children: [
             miuixInfoPreference(
+              context: context,
               title: l10n.version,
-              icon: Icons.info_outline,
-              endAction: Text(
-                  info == null ? '...' : '${info.version}+${info.buildNumber}'),
+              iconName: 'info',
+              endAction: MiuixText(
+                info == null ? '...' : '${info.version}+${info.buildNumber}',
+              ),
             ),
             miuixArrowPreference(
+              context: context,
               title: l10n.openSourceLicenses,
-              icon: Icons.description_outlined,
+              iconName: 'file',
               onClick: () => showLicensePage(
                 context: context,
                 applicationName: l10n.appTitle,
               ),
             ),
             miuixArrowPreference(
+              context: context,
               title: l10n.onboardingRestart,
-              icon: Icons.restart_alt_rounded,
+              iconName: 'refresh',
+              fallbackIcon: MiuixIcons.os4.refresh,
               summary: l10n.onboardingRestartHint,
               onClick: notifier.restartOnboarding,
             ),

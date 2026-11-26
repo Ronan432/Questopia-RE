@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 
 import '../../../../core/error/crash_reporter.dart';
 import '../../../../core/helpers/dialog_helper.dart';
@@ -21,7 +22,7 @@ class CrashDialogHelper {
         final colors = Theme.of(ctx).colorScheme;
         final l10n = AppLocalizations.of(ctx)!;
         return QuestopiaDialog(
-          icon: Icon(Icons.bug_report_rounded, color: colors.error),
+          icon: MiuixIcon(vector: MiuixIcons.os4.report, tint: colors.error, size: 22),
           title: Text(l10n.previousSessionCrashed),
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -61,7 +62,7 @@ class CrashDialogHelper {
                   ),
                 );
               },
-              icon: const Icon(Icons.copy_rounded),
+              icon: MiuixIcon(vector: MiuixIcons.os4.copy, size: 18),
               child: Text(l10n.copyDetails),
             ),
           ],

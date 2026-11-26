@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../helpers/platform_helper.dart';
 import '../providers/settings_provider.dart';
 
-bool shouldUseMiuixDesign(SettingsState settings) =>
-    isAndroidPlatform && settings.isMiuixDesignEnabled;
+bool shouldUseMiuixDesign(SettingsState settings) => true;
 
 class MiuixDesignTheme extends ConsumerWidget {
   const MiuixDesignTheme({super.key, required this.child});
@@ -53,6 +52,7 @@ class MiuixDesignTheme extends ConsumerWidget {
           final materialTheme = Theme.of(miuixCtx);
           final miuixData = MiuixTheme.of(miuixCtx);
           final colors = miuixData.colors;
+          final darkBrightness = miuixData.brightness == Brightness.dark;
           final scheme = ColorScheme.fromSeed(
             seedColor: colors.primary,
             brightness: miuixData.brightness,
@@ -73,20 +73,35 @@ class MiuixDesignTheme extends ConsumerWidget {
             color: colors.onSurface,
           );
 
-          return Theme(
-            data: materialTheme.copyWith(
-              colorScheme: scheme,
-              splashFactory: NoSplash.splashFactory,
-              splashColor: Colors.transparent,
-              highlightColor: Colors.transparent,
-              hoverColor: Colors.transparent,
-              textTheme: materialTheme.textTheme.apply(fontFamily: 'MiSans'),
-            ),
-            child: DefaultTextStyle(
-              style: baseTextStyle,
-              child: Material(
-                type: MaterialType.transparency,
-                child: child,
+          final overlayStyle = SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness:
+                darkBrightness ? Brightness.light : Brightness.dark,
+            statusBarBrightness:
+                darkBrightness ? Brightness.dark : Brightness.light,
+            systemNavigationBarColor: Colors.transparent,
+            systemNavigationBarDividerColor: Colors.transparent,
+            systemNavigationBarIconBrightness:
+                darkBrightness ? Brightness.light : Brightness.dark,
+          );
+
+          return AnnotatedRegion<SystemUiOverlayStyle>(
+            value: overlayStyle,
+            child: Theme(
+              data: materialTheme.copyWith(
+                colorScheme: scheme,
+                splashFactory: NoSplash.splashFactory,
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                hoverColor: Colors.transparent,
+                textTheme: materialTheme.textTheme.apply(fontFamily: 'MiSans'),
+              ),
+              child: DefaultTextStyle(
+                style: baseTextStyle,
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: child,
+                ),
               ),
             ),
           );

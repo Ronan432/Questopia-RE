@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/providers/settings_provider.dart';
+import '../../../../core/theme/glass_effect.dart';
+import '../../../../core/widgets/miuix_nav_bar.dart';
 
-class MiuixLibraryShell extends ConsumerStatefulWidget {
+class MiuixLibraryShell extends ConsumerWidget {
   const MiuixLibraryShell({
     super.key,
     required this.selectedTab,
@@ -13,6 +15,7 @@ class MiuixLibraryShell extends ConsumerStatefulWidget {
     required this.child,
     required this.isSearchOpen,
     required this.searchQuery,
+    required this.searchController,
     required this.searchFocusNode,
     required this.onSearchChanged,
     required this.onSearchSubmitted,
@@ -21,7 +24,6 @@ class MiuixLibraryShell extends ConsumerStatefulWidget {
     required this.onImportGame,
     required this.showFavoritesOnly,
     required this.onToggleFavorites,
-    required this.onRefreshCatalog,
     this.pagination,
   });
 
@@ -30,6 +32,7 @@ class MiuixLibraryShell extends ConsumerStatefulWidget {
   final Widget child;
   final bool isSearchOpen;
   final String searchQuery;
+  final TextEditingController searchController;
   final FocusNode searchFocusNode;
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<String> onSearchSubmitted;
@@ -38,126 +41,119 @@ class MiuixLibraryShell extends ConsumerStatefulWidget {
   final VoidCallback onImportGame;
   final bool showFavoritesOnly;
   final VoidCallback onToggleFavorites;
-  final VoidCallback onRefreshCatalog;
   final Widget? pagination;
 
-  @override
-  ConsumerState<MiuixLibraryShell> createState() => _MiuixLibraryShellState();
-}
+  Widget _buildTopBar(
+    BuildContext context,
+    AppLocalizations l10n,
+    MiuixThemeData miuixTheme,
+    SettingsState settings,
+  ) {
+    final colors = miuixTheme.colors;
+    final topInset = MediaQuery.paddingOf(context).top;
 
-class _MiuixLibraryShellState extends ConsumerState<MiuixLibraryShell> {
-  final MiuixLayerBackdrop _backdrop = MiuixLayerBackdrop();
-
-  @override
-  void dispose() {
-    _backdrop.dispose();
-    super.dispose();
-  }
-
-  Widget _action({
-    required String label,
-    required MiuixVectorIcon icon,
-    required VoidCallback onPressed,
-  }) {
-    return MiuixGlassIconButton(
-      tooltip: label,
-      semanticLabel: label,
-      onPressed: onPressed,
-      child: MiuixIcon(vector: icon, size: 22),
-    );
-  }
-
-  Widget _buildSearchBar(AppLocalizations l10n, MiuixThemeData miuixTheme) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: MiuixSearchBar(
-        expanded: widget.isSearchOpen,
-        onExpandedChange: (expanded) {
-          if (expanded) {
-            widget.onOpenSearch();
-          } else {
-            widget.onCloseSearch();
-          }
-        },
-        outsideEndAction: Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: MiuixTextButton(
-            l10n.cancel,
-            onPressed: widget.onCloseSearch,
-          ),
+    return GlassEffect.wrap(
+      context,
+      enabled: settings.isNavBarBlur,
+      percent: settings.navBarBlurPercent,
+      baseColor: colors.surface,
+      border: Border(
+        bottom: BorderSide(
+          color: colors.dividerLine.withValues(alpha: 0.45),
+          width: 0.5,
         ),
-        inputField: MiuixInputField(
-          query: widget.searchQuery,
-          onQueryChange: widget.onSearchChanged,
-          onSearch: widget.onSearchSubmitted,
-          expanded: widget.isSearchOpen,
-          onExpandedChange: (expanded) {
-            if (expanded) {
-              widget.onOpenSearch();
-            } else {
-              widget.onCloseSearch();
-            }
-          },
-          focusNode: widget.searchFocusNode,
-          label: l10n.search,
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(16, topInset + 6, 16, 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              height: 44,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: MiuixText(
+                      selectedTab == 2 ? l10n.settings : l10n.appTitle,
+                      style: miuixTheme.textStyles.title3.copyWith(
+                        color: colors.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (selectedTab == 0)
+                    MiuixIconButton(
+                      minWidth: 40,
+                      minHeight: 40,
+                      onPressed: onToggleFavorites,
+                      child: MiuixIcon(
+                        vector: showFavoritesOnly
+                            ? MiuixIcons.os4.favoritesFill
+                            : MiuixIcons.os4.favorites,
+                        size: 22,
+                        contentDescription: showFavoritesOnly
+                            ? l10n.showAllGames
+                            : l10n.showFavoritesOnly,
+                        tint: showFavoritesOnly
+                            ? colors.error
+                            : colors.onSurfaceVariantActions,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (selectedTab != 2) ...[
+              const SizedBox(height: 6),
+              _MiuixSearchField(
+                controller: searchController,
+                focusNode: searchFocusNode,
+                hintText: selectedTab == 1
+                    ? l10n.searchOnlineCatalog
+                    : l10n.search,
+                query: searchQuery,
+                onChanged: onSearchChanged,
+                onSubmitted: onSearchSubmitted,
+                onClear: () {
+                  searchController.clear();
+                  onSearchChanged('');
+                  onCloseSearch();
+                },
+              ),
+            ],
+          ],
         ),
-        content: const SizedBox.shrink(),
       ),
     );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final miuixTheme = MiuixTheme.of(context);
     final settings = ref.watch(settingsProvider);
-    final blurEnabled = settings.isNavBarBlur;
-    final blurSigma =
-        (settings.navBarBlurPercent.clamp(10.0, 100.0) / 100.0) * 24.0;
 
     return MiuixScaffold(
-      topBar: MiuixGlassTopAppBar(
-        title: widget.selectedTab == 2 ? l10n.settings : l10n.appTitle,
-        backdrop: blurEnabled ? _backdrop : null,
-        progressiveBlur: blurEnabled,
-        bandBlurRadius: blurEnabled ? blurSigma : 0,
-        actions: [
-          if (widget.selectedTab == 0)
-            _action(
-              label: widget.showFavoritesOnly
-                  ? l10n.showAllGames
-                  : l10n.showFavoritesOnly,
-              icon: widget.showFavoritesOnly
-                  ? MiuixIcons.os4.favoritesFill
-                  : MiuixIcons.os4.favorites,
-              onPressed: widget.onToggleFavorites,
-            ),
-          if (widget.selectedTab == 1)
-            _action(
-              label: l10n.refreshCatalog,
-              icon: MiuixIcons.os4.refresh,
-              onPressed: widget.onRefreshCatalog,
-            ),
-        ],
-        bottomContent: widget.selectedTab != 2
-            ? _buildSearchBar(l10n, miuixTheme)
-            : null,
-      ),
-      content: (padding) => MiuixLayerBackdropCapture(
-        backdrop: _backdrop,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            padding.left,
-            padding.top,
-            padding.right,
-            0,
-          ),
-          child: widget.child,
+      topBar: _buildTopBar(context, l10n, miuixTheme, settings),
+      content: (padding) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          padding.left,
+          padding.top,
+          padding.right,
+          0,
+        ),
+        child: MediaQuery.removePadding(
+          context: context,
+          removeTop: true,
+          removeBottom: true,
+          child: child,
         ),
       ),
-      floatingActionButton: widget.selectedTab == 0
+      floatingActionButton: selectedTab == 0
           ? MiuixFloatingActionButton(
-              onPressed: widget.onImportGame,
+              onPressed: onImportGame,
               child: MiuixIcon(
                 vector: MiuixIcons.os4.add,
                 tint: miuixTheme.colors.onPrimary,
@@ -175,40 +171,116 @@ class _MiuixLibraryShellState extends ConsumerState<MiuixLibraryShell> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (widget.pagination != null) ...[
-              widget.pagination!,
+            if (pagination != null) ...[
+              pagination!,
               const SizedBox(height: 8),
             ],
-            MiuixGlassNavigationBar(
-              backdrop: blurEnabled ? _backdrop : null,
-              selectedIndex: widget.selectedTab,
-              onSelect: widget.onTabChanged,
+            MiuixNavBar(
+              selectedIndex: selectedTab,
+              onSelect: onTabChanged,
+              blurEnabled: settings.isNavBarBlur,
+              blurPercent: settings.navBarBlurPercent,
               items: [
-                MiuixGlassNavigationItem(
-                  icon: MiuixIcon(
-                    vector: MiuixIcons.extended.byName('home')!,
-                    size: 24,
-                  ),
+                MiuixNavBarItem(
+                  icon: MiuixIcons.extended.byName('home') ??
+                      MiuixIcons.os4.gridView,
                   label: l10n.home,
                 ),
-                MiuixGlassNavigationItem(
-                  icon: MiuixIcon(
-                    vector: MiuixIcons.os4.gridView,
-                    size: 24,
-                  ),
+                MiuixNavBarItem(
+                  icon: MiuixIcons.os4.gridView,
                   label: l10n.catalog,
                 ),
-                MiuixGlassNavigationItem(
-                  icon: MiuixIcon(
-                    vector: MiuixIcons.os4.settings,
-                    size: 24,
-                  ),
+                MiuixNavBarItem(
+                  icon: MiuixIcons.os4.settings,
                   label: l10n.settings,
                 ),
               ],
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MiuixSearchField extends StatelessWidget {
+  const _MiuixSearchField({
+    required this.controller,
+    required this.focusNode,
+    required this.hintText,
+    required this.query,
+    required this.onChanged,
+    required this.onSubmitted,
+    required this.onClear,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final String hintText;
+  final String query;
+  final ValueChanged<String> onChanged;
+  final ValueChanged<String> onSubmitted;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final miuix = MiuixTheme.of(context);
+    final colors = miuix.colors;
+
+    return Container(
+      height: 42,
+      decoration: ShapeDecoration(
+        color: colors.surfaceContainerHigh,
+        shape: MiuixSquircleBorder(
+          cornerRadius: 21,
+          side: BorderSide(
+            color: colors.outline.withValues(alpha: 0.16),
+            width: 0.5,
+          ),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Row(
+        children: [
+          MiuixIcon(
+            vector: MiuixIcons.basic.search,
+            size: 18,
+            tint: colors.onSurfaceVariantActions,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              focusNode: focusNode,
+              onChanged: onChanged,
+              onSubmitted: onSubmitted,
+              textInputAction: TextInputAction.search,
+              style: miuix.textStyles.body2.copyWith(
+                color: colors.onSurface,
+              ),
+              cursorColor: colors.primary,
+              decoration: InputDecoration(
+                isCollapsed: true,
+                border: InputBorder.none,
+                hintText: hintText,
+                hintStyle: miuix.textStyles.body2.copyWith(
+                  color: colors.onSurfaceVariantSummary,
+                ),
+              ),
+            ),
+          ),
+          if (query.isNotEmpty)
+            MiuixIconButton(
+              minWidth: 32,
+              minHeight: 32,
+              onPressed: onClear,
+              child: MiuixIcon(
+                vector: MiuixIcons.os4.close,
+                size: 16,
+                tint: colors.onSurfaceVariantActions,
+              ),
+            ),
+        ],
       ),
     );
   }

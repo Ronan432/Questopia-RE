@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
@@ -47,7 +48,10 @@ class CheatVariablesView extends StatelessWidget {
                 controller: addVarController,
                 decoration: InputDecoration(
                   hintText: l10n.addVariableHint,
-                  prefixIcon: const Icon(Icons.add_rounded),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: MiuixIcon(vector: MiuixIcons.os4.add, size: 18),
+                  ),
                   isDense: true,
                   filled: true,
                   fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.5),
@@ -70,7 +74,7 @@ class CheatVariablesView extends StatelessWidget {
                 HapticFeedback.lightImpact();
                 notifier.refresh();
               },
-              icon: const Icon(Icons.sync_rounded, size: 18),
+              icon: MiuixIcon(vector: MiuixIcons.os4.refresh, size: 18),
               label: Text(l10n.scan),
               style: M3EButtonStyle.tonal,
               size: M3EButtonSize.sm,
@@ -88,7 +92,7 @@ class CheatVariablesView extends StatelessWidget {
         Expanded(
           child: vars.isEmpty
               ? QuestopiaSheetEmptyState(
-                  icon: Icons.search_off_rounded,
+                  miuixVectorIcon: MiuixIcons.basic.search,
                   message: l10n.noVariablesFound,
                 )
               : ListView(
@@ -123,12 +127,12 @@ class CheatVariablesView extends StatelessWidget {
               .withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(
-          frozen
-              ? Icons.lock_rounded
-              : (v.isNumeric ? Icons.tag_rounded : Icons.text_snippet_outlined),
+        child: MiuixIcon(
+          vector: frozen
+              ? MiuixIcons.os4.lock
+              : (v.isNumeric ? MiuixIcons.os4.tune : MiuixIcons.os4.read),
           size: 18,
-          color: frozen ? colors.tertiary : colors.primary,
+          tint: frozen ? colors.tertiary : colors.primary,
         ),
       ),
       title: Text(
@@ -150,10 +154,10 @@ class CheatVariablesView extends StatelessWidget {
         children: [
           IconButton(
             tooltip: frozen ? l10n.unlock : l10n.lockValue,
-            icon: Icon(
-              frozen ? Icons.lock_rounded : Icons.lock_open_outlined,
+            icon: MiuixIcon(
+              vector: frozen ? MiuixIcons.os4.lock : MiuixIcons.os4.unlock,
               size: 20,
-              color: frozen ? colors.tertiary : null,
+              tint: frozen ? colors.tertiary : null,
             ),
             onPressed: () {
               HapticFeedback.selectionClick();
@@ -165,12 +169,12 @@ class CheatVariablesView extends StatelessWidget {
           ),
           IconButton(
             tooltip: l10n.editValue,
-            icon: const Icon(Icons.edit_outlined, size: 20),
+            icon: MiuixIcon(vector: MiuixIcons.os4.edit, size: 20),
             onPressed: () => onEditVar(v.name, v.displayValue),
           ),
           IconButton(
             tooltip: l10n.remove,
-            icon: const Icon(Icons.close_rounded, size: 20),
+            icon: MiuixIcon(vector: MiuixIcons.os4.close, size: 20),
             onPressed: () {
               HapticFeedback.selectionClick();
               notifier.removeWatch(v.name);
@@ -199,7 +203,7 @@ class CheatLocksView extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     if (cheat.frozen.isEmpty) {
       return QuestopiaSheetEmptyState(
-        icon: Icons.lock_open_rounded,
+        miuixVectorIcon: MiuixIcons.os4.unlock,
         message: l10n.noLockedVariables,
       );
     }
@@ -216,13 +220,13 @@ class CheatLocksView extends StatelessWidget {
                     color: colors.tertiaryContainer.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.lock_rounded, size: 18, color: colors.tertiary),
+                  child: MiuixIcon(vector: MiuixIcons.os4.lock, size: 18, tint: colors.tertiary),
                 ),
                 title: Text(entry.key, style: const TextStyle(fontWeight: FontWeight.w600)),
                 subtitle: Text(l10n.lockedTo(entry.value), style: TextStyle(color: colors.tertiary)),
                 trailing: IconButton(
                   tooltip: l10n.unlock,
-                  icon: const Icon(Icons.lock_open_outlined),
+                  icon: MiuixIcon(vector: MiuixIcons.os4.unlock, size: 20),
                   onPressed: () => notifier.toggleFreeze(entry.key, entry.value),
                 ),
               ),
@@ -246,7 +250,7 @@ class CheatDiffView extends StatelessWidget {
     final diff = cheat.diff;
     if (!cheat.hasSnapshotSave || diff.isEmpty) {
       return QuestopiaSheetEmptyState(
-        icon: Icons.difference_outlined,
+        miuixVectorIcon: MiuixIcons.os4.listView,
         message: !cheat.hasSnapshotSave
             ? l10n.noSnapshotYet
             : l10n.noChangesSinceSnapshot,
@@ -258,7 +262,7 @@ class CheatDiffView extends StatelessWidget {
           children: [
             for (final d in diff)
               SegmentedListTile(
-                leading: Icon(Icons.difference_outlined, color: colors.primary, size: 20),
+                leading: MiuixIcon(vector: MiuixIcons.os4.listView, tint: colors.primary, size: 20),
                 title: Text(d.name, style: const TextStyle(fontWeight: FontWeight.w600)),
                 subtitle: Text(
                   '${d.before}  ->  ${d.after}',

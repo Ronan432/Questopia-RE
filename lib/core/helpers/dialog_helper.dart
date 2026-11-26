@@ -1,13 +1,13 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 
 import '../l10n/app_localizations.dart';
-import '../widgets/questopia_morph_button.dart';
 
 export '../widgets/questopia_morph_button.dart';
 
-/// Shows a unified Questopia modal dialog with clean fade, scale, and backdrop blur.
+/// Shows a unified Miuix modal dialog with scale/fade and backdrop blur.
 Future<T?> showQuestopiaDialog<T>({
   required BuildContext context,
   required WidgetBuilder builder,
@@ -22,7 +22,7 @@ Future<T?> showQuestopiaDialog<T>({
     context: context,
     barrierDismissible: barrierDismissible,
     barrierLabel: barrierLabel,
-    barrierColor: Colors.black.withValues(alpha: 0.60),
+    barrierColor: Colors.black.withValues(alpha: 0.50),
     useRootNavigator: useRootNavigator,
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (dialogContext, animation, secondaryAnimation) {
@@ -42,7 +42,7 @@ Future<T?> showQuestopiaDialog<T>({
           builder: (context, _) {
             final scale =
                 lerpDouble(0.92, 1.0, curvedAnimation.value) ?? 1.0;
-            final sigma = curvedAnimation.value * 10.0;
+            final sigma = curvedAnimation.value * 8.0;
 
             return BackdropFilter(
               filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
@@ -60,7 +60,7 @@ Future<T?> showQuestopiaDialog<T>({
   );
 }
 
-/// Unified modal dialog frame with static Material You geometry and compact padding.
+/// Unified Miuix modal dialog frame with squircle geometry.
 class QuestopiaDialog extends StatelessWidget {
   const QuestopiaDialog({
     super.key,
@@ -79,7 +79,13 @@ class QuestopiaDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final miuix = MiuixTheme.maybeOf(context);
+    final colors = miuix?.colors;
+    final themeColors = Theme.of(context).colorScheme;
+    final bg = colors?.surfaceContainer ?? themeColors.surfaceContainer;
+    final outline = colors?.outline ?? themeColors.outlineVariant;
+    final onSurface = colors?.onSurface ?? themeColors.onSurface;
+    final primary = colors?.primary ?? themeColors.primary;
 
     return ConstrainedBox(
       constraints: BoxConstraints(
@@ -87,14 +93,14 @@ class QuestopiaDialog extends StatelessWidget {
         minWidth: 260,
       ),
       child: Material(
-        color: colors.surfaceContainer,
+        color: bg,
         elevation: 8,
-        shadowColor: Colors.black.withValues(alpha: 0.4),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+        shadowColor: Colors.black.withValues(alpha: 0.32),
+        shape: MiuixSquircleBorder(
+          cornerRadius: 24,
           side: BorderSide(
-            color: colors.outlineVariant.withValues(alpha: 0.35),
-            width: 0.5,
+            color: outline.withValues(alpha: 0.24),
+            width: 0.75,
           ),
         ),
         clipBehavior: Clip.antiAlias,
@@ -110,7 +116,7 @@ class QuestopiaDialog extends StatelessWidget {
                   child: IconTheme(
                     data: IconThemeData(
                       size: 26,
-                      color: colors.primary,
+                      color: primary,
                     ),
                     child: icon!,
                   ),
@@ -119,16 +125,16 @@ class QuestopiaDialog extends StatelessWidget {
               ],
               if (title != null) ...[
                 DefaultTextStyle(
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    color: colors.onSurface,
+                  style: (miuix?.textStyles.title4 ?? const TextStyle(fontSize: 17))
+                      .copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: onSurface,
                   ),
                   textAlign:
                       icon != null ? TextAlign.center : TextAlign.start,
                   child: title!,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
               ],
               Flexible(
                 child: SingleChildScrollView(
@@ -136,7 +142,7 @@ class QuestopiaDialog extends StatelessWidget {
                 ),
               ),
               if (actions != null && actions!.isNotEmpty) ...[
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -155,7 +161,7 @@ class QuestopiaDialog extends StatelessWidget {
   }
 }
 
-/// Specialized confirmation dialog for destructive or general binary decisions.
+/// Specialized Miuix confirmation dialog for destructive or binary decisions.
 class QuestopiaConfirmationDialog extends StatelessWidget {
   const QuestopiaConfirmationDialog({
     super.key,
@@ -165,6 +171,7 @@ class QuestopiaConfirmationDialog extends StatelessWidget {
     this.cancelLabel,
     this.isDestructive = false,
     this.icon,
+    this.miuixVectorIcon,
     this.onConfirm,
     this.onCancel,
   });
@@ -175,33 +182,47 @@ class QuestopiaConfirmationDialog extends StatelessWidget {
   final String? cancelLabel;
   final bool isDestructive;
   final IconData? icon;
+  final MiuixVectorIcon? miuixVectorIcon;
   final VoidCallback? onConfirm;
   final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
+    final miuix = MiuixTheme.maybeOf(context);
     final colors = Theme.of(context).colorScheme;
+    final primary = miuix?.colors.primary ?? colors.primary;
+    final error = miuix?.colors.error ?? colors.error;
+    final summaryColor =
+        miuix?.colors.onSurfaceVariantSummary ?? colors.onSurfaceVariant;
     final l10n = AppLocalizations.of(context)!;
     final resolvedConfirmLabel = confirmLabel ?? l10n.confirm;
     final resolvedCancelLabel = cancelLabel ?? l10n.cancel;
 
+    Widget? resolvedIcon;
+    if (miuixVectorIcon != null) {
+      resolvedIcon = MiuixIcon(
+        vector: miuixVectorIcon,
+        size: 26,
+        tint: isDestructive ? error : primary,
+      );
+    } else if (icon != null) {
+      resolvedIcon = MiuixIcon(
+        vector: isDestructive ? MiuixIcons.os4.delete : MiuixIcons.os4.settings,
+        size: 26,
+        tint: isDestructive ? error : primary,
+      );
+    }
+
     return QuestopiaDialog(
-      icon: icon != null
-          ? Icon(
-              icon,
-              color: isDestructive ? colors.error : colors.primary,
-            )
-          : null,
+      icon: resolvedIcon,
       title: Text(title),
       content: Text(
         message,
-        style: TextStyle(
-          fontSize: 14,
-          color: colors.onSurfaceVariant,
-        ),
+        style: (miuix?.textStyles.body2 ?? const TextStyle(fontSize: 14))
+            .copyWith(color: summaryColor),
       ),
       actions: [
-        QuestopiaMorphButton.outlined(
+        MiuixButton(
           onPressed: () {
             if (onCancel != null) {
               onCancel!();
@@ -209,9 +230,12 @@ class QuestopiaConfirmationDialog extends StatelessWidget {
               Navigator.of(context).pop(false);
             }
           },
+          minHeight: 38,
+          insideMargin:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           child: Text(resolvedCancelLabel),
         ),
-        QuestopiaMorphButton.filled(
+        MiuixButton(
           onPressed: () {
             if (onConfirm != null) {
               onConfirm!();
@@ -219,7 +243,19 @@ class QuestopiaConfirmationDialog extends StatelessWidget {
               Navigator.of(context).pop(true);
             }
           },
-          isDestructive: isDestructive,
+          colors: isDestructive
+              ? MiuixButtonColors(
+                  color: error,
+                  contentColor: miuix?.colors.onError ?? colors.onError,
+                  disabledColor: error.withValues(alpha: 0.38),
+                  disabledContentColor:
+                      (miuix?.colors.onError ?? colors.onError)
+                          .withValues(alpha: 0.38),
+                )
+              : MiuixButtonDefaults.buttonColorsPrimary(context),
+          minHeight: 38,
+          insideMargin:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           child: Text(resolvedConfirmLabel),
         ),
       ],

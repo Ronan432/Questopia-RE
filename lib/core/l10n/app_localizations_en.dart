@@ -1122,4 +1122,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingRestartHint => 'Run the first time setup wizard again';
+
+  @override
+  String get filters => 'Filters';
+
+  @override
+  String get filterLanguage => 'Language';
 }

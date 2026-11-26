@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/helpers/dialog_helper.dart';
@@ -36,13 +37,13 @@ class _CheatModesSheetState extends ConsumerState<CheatModesSheet> {
     'diff',
   ];
 
-  static const _tabIcons = [
-    Icons.data_object_rounded,
-    Icons.lock_outline_rounded,
-    Icons.explore_outlined,
-    Icons.inventory_2_outlined,
-    Icons.terminal_rounded,
-    Icons.difference_outlined,
+  static final _tabIcons = [
+    MiuixIcons.os4.tune,
+    MiuixIcons.os4.lock,
+    MiuixIcons.os4.location,
+    MiuixIcons.os4.layers,
+    MiuixIcons.os4.memoryFunction,
+    MiuixIcons.os4.listView,
   ];
 
   /// Maps a tab index to its localized title.
@@ -97,7 +98,7 @@ class _CheatModesSheetState extends ConsumerState<CheatModesSheet> {
                   if (i > 0) const SizedBox(width: 8),
                   ChoiceChip(
                     showCheckmark: false,
-                    avatar: Icon(_tabIcons[i], size: 16),
+                    avatar: MiuixIcon(vector: _tabIcons[i], size: 16),
                     label: Text(_localizedTabTitle(l10n, i)),
                     selected: _activeTabIndex == i,
                     shape: RoundedRectangleBorder(
@@ -161,7 +162,7 @@ class _CheatModesSheetState extends ConsumerState<CheatModesSheet> {
     showQuestopiaDialog<void>(
       context: context,
       builder: (ctx) => QuestopiaDialog(
-        icon: const Icon(Icons.edit_note_rounded),
+        icon: MiuixIcon(vector: MiuixIcons.os4.edit, size: 20),
         title: Text(l10n.editVarTitle(varName)),
         content: TextField(
           controller: controller,

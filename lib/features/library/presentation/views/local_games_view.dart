@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/helpers/platform_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/providers/settings_provider.dart';
-import '../../../../core/widgets/questopia_morph_button.dart';
 import '../../../game/presentation/game_screen.dart';
 import '../../../game/providers/game_engine_provider.dart';
 import '../../data/local_game.dart';
@@ -86,45 +85,45 @@ class LocalGamesView extends ConsumerWidget {
     if (games.isEmpty) {
       return wrapPullToRefresh(
         ListView(
+          padding: const EdgeInsets.only(top: 16),
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
-            const SizedBox(height: 120),
-            Icon(
-              Icons.sports_esports_outlined,
-              size: 56,
-              color: Theme.of(context).colorScheme.outline,
+            Center(
+              child: MiuixIcon(
+                vector: MiuixIcons.os4.gridView,
+                size: 52,
+                tint: MiuixTheme.of(context).colors.onSurfaceVariantSummary,
+              ),
             ),
             const SizedBox(height: 12),
             Center(
-              child: Text(
+              child: MiuixText(
                 l10n.emptyLibraryHint,
                 textAlign: TextAlign.center,
+                style: MiuixTheme.of(context).textStyles.body2.copyWith(
+                      color:
+                          MiuixTheme.of(context).colors.onSurfaceVariantSummary,
+                    ),
               ),
             ),
             const SizedBox(height: 16),
             Center(
-              child: miuix
-                  ? MiuixButton(
-                      onPressed: onImportFolder,
-                      colors: MiuixButtonDefaults.buttonColorsPrimary(context),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          MiuixIcon(
-                            vector: MiuixIcons.os4.add,
-                            size: 20,
-                            tint: MiuixTheme.of(context).colors.onPrimary,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(l10n.addGame),
-                        ],
-                      ),
-                    )
-                  : QuestopiaMorphButton.filled(
-                      onPressed: onImportFolder,
-                      icon: const Icon(Icons.add_rounded, size: 20),
-                      child: Text(l10n.addGame),
+              child: MiuixButton(
+                onPressed: onImportFolder,
+                colors: MiuixButtonDefaults.buttonColorsPrimary(context),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    MiuixIcon(
+                      vector: MiuixIcons.os4.add,
+                      size: 20,
+                      tint: MiuixTheme.of(context).colors.onPrimary,
                     ),
+                    const SizedBox(width: 8),
+                    Text(l10n.addGame),
+                  ],
+                ),
+              ),
             ),
           ],
         ),

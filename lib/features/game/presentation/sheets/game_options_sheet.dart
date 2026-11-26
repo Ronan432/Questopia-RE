@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_segmented_list/material_segmented_list.dart';
 
 import '../../../../core/helpers/sheet_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/providers/settings_provider.dart';
+import '../../../../core/theme/miuix_icons_helper.dart';
 import '../../providers/game_engine_provider.dart';
 import 'cheat_modes_sheet.dart';
 import 'notes_sheet.dart';
@@ -15,94 +16,102 @@ class GameOptionsSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    // The cheat engine and the console are gated by their settings, which used
-    // to be stored but never checked.
     final settings = ref.watch(settingsProvider);
+    final colors = MiuixTheme.of(context).colors;
+    const rowMargin = EdgeInsets.symmetric(horizontal: 14, vertical: 11);
+
+    Widget lead(String name, {MiuixVectorIcon? fallback}) => Padding(
+          padding: const EdgeInsets.only(right: 10),
+          child: miuixIcon(
+            name,
+            size: 20,
+            tint: colors.onSurfaceVariantActions,
+            fallback: fallback,
+          ),
+        );
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           QuestopiaSheetHeaderPill(title: l10n.gameOptions),
-          const SizedBox(height: 8),
-          SegmentedListSection(
-            children: [
-              SegmentedListTile(
-                leading: const Icon(Icons.save_outlined, size: 22),
-                title: Text(l10n.saveAndLoad,
-                    style: const TextStyle(fontSize: 16)),
-                trailing: Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
-                onTap: () {
-                  Navigator.pop(context);
-                  showQuestopiaSheet<void>(
-                    context: context,
-                    builder: (_) => const SaveSlotsSheet(),
-                  );
-                },
-              ),
-              SegmentedListTile(
-                leading: const Icon(Icons.edit_note_rounded, size: 22),
-                title: Text(l10n.gameNotes,
-                    style: const TextStyle(fontSize: 16)),
-                trailing: Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
-                onTap: () {
-                  Navigator.pop(context);
-                  showQuestopiaSheet<void>(
-                    context: context,
-                    builder: (_) => const NotesSheet(),
-                  );
-                },
-              ),
-              if (settings.isCheatsEnabled)
-                SegmentedListTile(
-                  leading: const Icon(Icons.tune_rounded, size: 22),
-                  title: Text(l10n.cheatEngine,
-                      style: const TextStyle(fontSize: 16)),
-                  trailing:
-                      Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
-                  onTap: () {
+          MiuixCard(
+            cornerRadius: 20,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                MiuixArrowPreference(
+                  title: l10n.saveAndLoad,
+                  insideMargin: rowMargin,
+                  startAction: lead('save'),
+                  onClick: () {
                     Navigator.pop(context);
                     showQuestopiaSheet<void>(
                       context: context,
-                      builder: (_) => const CheatModesSheet(),
+                      builder: (_) => const SaveSlotsSheet(),
                     );
                   },
                 ),
-              SegmentedListTile(
-                leading: const Icon(Icons.restart_alt_rounded, size: 22),
-                title: Text(l10n.restartGame, style: const TextStyle(fontSize: 16)),
-                trailing: Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
-                onTap: () {
-                  Navigator.pop(context);
-                  ref.read(gameEngineProvider.notifier).showRestartConfirmation();
-                },
-              ),
-              if (settings.isExecStringEnabled)
-                SegmentedListTile(
-                  leading: const Icon(Icons.terminal_rounded, size: 22),
-                  title:
-                      Text(l10n.qspConsole, style: const TextStyle(fontSize: 16)),
-                  trailing:
-                      Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
-                  onTap: () {
+                MiuixArrowPreference(
+                  title: l10n.gameNotes,
+                  insideMargin: rowMargin,
+                  startAction: lead('edit'),
+                  onClick: () {
                     Navigator.pop(context);
-                    ref.read(gameEngineProvider.notifier).showExecutor();
+                    showQuestopiaSheet<void>(
+                      context: context,
+                      builder: (_) => const NotesSheet(),
+                    );
                   },
                 ),
-              SegmentedListTile(
-                leading: const Icon(Icons.file_open_outlined, size: 22),
-                title: Text(l10n.openSaveFile, style: const TextStyle(fontSize: 16)),
-                trailing: Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
-                onTap: () {
-                  Navigator.pop(context);
-                  ref.read(gameEngineProvider.notifier).showFileLoad();
-                },
-              ),
-            ],
+                if (settings.isCheatsEnabled)
+                  MiuixArrowPreference(
+                    title: l10n.cheatEngine,
+                    insideMargin: rowMargin,
+                    startAction: lead('tune'),
+                    onClick: () {
+                      Navigator.pop(context);
+                      showQuestopiaSheet<void>(
+                        context: context,
+                        builder: (_) => const CheatModesSheet(),
+                      );
+                    },
+                  ),
+                MiuixArrowPreference(
+                  title: l10n.restartGame,
+                  insideMargin: rowMargin,
+                  startAction: lead('refresh', fallback: MiuixIcons.os4.refresh),
+                  onClick: () {
+                    Navigator.pop(context);
+                    ref
+                        .read(gameEngineProvider.notifier)
+                        .showRestartConfirmation();
+                  },
+                ),
+                if (settings.isExecStringEnabled)
+                  MiuixArrowPreference(
+                    title: l10n.qspCommandLine,
+                    insideMargin: rowMargin,
+                    startAction: lead('code'),
+                    onClick: () {
+                      Navigator.pop(context);
+                      ref.read(gameEngineProvider.notifier).showExecutor();
+                    },
+                  ),
+                MiuixArrowPreference(
+                  title: l10n.openSaveFile,
+                  insideMargin: rowMargin,
+                  startAction: lead('folder', fallback: MiuixIcons.os4.folder),
+                  onClick: () {
+                    Navigator.pop(context);
+                    ref.read(gameEngineProvider.notifier).showFileLoad();
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/helpers/dialog_helper.dart';
@@ -80,7 +81,7 @@ class CatalogSearchHistory extends ConsumerWidget {
       padding: const EdgeInsets.only(left: 16, right: 4, top: 4, bottom: 4),
       child: Row(
         children: [
-          Icon(Icons.history_rounded, size: 16, color: colors.onSurfaceVariant),
+          MiuixIcon(vector: MiuixIcons.os4.recent, size: 16, tint: colors.onSurfaceVariant),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -115,7 +116,7 @@ class CatalogSearchHistory extends ConsumerWidget {
     return ListTile(
       dense: true,
       visualDensity: VisualDensity.compact,
-      leading: Icon(Icons.search_rounded, size: 18, color: colors.outline),
+      leading: MiuixIcon(vector: MiuixIcons.basic.search, size: 18, tint: colors.outline),
       title: Text(
         query,
         maxLines: 1,
@@ -123,7 +124,7 @@ class CatalogSearchHistory extends ConsumerWidget {
         style: TextStyle(fontSize: 14, color: colors.onSurface),
       ),
       trailing: IconButton(
-        icon: Icon(Icons.close_rounded, size: 18, color: colors.outline),
+        icon: MiuixIcon(vector: MiuixIcons.os4.close, size: 18, tint: colors.outline),
         tooltip: l10n.searchHistoryRemove,
         visualDensity: VisualDensity.compact,
         onPressed: onRemove,
@@ -146,7 +147,7 @@ class CatalogSearchHistory extends ConsumerWidget {
         message: l10n.searchHistoryClearMessage,
         confirmLabel: l10n.searchHistoryClearAll,
         isDestructive: true,
-        icon: Icons.delete_sweep_outlined,
+        miuixVectorIcon: MiuixIcons.os4.delete,
         onConfirm: () {
           Navigator.of(dialogContext).pop();
           notifier.clear();

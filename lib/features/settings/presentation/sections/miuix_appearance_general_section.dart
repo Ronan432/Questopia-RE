@@ -19,17 +19,17 @@ class MiuixAppearanceSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final accentLabels = SettingsPickerSheets.accentLabels(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MiuixSmallTitle(l10n.sectionAppearance),
+        MiuixSettingsSectionTitle(l10n.sectionAppearance),
         MiuixSettingsGroup(
           children: [
             miuixArrowPreference(
+              context: context,
               title: l10n.theme,
-              icon: Icons.brightness_6_outlined,
+              iconName: 'theme',
               summary: SettingsPickerSheets.themeLabel(
                 context,
                 settings.themeMode == ThemeModeOption.amoled
@@ -43,18 +43,9 @@ class MiuixAppearanceSection extends StatelessWidget {
               ),
             ),
             miuixArrowPreference(
-              title: l10n.colorAccent,
-              icon: Icons.palette_outlined,
-              summary: accentLabels[settings.themeColor] ?? l10n.accentDynamic,
-              onClick: () => SettingsPickerSheets.showAccentPicker(
-                context,
-                notifier,
-                settings,
-              ),
-            ),
-            miuixArrowPreference(
+              context: context,
               title: l10n.language,
-              icon: Icons.language_outlined,
+              iconName: 'translate',
               summary: SettingsPickerSheets.languageOptions(context)
                   .firstWhere(
                     (option) => option.$1 == settings.language,
@@ -68,16 +59,10 @@ class MiuixAppearanceSection extends StatelessWidget {
               ),
             ),
             miuixSwitchPreference(
-              title: l10n.miuixDesign,
-              summary: l10n.miuixDesignSummary,
-              icon: Icons.auto_awesome_outlined,
-              value: settings.isMiuixDesignEnabled,
-              onChanged: notifier.setMiuixDesignEnabled,
-            ),
-            miuixSwitchPreference(
+              context: context,
               title: l10n.miuixDynamicColor,
               summary: l10n.miuixDynamicColorSummary,
-              icon: Icons.color_lens_outlined,
+              iconName: 'theme',
               value: settings.isMiuixDynamicColor,
               onChanged: notifier.setMiuixDynamicColor,
             ),
@@ -105,37 +90,42 @@ class MiuixGeneralSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MiuixSmallTitle(l10n.sectionGeneral),
+        MiuixSettingsSectionTitle(l10n.sectionGeneral),
         MiuixSettingsGroup(
           children: [
             miuixSwitchPreference(
+              context: context,
               title: l10n.immersiveMode,
-              icon: Icons.fullscreen_outlined,
+              iconName: 'screenMirroring',
               value: settings.isImmersiveMode,
               onChanged: notifier.setImmersiveMode,
             ),
             miuixSwitchPreference(
+              context: context,
               title: l10n.autoscroll,
-              icon: Icons.vertical_align_bottom_outlined,
+              iconName: 'expandMore',
               value: settings.isUseAutoscroll,
               onChanged: notifier.setAutoscroll,
             ),
             miuixSwitchPreference(
+              context: context,
               title: l10n.separatorLine,
-              icon: Icons.table_rows_outlined,
+              iconName: 'listView',
               value: settings.isUseSeparator,
               onChanged: notifier.setSeparator,
             ),
             miuixSwitchPreference(
+              context: context,
               title: l10n.navBarBlur,
-              icon: Icons.blur_on_outlined,
+              iconName: 'layers',
               value: settings.isNavBarBlur,
               onChanged: notifier.setNavBarBlur,
             ),
             if (settings.isNavBarBlur)
               miuixSliderPreference(
+                context: context,
                 title: l10n.navBarBlur,
-                icon: Icons.blur_linear_outlined,
+                iconName: 'tune',
                 value: settings.navBarBlurPercent,
                 min: 10,
                 max: 100,
@@ -144,15 +134,17 @@ class MiuixGeneralSection extends StatelessWidget {
                 onChanged: notifier.setNavBarBlurPercent,
               ),
             miuixSwitchPreference(
+              context: context,
               title: l10n.autoSave,
-              icon: Icons.save_outlined,
+              iconName: 'save',
               value: settings.isAutosaveEnabled,
               onChanged: notifier.setAutosave,
             ),
             if (settings.isAutosaveEnabled)
               miuixSliderPreference(
+                context: context,
                 title: l10n.autoSaveInterval,
-                icon: Icons.timer_outlined,
+                iconName: 'timer',
                 value: settings.autosaveInterval.toDouble(),
                 min: 10,
                 max: 100,
@@ -162,20 +154,23 @@ class MiuixGeneralSection extends StatelessWidget {
                     notifier.setAutosaveInterval(value.round()),
               ),
             miuixSwitchPreference(
+              context: context,
               title: l10n.cheatEngine,
-              icon: Icons.security_outlined,
+              iconName: 'lock',
               value: settings.isCheatsEnabled,
               onChanged: notifier.setCheatsEnabled,
             ),
             miuixSwitchPreference(
+              context: context,
               title: l10n.qspCommandLine,
-              icon: Icons.terminal_outlined,
+              iconName: 'memoryFunction',
               value: settings.isExecStringEnabled,
               onChanged: notifier.setExecStringEnabled,
             ),
             miuixArrowPreference(
+              context: context,
               title: l10n.actionsPanelHeight,
-              icon: Icons.height_outlined,
+              iconName: 'verticalSplit',
               summary: settings.actionsHeightRatio,
               onClick: () => SettingsPickerSheets.showActionsHeightPicker(
                 context,
@@ -184,8 +179,10 @@ class MiuixGeneralSection extends StatelessWidget {
               ),
             ),
             miuixArrowPreference(
+              context: context,
               title: l10n.binaryPrefixes,
-              icon: Icons.memory_outlined,
+              iconName: 'backup',
+              fallbackIcon: MiuixIcons.os4.backup,
               summary: settings.binaryPrefixes == 1024 ? '1024' : '1000',
               onClick: () => SettingsPickerSheets.showBinaryPrefixesPicker(
                 context,

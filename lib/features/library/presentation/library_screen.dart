@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 
@@ -116,6 +118,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   void _onTabChanged(int index) {
     if (_selectedTab == index) return;
+    HapticFeedback.selectionClick();
     _closeSearch();
     setState(() => _selectedTab = index);
     if (_libraryPageController.hasClients) {
@@ -185,6 +188,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       controller: _libraryPageController,
       physics: const ClampingScrollPhysics(),
       onPageChanged: (value) {
+        if (value != _selectedTab) {
+          HapticFeedback.selectionClick();
+        }
         _closeSearch();
         setState(() => _selectedTab = value);
         _ensureCatalogLoaded(value);
@@ -196,7 +202,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       ],
     );
 
-    if (shouldUseMiuixDesign(settings)) {
+    if (shouldUseMiuixDesign(settings) && !isDesktop) {
       return MiuixDesignTheme(
         child: PopScope(
           canPop: !_isSearchOpen && _selectedTab == 0,
@@ -213,14 +219,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             onTabChanged: _onTabChanged,
             isSearchOpen: _isSearchOpen,
             searchQuery: _searchQuery,
+            searchController: _searchController,
             searchFocusNode: _searchFocusNode,
-            onSearchChanged: (value) {
-              _searchController.value = TextEditingValue(
-                text: value,
-                selection: TextSelection.collapsed(offset: value.length),
-              );
-              setState(() => _searchQuery = value);
-            },
+            onSearchChanged: (value) => setState(() => _searchQuery = value),
             onSearchSubmitted: _rememberCatalogSearch,
             onOpenSearch: _openSearch,
             onCloseSearch: _closeSearch,
@@ -228,9 +229,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             showFavoritesOnly: _showFavoritesOnly,
             onToggleFavorites: () =>
                 setState(() => _showFavoritesOnly = !_showFavoritesOnly),
-            onRefreshCatalog: () => ref
-                .read(libraryProvider.notifier)
-                .refreshRemoteCatalog(force: true),
             pagination: _selectedTab == 1 && state.totalPages > 1
                 ? const CatalogPaginationBar(isInsideOverlay: true, miuix: true)
                 : null,
@@ -269,22 +267,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                       tooltip: _showFavoritesOnly
                           ? l10n.showAllGames
                           : l10n.showFavoritesOnly,
-                      icon: Icon(
-                        _showFavoritesOnly
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
-                        color: _showFavoritesOnly ? colors.error : null,
+                      icon: MiuixIcon(
+                        vector: _showFavoritesOnly
+                            ? MiuixIcons.os4.favoritesFill
+                            : MiuixIcons.os4.favorites,
+                        tint: _showFavoritesOnly ? colors.error : null,
                       ),
                       onPressed: () => setState(
                           () => _showFavoritesOnly = !_showFavoritesOnly),
-                    ),
-                  if (_selectedTab == 1)
-                    IconButton(
-                      tooltip: l10n.refreshCatalog,
-                      icon: const Icon(Icons.refresh_rounded),
-                      onPressed: () => ref
-                          .read(libraryProvider.notifier)
-                          .refreshRemoteCatalog(force: true),
                     ),
                   const SizedBox(width: 8),
                 ]

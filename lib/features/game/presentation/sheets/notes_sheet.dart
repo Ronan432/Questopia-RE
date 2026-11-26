@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/helpers/dialog_helper.dart';
@@ -128,7 +129,7 @@ class _NotesSheetState extends ConsumerState<NotesSheet> {
     final name = await showQuestopiaDialog<String>(
       context: context,
       builder: (ctx) => QuestopiaDialog(
-        icon: const Icon(Icons.edit_rounded),
+        icon: MiuixIcon(vector: MiuixIcons.os4.edit, size: 20),
         title: Text(l10n.notesRenameTabTitle),
         content: TextField(
           controller: controller,
@@ -189,7 +190,7 @@ class _NotesSheetState extends ConsumerState<NotesSheet> {
         confirmLabel: l10n.delete,
         cancelLabel: l10n.cancel,
         isDestructive: true,
-        icon: Icons.delete_outline_rounded,
+        miuixVectorIcon: MiuixIcons.os4.delete,
       ),
     );
     if (confirmed != true || !mounted) return;
@@ -224,7 +225,7 @@ class _NotesSheetState extends ConsumerState<NotesSheet> {
         confirmLabel: l10n.notesSwitchDiscard,
         cancelLabel: l10n.notesKeepEditing,
         isDestructive: true,
-        icon: Icons.edit_note_rounded,
+        miuixVectorIcon: MiuixIcons.os4.edit,
       ),
     );
     return confirmed == true;
@@ -254,12 +255,12 @@ class _NotesSheetState extends ConsumerState<NotesSheet> {
           children: [
             QuestopiaSheetHeaderPill(
               title: l10n.gameNotes,
-              icon: Icons.edit_note_rounded,
+              miuixVectorIcon: MiuixIcons.os4.notes,
             ),
             if (id == null)
               Expanded(
                 child: QuestopiaSheetEmptyState(
-                  icon: Icons.edit_note_rounded,
+                  miuixVectorIcon: MiuixIcons.os4.notes,
                   message: l10n.noStatusInformation,
                 ),
               )
@@ -279,7 +280,7 @@ class _NotesSheetState extends ConsumerState<NotesSheet> {
         child: asyncTabs.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (_, __) => QuestopiaSheetEmptyState(
-            icon: Icons.error_outline_rounded,
+            miuixVectorIcon: MiuixIcons.os4.report,
             message: l10n.noStatusInformation,
           ),
           data: (tabs) => _buildLoaded(l10n, tabs),

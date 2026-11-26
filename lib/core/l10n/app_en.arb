@@ -576,5 +576,7 @@
   "onboardingFinishBody": "These choices are saved. You can change any of them later in Settings.",
   "getStarted": "Get Started",
   "onboardingRestart": "Show setup again",
-  "onboardingRestartHint": "Run the first time setup wizard again"
+  "onboardingRestartHint": "Run the first time setup wizard again",
+  "filters": "Filters",
+  "filterLanguage": "Language"
 }

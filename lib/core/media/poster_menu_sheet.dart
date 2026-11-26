@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
 
 import '../helpers/sheet_helper.dart';
@@ -80,7 +81,7 @@ Future<void> showPosterMenuSheet({
             SegmentedListSection(
               children: [
                 SegmentedListTile(
-                  leading: const Icon(Icons.content_copy_rounded),
+                  leading: MiuixIcon(vector: MiuixIcons.os4.copy, size: 20),
                   title: Text(l10n.copyImage),
                   onTap: () => run(
                     () => service.copyImage(imageUri),
@@ -89,7 +90,7 @@ Future<void> showPosterMenuSheet({
                   ),
                 ),
                 SegmentedListTile(
-                  leading: const Icon(Icons.file_download_rounded),
+                  leading: MiuixIcon(vector: MiuixIcons.os4.download, size: 20),
                   title: Text(l10n.saveToGallery),
                   onTap: () => run(
                     () => service.saveToGallery(imageUri),
@@ -98,7 +99,7 @@ Future<void> showPosterMenuSheet({
                   ),
                 ),
                 SegmentedListTile(
-                  leading: const Icon(Icons.search_rounded),
+                  leading: MiuixIcon(vector: MiuixIcons.basic.search, size: 20),
                   title: Text(l10n.searchImageOnYandex),
                   onTap: () => run(
                     () => service.searchImage(imageUri, languageCode: languageCode),

@@ -2,7 +2,7 @@ name: questopia_re
 description: "Questopia Flutter client for QSP interactive fiction."
 publish_to: 'none'
 
-version: 3.25.5+202505
+version: 1.0.0+1
 
 environment:
   sdk: '>=3.1.0 <4.0.0'

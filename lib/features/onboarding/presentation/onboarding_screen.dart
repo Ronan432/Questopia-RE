@@ -18,7 +18,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
-  static const _stepCount = 7;
+  static const _stepCount = 6;
 
   final PageController _pageController = PageController();
   int _currentStep = 0;
@@ -55,10 +55,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       OnboardingThemeStep(
         settings: settings,
         onChanged: (value) => notifier.setThemeMode(value),
-      ),
-      OnboardingAccentStep(
-        settings: settings,
-        onChanged: (value) => notifier.setThemeColor(value),
       ),
       OnboardingReadingStep(
         settings: settings,
@@ -158,25 +154,42 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       child: Row(
         children: [
           if (_currentStep > 0)
-            MiuixTextButton(
-              l10n.prev,
+            MiuixButton(
               onPressed: () => _goTo(_currentStep - 1),
+              minHeight: 38,
+              insideMargin:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  MiuixIcon(
+                    vector: MiuixIcons.os4.back,
+                    size: 16,
+                    tint: miuix.colors.onSecondary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(l10n.prev),
+                ],
+              ),
             ),
           const Spacer(),
           MiuixButton(
             onPressed: isLastStep ? _finish : () => _goTo(_currentStep + 1),
             colors: MiuixButtonDefaults.buttonColorsPrimary(context),
+            minHeight: 38,
+            insideMargin:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(isLastStep ? l10n.getStarted : l10n.next),
                 const SizedBox(width: 6),
-                Icon(
-                  isLastStep
-                      ? Icons.rocket_launch_rounded
-                      : Icons.arrow_forward_rounded,
-                  size: 18,
-                  color: miuix.colors.onPrimary,
+                MiuixIcon(
+                  vector: isLastStep
+                      ? MiuixIcons.basic.check
+                      : MiuixIcons.basic.arrowRight,
+                  size: 16,
+                  tint: miuix.colors.onPrimary,
                 ),
               ],
             ),
@@ -211,10 +224,10 @@ class OnboardingFinishStep extends StatelessWidget {
                   color: colors.primaryContainer,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  Icons.check_rounded,
+                child: MiuixIcon(
+                  vector: MiuixIcons.basic.check,
                   size: 44,
-                  color: colors.onPrimaryContainer,
+                  tint: colors.onPrimaryContainer,
                 ),
               ),
               const SizedBox(height: 24),

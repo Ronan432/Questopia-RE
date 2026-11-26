@@ -6,6 +6,7 @@ import 'package:material_segmented_list/material_segmented_list.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/providers/settings_provider.dart';
 import '../../../../core/theme/game_colors.dart';
+import '../../../../core/theme/miuix_icons_helper.dart';
 import '../../../../core/theme/questopia_theme.dart';
 import '../../../../core/helpers/sheet_helper.dart';
 import '../../../../core/widgets/questopia_morph_button.dart';
@@ -93,39 +94,17 @@ abstract final class SettingsPickerSheets {
     required String title,
     required Widget Function(BuildContext ctx) bodyBuilder,
   }) async {
-    final miuix = MiuixTheme.of(context);
-    await showModalBottomSheet<void>(
+    await showQuestopiaSheet<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: miuix.colors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetCtx) => MiuixTheme(
-        data: miuix,
-        child: SafeArea(
-          top: false,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: miuix.textStyles.title4.copyWith(
-                      color: miuix.colors.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                bodyBuilder(sheetCtx),
-              ],
-            ),
-          ),
+      builder: (sheetCtx) => SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            QuestopiaSheetHeaderPill(title: title),
+            bodyBuilder(sheetCtx),
+          ],
         ),
       ),
     );
@@ -133,6 +112,7 @@ abstract final class SettingsPickerSheets {
 
   static Widget _miuixGroup(List<Widget> items) {
     return MiuixCard(
+      cornerRadius: 20,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -150,9 +130,10 @@ abstract final class SettingsPickerSheets {
   }) {
     return MiuixBasicComponent(
       title: title,
+      insideMargin: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       startAction: leading != null
           ? Padding(
-              padding: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.only(right: 10),
               child: leading,
             )
           : null,
@@ -302,11 +283,10 @@ abstract final class SettingsPickerSheets {
                 ctx,
                 title: themeLabel(ctx, mode),
                 selected: mode == activeMode,
-                leading: Icon(
-                  mode == activeMode
-                      ? Icons.brightness_auto_rounded
-                      : Icons.brightness_4_outlined,
-                  color: mode == activeMode
+                leading: miuixIcon(
+                  'dark_mode',
+                  size: 20,
+                  tint: mode == activeMode
                       ? miuix.colors.primary
                       : miuix.colors.onSurfaceVariantActions,
                 ),
@@ -634,9 +614,10 @@ abstract final class SettingsPickerSheets {
                       sheetCtx,
                       title: fonts[i],
                       selected: i == activeIndex,
-                      leading: Icon(
-                        Icons.font_download_outlined,
-                        color: i == activeIndex
+                      leading: miuixIcon(
+                        'text_fields',
+                        size: 20,
+                        tint: i == activeIndex
                             ? miuix.colors.primary
                             : miuix.colors.onSurfaceVariantActions,
                       ),
@@ -779,7 +760,7 @@ abstract final class SettingsPickerSheets {
               ctx,
               title: ratio,
               selected: ratio == settings.actionsHeightRatio,
-              leading: const Icon(Icons.height_outlined),
+              leading: miuixIcon('expand', size: 20),
               onTap: () async {
                 await notifier.setActionsHeightRatio(ratio);
                 if (ctx.mounted) Navigator.pop(ctx);
@@ -806,7 +787,7 @@ abstract final class SettingsPickerSheets {
                 children: [
                   for (final ratio in actionsHeightRatios)
                     SegmentedListTile(
-                      leading: const Icon(Icons.height_outlined),
+                      leading: miuixIcon('expand', size: 20),
                       title: Text(
                         ratio,
                         style: const TextStyle(fontSize: 16),
@@ -847,7 +828,7 @@ abstract final class SettingsPickerSheets {
               title:
                   '$value (${value == 1024 ? l10n.binaryKiB : l10n.decimalKB})',
               selected: value == settings.binaryPrefixes,
-              leading: const Icon(Icons.memory_outlined),
+              leading: miuixIcon('storage', size: 20),
               onTap: () async {
                 await notifier.setBinaryPrefixes(value);
                 if (ctx.mounted) Navigator.pop(ctx);
@@ -874,7 +855,7 @@ abstract final class SettingsPickerSheets {
                 children: [
                   for (final value in const [1000, 1024])
                     SegmentedListTile(
-                      leading: const Icon(Icons.memory_outlined),
+                      leading: miuixIcon('storage', size: 20),
                       title: Text(
                         '$value (${value == 1024 ? l10n.binaryKiB : l10n.decimalKB})',
                         style: const TextStyle(fontSize: 16),

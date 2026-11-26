@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'qsp_media_kind.dart';
 import 'qsp_ogv_video.dart';
 import 'qsp_path_resolver.dart';
@@ -162,9 +163,9 @@ class QspMedia extends StatelessWidget {
         color: colors.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(
-        Icons.broken_image_outlined,
-        color: colors.onSurfaceVariant,
+      child: MiuixIcon(
+        vector: MiuixIcons.os4.image,
+        tint: colors.onSurfaceVariant,
         size: 24,
       ),
     );

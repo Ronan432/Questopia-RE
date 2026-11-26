@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/helpers/dialog_helper.dart';
@@ -34,7 +35,7 @@ class GameImagePreviewDialog extends ConsumerWidget {
           if (imageUrl.isNotEmpty)
             IconButton(
               tooltip: l10n.options,
-              icon: const Icon(Icons.more_vert_rounded),
+              icon: MiuixIcon(vector: MiuixIcons.os4.more, size: 20),
               onPressed: () => showPosterMenuSheet(
                 context: context,
                 imageUri: imageUrl,
@@ -73,7 +74,7 @@ class GameRestartConfirmationDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return QuestopiaConfirmationDialog(
-      icon: Icons.restart_alt_rounded,
+      miuixVectorIcon: MiuixIcons.os4.refresh,
       isDestructive: true,
       title: l10n.restartGameTitle,
       message: l10n.restartGameMessage,
@@ -118,7 +119,7 @@ class _GameExecutorDialogState extends State<GameExecutorDialog> {
 
     return QuestopiaDialog(
       maxWidth: 360,
-      icon: const Icon(Icons.terminal_rounded),
+      icon: MiuixIcon(vector: MiuixIcons.os4.memoryFunction, size: 22),
       title: Text(l10n.qspConsole),
       content: SizedBox(
         width: double.maxFinite,

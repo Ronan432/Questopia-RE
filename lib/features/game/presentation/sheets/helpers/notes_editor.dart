@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 
 import '../../../../../core/l10n/app_localizations.dart';
 
@@ -40,10 +41,10 @@ class NotesEditor extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.lightbulb_outline_rounded,
+                    MiuixIcon(
+                      vector: MiuixIcons.os4.info,
                       size: 18,
-                      color: colors.onSurfaceVariant,
+                      tint: colors.onSurfaceVariant,
                     ),
                     const SizedBox(width: 8),
                     Text(

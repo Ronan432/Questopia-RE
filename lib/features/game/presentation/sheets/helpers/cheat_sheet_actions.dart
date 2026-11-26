@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
@@ -40,7 +41,10 @@ class CheatTeleportView extends StatelessWidget {
             controller: controller,
             decoration: InputDecoration(
               hintText: l10n.locationNameHint,
-              prefixIcon: const Icon(Icons.explore_outlined),
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(12),
+                child: MiuixIcon(vector: MiuixIcons.os4.location, size: 18),
+              ),
               filled: true,
               fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.5),
               border: OutlineInputBorder(
@@ -54,7 +58,7 @@ class CheatTeleportView extends StatelessWidget {
           const SizedBox(height: 16),
           M3EButton.icon(
             onPressed: () => onTeleport(controller.text),
-            icon: const Icon(Icons.my_location_rounded, size: 18),
+            icon: MiuixIcon(vector: MiuixIcons.os4.location, size: 18),
             label: Text(l10n.teleport),
             style: M3EButtonStyle.filled,
             size: M3EButtonSize.md,
@@ -96,7 +100,10 @@ class CheatInventoryView extends StatelessWidget {
                 controller: itemController,
                 decoration: InputDecoration(
                   hintText: l10n.newItemNameHint,
-                  prefixIcon: const Icon(Icons.add_rounded),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: MiuixIcon(vector: MiuixIcons.os4.add, size: 18),
+                  ),
                   isDense: true,
                   filled: true,
                   fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.5),
@@ -112,7 +119,7 @@ class CheatInventoryView extends StatelessWidget {
             const SizedBox(width: 8),
             M3EButton.icon(
               onPressed: () => onAddItem(itemController.text),
-              icon: const Icon(Icons.add_rounded, size: 18),
+              icon: MiuixIcon(vector: MiuixIcons.os4.add, size: 18),
               label: Text(l10n.add),
               style: M3EButtonStyle.filled,
               size: M3EButtonSize.sm,
@@ -124,7 +131,7 @@ class CheatInventoryView extends StatelessWidget {
         Expanded(
           child: objects.isEmpty
               ? QuestopiaSheetEmptyState(
-                  icon: Icons.inventory_2_outlined,
+                  miuixVectorIcon: MiuixIcons.os4.layers,
                   message: l10n.inventoryIsEmpty,
                 )
               : ListView(
@@ -133,14 +140,20 @@ class CheatInventoryView extends StatelessWidget {
                       children: [
                         for (final item in objects)
                           SegmentedListTile(
-                            leading: Icon(Icons.inventory_2_outlined,
-                                color: colors.primary, size: 20),
+                            leading: MiuixIcon(
+                              vector: MiuixIcons.os4.layers,
+                              tint: colors.primary,
+                              size: 20,
+                            ),
                             title: Text(item.name,
                                 style: const TextStyle(fontWeight: FontWeight.w600)),
                             trailing: IconButton(
                               tooltip: l10n.remove,
-                              icon: Icon(Icons.delete_outline_rounded,
-                                  color: colors.error, size: 20),
+                              icon: MiuixIcon(
+                                vector: MiuixIcons.os4.delete,
+                                tint: colors.error,
+                                size: 20,
+                              ),
                               onPressed: () {
                                 final ok = notifier.removeItem(item.name);
                                 if (!ok) {
@@ -227,7 +240,7 @@ class CheatConsoleView extends StatelessWidget {
             const SizedBox(width: 8),
             M3EButton.icon(
               onPressed: onRunConsole,
-              icon: const Icon(Icons.play_arrow_rounded, size: 18),
+              icon: MiuixIcon(vector: MiuixIcons.os4.play, size: 18),
               label: Text(l10n.run),
               style: M3EButtonStyle.filled,
               size: M3EButtonSize.sm,

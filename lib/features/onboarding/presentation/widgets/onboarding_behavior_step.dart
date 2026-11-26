@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_miuix/miuix.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/theme/miuix_icons_helper.dart';
 import 'onboarding_step_layout.dart';
 
 /// Behavior step: the helper switches that are worth deciding before the first
@@ -33,45 +34,50 @@ class OnboardingBehaviorStep extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return OnboardingStepLayout(
-      icon: Icons.tune_rounded,
+      icon: MiuixIcons.os4.tune,
       title: l10n.onboardingBehaviorTitle,
       description: l10n.onboardingBehaviorBody,
       child: MiuixCard(
+        cornerRadius: 20,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             MiuixSwitchPreference(
               title: l10n.immersiveMode,
-              startAction: const Padding(
-                padding: EdgeInsets.only(right: 12),
-                child: Icon(Icons.fullscreen_rounded, size: 22),
+              insideMargin: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              startAction: Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: miuixIcon('fullscreen', size: 20),
               ),
               value: isImmersiveMode,
               onChanged: onImmersiveModeChanged,
             ),
             MiuixSwitchPreference(
               title: l10n.autoscroll,
-              startAction: const Padding(
-                padding: EdgeInsets.only(right: 12),
-                child: Icon(Icons.vertical_align_bottom_rounded, size: 22),
+              insideMargin: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              startAction: Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: miuixIcon('arrow_down', size: 20),
               ),
               value: isUseAutoscroll,
               onChanged: onAutoscrollChanged,
             ),
             MiuixSwitchPreference(
               title: l10n.autoSave,
-              startAction: const Padding(
-                padding: EdgeInsets.only(right: 12),
-                child: Icon(Icons.save_outlined, size: 22),
+              insideMargin: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              startAction: Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: miuixIcon('save', size: 20),
               ),
               value: isAutosaveEnabled,
               onChanged: onAutosaveChanged,
             ),
             MiuixSwitchPreference(
               title: l10n.cheatEngine,
-              startAction: const Padding(
-                padding: EdgeInsets.only(right: 12),
-                child: Icon(Icons.bug_report_outlined, size: 22),
+              insideMargin: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              startAction: Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: miuixIcon('lock', size: 20),
               ),
               value: isCheatsEnabled,
               onChanged: onCheatsChanged,

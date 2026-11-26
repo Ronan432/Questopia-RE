@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_miuix/miuix.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/providers/settings_provider.dart';
 import '../sheets/settings_picker_sheets.dart';
 import '../widgets/miuix_settings_tiles.dart';
-import '../widgets/setting_tiles.dart';
 
 class MiuixTypographySection extends StatelessWidget {
   const MiuixTypographySection({
@@ -25,12 +23,13 @@ class MiuixTypographySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MiuixSmallTitle(l10n.sectionTypography),
+        MiuixSettingsSectionTitle(l10n.sectionTypography),
         MiuixSettingsGroup(
           children: [
             miuixSliderPreference(
+              context: context,
               title: l10n.fontSize,
-              icon: Icons.format_size_outlined,
+              iconName: 'book',
               value: settings.fontSize,
               min: 12,
               max: 28,
@@ -39,8 +38,9 @@ class MiuixTypographySection extends StatelessWidget {
               onChanged: notifier.setFontSize,
             ),
             miuixArrowPreference(
+              context: context,
               title: l10n.typeface,
-              icon: Icons.style_outlined,
+              iconName: 'edit',
               summary: typefaces[
                   settings.typefaceIndex.clamp(0, typefaces.length - 1)],
               onClick: () => SettingsPickerSheets.showTypefacePicker(
@@ -50,8 +50,9 @@ class MiuixTypographySection extends StatelessWidget {
               ),
             ),
             miuixArrowPreference(
+              context: context,
               title: l10n.readingTheme,
-              icon: Icons.contrast_rounded,
+              iconName: 'theme',
               summary: SettingsPickerSheets.readingThemeLabel(
                 context,
                 settings.readingTheme,
@@ -63,55 +64,103 @@ class MiuixTypographySection extends StatelessWidget {
               ),
             ),
             miuixSwitchPreference(
+              context: context,
               title: l10n.customTextColor,
-              icon: Icons.format_color_text_outlined,
+              iconName: 'theme',
               value: settings.useGameTextColor,
               onChanged: notifier.setUseGameTextColor,
             ),
             if (settings.useGameTextColor)
-              MiuixBasicComponent(
+              miuixInfoPreference(
+                context: context,
                 title: l10n.textColor,
-                bottomAction: ColorRow(
-                  label: l10n.textColor,
+                iconName: 'theme',
+                endAction: _ColorDot(
                   color: Color(settings.gameTextColor),
-                  onPick: (color) =>
-                      notifier.setGameTextColor(color.toARGB32()),
+                  onPick: (c) => notifier.setGameTextColor(c.toARGB32()),
                 ),
               ),
             miuixSwitchPreference(
+              context: context,
               title: l10n.customBackgroundColor,
-              icon: Icons.format_color_fill_outlined,
+              iconName: 'theme',
               value: settings.useGameBackgroundColor,
               onChanged: notifier.setUseGameBackgroundColor,
             ),
             if (settings.useGameBackgroundColor)
-              MiuixBasicComponent(
+              miuixInfoPreference(
+                context: context,
                 title: l10n.backgroundColor,
-                bottomAction: ColorRow(
-                  label: l10n.backgroundColor,
+                iconName: 'theme',
+                endAction: _ColorDot(
                   color: Color(settings.gameBackColor),
-                  onPick: (color) =>
-                      notifier.setGameBackColor(color.toARGB32()),
+                  onPick: (c) => notifier.setGameBackColor(c.toARGB32()),
                 ),
               ),
             miuixSwitchPreference(
+              context: context,
               title: l10n.customLinkColor,
-              icon: Icons.link_outlined,
+              iconName: 'link',
               value: settings.useGameLinkColor,
               onChanged: notifier.setUseGameLinkColor,
             ),
             if (settings.useGameLinkColor)
-              MiuixBasicComponent(
+              miuixInfoPreference(
+                context: context,
                 title: l10n.linkColor,
-                bottomAction: ColorRow(
-                  label: l10n.linkColor,
+                iconName: 'link',
+                endAction: _ColorDot(
                   color: Color(settings.gameLinkColor),
-                  onPick: (color) =>
-                      notifier.setGameLinkColor(color.toARGB32()),
+                  onPick: (c) => notifier.setGameLinkColor(c.toARGB32()),
                 ),
               ),
           ],
         ),
+      ],
+    );
+  }
+}
+
+class _ColorDot extends StatelessWidget {
+  const _ColorDot({required this.color, required this.onPick});
+
+  final Color color;
+  final ValueChanged<Color> onPick;
+
+  static const _swatches = <Color>[
+    Color(0xFF000000),
+    Color(0xFFFFFFFF),
+    Color(0xFF1A1C1E),
+    Color(0xFFF4ECD8),
+    Color(0xFF0061A4),
+    Color(0xFF2E6C38),
+    Color(0xFF9B4061),
+    Color(0xFF924C00),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 6,
+      children: [
+        for (final swatch in _swatches)
+          GestureDetector(
+            onTap: () => onPick(swatch),
+            child: Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: swatch,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: swatch.toARGB32() == color.toARGB32()
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey.withValues(alpha: 0.4),
+                  width: swatch.toARGB32() == color.toARGB32() ? 2 : 1,
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -134,43 +183,49 @@ class MiuixMediaSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MiuixSmallTitle(l10n.sectionMedia),
+        MiuixSettingsSectionTitle(l10n.sectionMedia),
         MiuixSettingsGroup(
           children: [
             miuixSwitchPreference(
+              context: context,
               title: l10n.disableImages,
-              icon: Icons.hide_image_outlined,
+              iconName: 'image',
               value: settings.isImageDisabled,
               onChanged: notifier.setImageDisabled,
             ),
             miuixSwitchPreference(
+              context: context,
               title: l10n.showAllImagesDialog,
-              icon: Icons.image_outlined,
+              iconName: 'image',
               value: settings.isImagesInDialogEnabled,
               onChanged: notifier.setImagesInDialog,
             ),
             miuixSwitchPreference(
+              context: context,
               title: l10n.pinchZoom,
-              icon: Icons.zoom_in_outlined,
+              iconName: 'search',
               value: settings.isPinchZoomEnabled,
               onChanged: notifier.setPinchZoom,
             ),
             miuixSwitchPreference(
+              context: context,
               title: l10n.fullscreenImages,
-              icon: Icons.fullscreen_outlined,
+              iconName: 'screenMirroring',
               value: settings.isFullscreenImages,
               onChanged: notifier.setFullscreenImages,
             ),
             miuixSwitchPreference(
+              context: context,
               title: l10n.autoWidth,
-              icon: Icons.width_full_outlined,
+              iconName: 'horizontalSplit',
               value: settings.isAutoWidth,
               onChanged: notifier.setAutoWidth,
             ),
             if (!settings.isAutoWidth)
               miuixSliderPreference(
+                context: context,
                 title: l10n.imageWidth,
-                icon: Icons.width_normal_outlined,
+                iconName: 'horizontalSplit',
                 value: settings.customWidthImage.toDouble(),
                 min: 100,
                 max: 2000,
@@ -180,15 +235,17 @@ class MiuixMediaSection extends StatelessWidget {
                     notifier.setCustomWidthImage(value.round()),
               ),
             miuixSwitchPreference(
+              context: context,
               title: l10n.autoHeight,
-              icon: Icons.height_outlined,
+              iconName: 'verticalSplit',
               value: settings.isAutoHeight,
               onChanged: notifier.setAutoHeight,
             ),
             if (!settings.isAutoHeight)
               miuixSliderPreference(
+                context: context,
                 title: l10n.imageHeight,
-                icon: Icons.height_outlined,
+                iconName: 'verticalSplit',
                 value: settings.customHeightImage.toDouble(),
                 min: 100,
                 max: 2000,

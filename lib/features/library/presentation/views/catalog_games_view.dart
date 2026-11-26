@@ -68,33 +68,32 @@ class CatalogGamesView extends ConsumerWidget {
 
     if (state.isLoadingRemote && games.isEmpty) {
       return ListView(
+        padding: const EdgeInsets.only(top: 20),
         physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          const SizedBox(height: 120),
-          Center(
-            child: miuix
-                ? const MiuixCircularProgressIndicator()
-                : const CircularProgressIndicator(),
-          ),
+        children: const [
+          Center(child: MiuixCircularProgressIndicator()),
         ],
       );
     }
 
     if (state.remoteError != null && games.isEmpty) {
+      final miuixColors = MiuixTheme.of(context).colors;
       return ListView(
+        padding: const EdgeInsets.only(top: 16),
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
-          const SizedBox(height: 100),
-          Icon(
-            Icons.cloud_off_outlined,
-            size: 56,
-            color: Theme.of(context).colorScheme.outline,
+          Center(
+            child: MiuixIcon(
+              vector: MiuixIcons.os4.refresh,
+              size: 52,
+              tint: miuixColors.onSurfaceVariantSummary,
+            ),
           ),
           const SizedBox(height: 12),
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
+              child: MiuixText(
                 state.remoteError ?? l10n.couldNotReachRepository,
                 textAlign: TextAlign.center,
               ),
@@ -102,28 +101,24 @@ class CatalogGamesView extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Center(
-            child: miuix
-                ? MiuixButton(
-                    onPressed: () => ref
-                        .read(libraryProvider.notifier)
-                        .refreshRemoteCatalog(force: true),
-                    colors: MiuixButtonDefaults.buttonColorsPrimary(context),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.refresh_rounded, size: 20),
-                        const SizedBox(width: 8),
-                        Text(AppLocalizations.of(context)!.retry),
-                      ],
-                    ),
-                  )
-                : FilledButton.icon(
-                    onPressed: () => ref
-                        .read(libraryProvider.notifier)
-                        .refreshRemoteCatalog(force: true),
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: Text(AppLocalizations.of(context)!.retry),
+            child: MiuixButton(
+              onPressed: () => ref
+                  .read(libraryProvider.notifier)
+                  .refreshRemoteCatalog(force: true),
+              colors: MiuixButtonDefaults.buttonColorsPrimary(context),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  MiuixIcon(
+                    vector: MiuixIcons.os4.refresh,
+                    size: 18,
+                    tint: miuixColors.onPrimary,
                   ),
+                  const SizedBox(width: 8),
+                  Text(l10n.retry),
+                ],
+              ),
+            ),
           ),
         ],
       );
@@ -131,11 +126,11 @@ class CatalogGamesView extends ConsumerWidget {
 
     if (games.isEmpty) {
       return ListView(
+        padding: const EdgeInsets.only(top: 20),
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
-          const SizedBox(height: 120),
           Center(
-            child: Text(AppLocalizations.of(context)!.noCatalogItems),
+            child: MiuixText(l10n.noCatalogItems),
           ),
         ],
       );

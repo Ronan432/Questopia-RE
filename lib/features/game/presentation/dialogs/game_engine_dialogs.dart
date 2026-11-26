@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 
 import '../../../../core/helpers/dialog_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
@@ -170,7 +171,7 @@ class GameErrorDialog extends StatelessWidget {
     ].join('\n');
 
     return QuestopiaDialog(
-      icon: const Icon(Icons.error_outline_rounded),
+      icon: MiuixIcon(vector: MiuixIcons.os4.report, size: 22),
       title: Text(l10n.engineError),
       content: Text(
         details,
@@ -203,7 +204,7 @@ class GameFileLoadDialog extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return QuestopiaDialog(
-      icon: const Icon(Icons.folder_open_rounded),
+      icon: MiuixIcon(vector: MiuixIcons.os4.folder, size: 22),
       title: Text(l10n.openSaveFile),
       content: Text(
         l10n.openSaveFileHint,

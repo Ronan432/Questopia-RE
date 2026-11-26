@@ -12,7 +12,7 @@ class OnboardingStepLayout extends StatelessWidget {
     required this.child,
   });
 
-  final IconData icon;
+  final MiuixVectorIcon icon;
   final String title;
   final String description;
   final Widget child;
@@ -38,7 +38,11 @@ class OnboardingStepLayout extends StatelessWidget {
                     color: colors.primaryContainer,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, size: 34, color: colors.onPrimaryContainer),
+                  child: MiuixIcon(
+                    vector: icon,
+                    size: 34,
+                    tint: colors.onPrimaryContainer,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),

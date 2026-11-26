@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/providers/settings_provider.dart';
@@ -69,7 +70,7 @@ class OnboardingLanguageStep extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return OnboardingStepLayout(
-      icon: Icons.translate_rounded,
+      icon: MiuixIcons.os4.translate,
       title: l10n.onboardingLanguageTitle,
       description: l10n.onboardingLanguageBody,
       child: Column(
@@ -77,9 +78,9 @@ class OnboardingLanguageStep extends StatelessWidget {
           OnboardingOptionCard(
             title: l10n.languageAuto,
             isSelected: settings.language == 'system',
-            leading: Icon(
-              Icons.settings_suggest_rounded,
-              color: settings.language == 'system' ? colors.primary : null,
+            leading: MiuixIcon(
+              vector: MiuixIcons.os4.settings,
+              tint: settings.language == 'system' ? colors.primary : null,
             ),
             onTap: () => onChanged('system'),
           ),
@@ -127,11 +128,11 @@ class OnboardingThemeStep extends StatelessWidget {
   final SettingsState settings;
   final ValueChanged<ThemeModeOption> onChanged;
 
-  static IconData iconFor(ThemeModeOption mode) => switch (mode) {
-        ThemeModeOption.system => Icons.brightness_auto_rounded,
-        ThemeModeOption.light => Icons.light_mode_rounded,
-        ThemeModeOption.dark => Icons.dark_mode_rounded,
-        ThemeModeOption.amoled => Icons.contrast_rounded,
+  static MiuixVectorIcon iconFor(ThemeModeOption mode) => switch (mode) {
+        ThemeModeOption.system => MiuixIcons.os4.settings,
+        ThemeModeOption.light => MiuixIcons.os4.theme,
+        ThemeModeOption.dark => MiuixIcons.os4.theme,
+        ThemeModeOption.amoled => MiuixIcons.os4.theme,
       };
 
   static String labelFor(AppLocalizations l10n, ThemeModeOption mode) =>
@@ -156,7 +157,7 @@ class OnboardingThemeStep extends StatelessWidget {
     ];
 
     return OnboardingStepLayout(
-      icon: Icons.palette_outlined,
+      icon: MiuixIcons.os4.theme,
       title: l10n.onboardingThemeTitle,
       description: l10n.onboardingThemeBody,
       child: Column(

@@ -1,5 +1,6 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -7,12 +8,16 @@ import 'core/error/crash_reporter.dart';
 import 'core/helpers/platform_helper.dart';
 import 'core/l10n/app_localizations.dart';
 import 'core/providers/settings_provider.dart';
+import 'core/theme/miuix_design.dart';
 import 'core/theme/questopia_theme.dart';
 import 'features/library/presentation/library_screen.dart';
 import 'features/onboarding/presentation/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (!isDesktopPlatform) {
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  }
   if (isDesktopPlatform) {
     await windowManager.ensureInitialized();
     windowManager.waitUntilReadyToShow(
@@ -76,6 +81,9 @@ class QuestopiaApp extends ConsumerWidget {
           themeMode: mode,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MiuixDesignTheme(
+            child: child ?? const SizedBox.shrink(),
+          ),
           home: settings.isOnboardingCompleted
               ? const LibraryScreen()
               : const OnboardingScreen(),

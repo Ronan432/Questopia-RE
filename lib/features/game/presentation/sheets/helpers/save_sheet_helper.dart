@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 
@@ -76,7 +77,7 @@ class SaveImportExportRow extends StatelessWidget {
             onPressed: () => _handleImport(context),
             size: M3EButtonSize.sm,
             style: M3EButtonStyle.outlined,
-            icon: const Icon(Icons.file_upload_outlined, size: 18),
+            icon: MiuixIcon(vector: MiuixIcons.os4.import, size: 18),
             label: Text(l10n.importSav),
           ),
         ),
@@ -86,7 +87,7 @@ class SaveImportExportRow extends StatelessWidget {
             onPressed: () => _handleExport(context),
             size: M3EButtonSize.sm,
             style: M3EButtonStyle.outlined,
-            icon: const Icon(Icons.file_download_outlined, size: 18),
+            icon: MiuixIcon(vector: MiuixIcons.os4.download, size: 18),
             label: Text(l10n.exportSav),
           ),
         ),

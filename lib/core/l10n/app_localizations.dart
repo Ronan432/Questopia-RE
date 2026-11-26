@@ -519,21 +519,39 @@ abstract class AppLocalizations {
   String get miuixDesignSummary;
 
   /// No description provided for @miuixDynamicColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic color'**
   String get miuixDynamicColor;
 
   /// No description provided for @miuixDynamicColorSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Miuix Monet dynamic colors from wallpaper'**
   String get miuixDynamicColorSummary;
 
   /// No description provided for @pullToRefreshPull.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull down to refresh'**
   String get pullToRefreshPull;
 
   /// No description provided for @pullToRefreshRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'Release to refresh'**
   String get pullToRefreshRelease;
 
   /// No description provided for @pullToRefreshRefreshing.
+  ///
+  /// In en, this message translates to:
+  /// **'Refreshing...'**
   String get pullToRefreshRefreshing;
 
   /// No description provided for @pullToRefreshComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Refreshed'**
   String get pullToRefreshComplete;
 
   /// No description provided for @language.
@@ -575,7 +593,7 @@ abstract class AppLocalizations {
   /// No description provided for @navBarBlur.
   ///
   /// In en, this message translates to:
-  /// **'Navigation bar blur'**
+  /// **'Blur'**
   String get navBarBlur;
 
   /// No description provided for @autoSaveInterval.
@@ -2155,6 +2173,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Run the first time setup wizard again'**
   String get onboardingRestartHint;
+
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// No description provided for @filterLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get filterLanguage;
 }
 
 class _AppLocalizationsDelegate

@@ -46,24 +46,24 @@ class _MiuixSettingsScreenState extends ConsumerState<MiuixSettingsScreen> {
     final content = ListView(
       padding: EdgeInsets.fromLTRB(
         12,
-        12,
+        6,
         12,
         (widget.isInline && settings.isNavBarBlur ? 90 : 32) +
             MediaQuery.paddingOf(context).bottom,
       ),
       children: [
         MiuixAppearanceSection(settings: settings, notifier: notifier),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         MiuixGeneralSection(settings: settings, notifier: notifier),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         MiuixTypographySection(settings: settings, notifier: notifier),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         MiuixMediaSection(settings: settings, notifier: notifier),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         MiuixSoundSection(settings: settings, notifier: notifier),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         MiuixStorageSection(settings: settings, notifier: notifier),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         MiuixAboutSection(
           settings: settings,
           notifier: notifier,
@@ -75,24 +75,28 @@ class _MiuixSettingsScreenState extends ConsumerState<MiuixSettingsScreen> {
     if (widget.isInline) return content;
 
     return MiuixScaffold(
-      topBar: MiuixGlassTopAppBar(
+      topBar: MiuixSmallTopAppBar(
         title: l10n.settings,
-        progressiveBlur: false,
-        bandBlurRadius: 0,
         navigationIcon: Navigator.of(context).canPop()
-            ? MiuixGlassIconButton(
-                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            ? MiuixIconButton(
                 onPressed: () => Navigator.of(context).maybePop(),
                 child: MiuixIcon(
                   vector: MiuixIcons.os4.back,
                   size: 22,
+                  contentDescription:
+                      MaterialLocalizations.of(context).backButtonTooltip,
                 ),
               )
             : null,
       ),
       content: (padding) => Padding(
         padding: padding,
-        child: content,
+        child: MediaQuery.removePadding(
+          context: context,
+          removeTop: true,
+          removeBottom: true,
+          child: content,
+        ),
       ),
     );
   }
