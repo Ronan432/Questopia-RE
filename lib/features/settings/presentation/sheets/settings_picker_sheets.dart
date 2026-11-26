@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
@@ -87,13 +88,142 @@ abstract final class SettingsPickerSheets {
     };
   }
 
+  static Future<void> _showMiuixPickerSheet(
+    BuildContext context, {
+    required String title,
+    required Widget Function(BuildContext ctx) bodyBuilder,
+  }) async {
+    final miuix = MiuixTheme.of(context);
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: miuix.colors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetCtx) => MiuixTheme(
+        data: miuix,
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: miuix.textStyles.title4.copyWith(
+                      color: miuix.colors.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                bodyBuilder(sheetCtx),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static Widget _miuixGroup(List<Widget> items) {
+    return MiuixCard(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            if (i > 0)
+              const Padding(
+                padding: EdgeInsets.only(left: 52),
+                child: MiuixHorizontalDivider(),
+              ),
+            items[i],
+          ],
+        ],
+      ),
+    );
+  }
+
+  static Widget _miuixOptionTile(
+    BuildContext context, {
+    required String title,
+    Widget? leading,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return MiuixBasicComponent(
+      title: title,
+      startAction: leading != null
+          ? Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: leading,
+            )
+          : null,
+      endActions: [
+        MiuixRadioButton(
+          selected: selected,
+          onChanged: (_) => onTap(),
+        ),
+      ],
+      onClick: onTap,
+    );
+  }
+
   static Future<void> showReadingThemePicker(
     BuildContext context,
     SettingsNotifier notifier,
     SettingsState settings,
   ) async {
-    final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    if (MiuixTheme.maybeOf(context) != null) {
+      await _showMiuixPickerSheet(
+        context,
+        title: l10n.readingTheme,
+        bodyBuilder: (ctx) {
+          final theme = Theme.of(ctx);
+          final miuix = MiuixTheme.of(ctx);
+          return _miuixGroup([
+            for (final id in kReadingThemeIds)
+              _miuixOptionTile(
+                ctx,
+                title: readingThemeLabel(ctx, id),
+                selected: id == settings.readingTheme,
+                leading: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: ReadingThemeColors.background(
+                      id,
+                      theme.brightness,
+                      scheme: theme.colorScheme,
+                    ),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: id == settings.readingTheme
+                          ? miuix.colors.primary
+                          : miuix.colors.outline,
+                      width: id == settings.readingTheme ? 2.5 : 1,
+                    ),
+                  ),
+                ),
+                onTap: () async {
+                  await notifier.setReadingTheme(id);
+                  if (ctx.mounted) Navigator.pop(ctx);
+                },
+              ),
+          ]);
+        },
+      );
+      return;
+    }
+
+    final colors = Theme.of(context).colorScheme;
 
     await showQuestopiaSheet<void>(
       context: context,
@@ -155,12 +285,52 @@ abstract final class SettingsPickerSheets {
     );
   }
 
-  static Future<void> showThemeModePicker(    BuildContext context,
+  static Future<void> showThemeModePicker(
+    BuildContext context,
     SettingsNotifier notifier,
     SettingsState settings,
   ) async {
-    final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    if (MiuixTheme.maybeOf(context) != null) {
+      final activeMode = settings.themeMode == ThemeModeOption.amoled
+          ? ThemeModeOption.dark
+          : settings.themeMode;
+      const miuixModes = [
+        ThemeModeOption.system,
+        ThemeModeOption.light,
+        ThemeModeOption.dark,
+      ];
+      await _showMiuixPickerSheet(
+        context,
+        title: l10n.themeModeTitle,
+        bodyBuilder: (ctx) {
+          final miuix = MiuixTheme.of(ctx);
+          return _miuixGroup([
+            for (final mode in miuixModes)
+              _miuixOptionTile(
+                ctx,
+                title: themeLabel(ctx, mode),
+                selected: mode == activeMode,
+                leading: Icon(
+                  mode == activeMode
+                      ? Icons.brightness_auto_rounded
+                      : Icons.brightness_4_outlined,
+                  color: mode == activeMode
+                      ? miuix.colors.primary
+                      : miuix.colors.onSurfaceVariantActions,
+                ),
+                onTap: () async {
+                  await notifier.setThemeMode(mode);
+                  if (ctx.mounted) Navigator.pop(ctx);
+                },
+              ),
+          ]);
+        },
+      );
+      return;
+    }
+
+    final colors = Theme.of(context).colorScheme;
 
     await showQuestopiaSheet<void>(
       context: context,
@@ -211,9 +381,46 @@ abstract final class SettingsPickerSheets {
     SettingsNotifier notifier,
     SettingsState settings,
   ) async {
-    final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     final labels = accentLabels(context);
+    if (MiuixTheme.maybeOf(context) != null) {
+      await _showMiuixPickerSheet(
+        context,
+        title: l10n.colorAccentTitle,
+        bodyBuilder: (ctx) {
+          final miuix = MiuixTheme.of(ctx);
+          return _miuixGroup([
+            for (final entry in labels.entries)
+              _miuixOptionTile(
+                ctx,
+                title: entry.value,
+                selected: entry.key == settings.themeColor,
+                leading: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: accentColors[entry.key] ?? miuix.colors.primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: entry.key == settings.themeColor
+                          ? miuix.colors.primary
+                          : miuix.colors.outline,
+                      width: entry.key == settings.themeColor ? 2.5 : 1,
+                    ),
+                  ),
+                ),
+                onTap: () async {
+                  await notifier.setThemeColor(entry.key);
+                  if (ctx.mounted) Navigator.pop(ctx);
+                },
+              ),
+          ]);
+        },
+      );
+      return;
+    }
+
+    final colors = Theme.of(context).colorScheme;
 
     await showQuestopiaSheet<void>(
       context: context,
@@ -271,9 +478,56 @@ abstract final class SettingsPickerSheets {
     SettingsNotifier notifier,
     SettingsState settings,
   ) async {
-    final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     final options = languageOptions(context);
+    if (MiuixTheme.maybeOf(context) != null) {
+      await _showMiuixPickerSheet(
+        context,
+        title: l10n.languageTitle,
+        bodyBuilder: (ctx) {
+          final miuix = MiuixTheme.of(ctx);
+          return _miuixGroup([
+            for (final option in options)
+              _miuixOptionTile(
+                ctx,
+                title: option.$2,
+                selected: option.$1 == settings.language,
+                leading: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: option.$1 == settings.language
+                        ? miuix.colors.primary.withValues(alpha: 0.16)
+                        : miuix.colors.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    option.$1.isEmpty
+                        ? l10n.languageAuto
+                        : option.$1.toUpperCase(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: option.$1 == settings.language
+                          ? miuix.colors.primary
+                          : miuix.colors.onSurfaceVariantActions,
+                    ),
+                  ),
+                ),
+                onTap: () async {
+                  await notifier.setLanguage(option.$1);
+                  if (ctx.mounted) Navigator.pop(ctx);
+                },
+              ),
+          ]);
+        },
+      );
+      return;
+    }
+
+    final colors = Theme.of(context).colorScheme;
 
     await showQuestopiaSheet<void>(
       context: context,
@@ -339,9 +593,83 @@ abstract final class SettingsPickerSheets {
     SettingsNotifier notifier,
     SettingsState settings,
   ) async {
-    final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     final fonts = typefaceNames(context);
+    if (MiuixTheme.maybeOf(context) != null) {
+      var selectedIndex = settings.typefaceIndex;
+      await _showMiuixPickerSheet(
+        context,
+        title: l10n.typeface,
+        bodyBuilder: (ctx) => StatefulBuilder(
+          builder: (sheetCtx, setSheetState) {
+            final miuix = MiuixTheme.of(sheetCtx);
+            final activeIndex = selectedIndex.clamp(0, fonts.length - 1);
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                MiuixCard(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${l10n.livePreview} (${fonts[activeIndex]})',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: miuix.colors.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          l10n.livePreviewText,
+                          style: TextStyle(
+                            fontSize: settings.fontSize,
+                            fontFamily:
+                                QuestopiaTheme.fontFamilyFor(activeIndex),
+                            color: miuix.colors.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _miuixGroup([
+                  for (var i = 0; i < fonts.length; i++)
+                    _miuixOptionTile(
+                      sheetCtx,
+                      title: fonts[i],
+                      selected: i == activeIndex,
+                      leading: Icon(
+                        Icons.font_download_outlined,
+                        color: i == activeIndex
+                            ? miuix.colors.primary
+                            : miuix.colors.onSurfaceVariantActions,
+                      ),
+                      onTap: () => setSheetState(() => selectedIndex = i),
+                    ),
+                ]),
+                const SizedBox(height: 14),
+                MiuixButton(
+                  onPressed: () async {
+                    await notifier.setTypefaceIndex(activeIndex);
+                    if (sheetCtx.mounted) Navigator.pop(sheetCtx);
+                  },
+                  colors: MiuixButtonDefaults.buttonColorsPrimary(sheetCtx),
+                  child: Text(l10n.apply),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+      return;
+    }
+
+    final colors = Theme.of(context).colorScheme;
 
     await showQuestopiaSheet<void>(
       context: context,
@@ -449,8 +777,29 @@ abstract final class SettingsPickerSheets {
     SettingsNotifier notifier,
     SettingsState settings,
   ) async {
-    final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    if (MiuixTheme.maybeOf(context) != null) {
+      await _showMiuixPickerSheet(
+        context,
+        title: l10n.actionsHeightTitle,
+        bodyBuilder: (ctx) => _miuixGroup([
+          for (final ratio in actionsHeightRatios)
+            _miuixOptionTile(
+              ctx,
+              title: ratio,
+              selected: ratio == settings.actionsHeightRatio,
+              leading: const Icon(Icons.height_outlined),
+              onTap: () async {
+                await notifier.setActionsHeightRatio(ratio);
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+            ),
+        ]),
+      );
+      return;
+    }
+
+    final colors = Theme.of(context).colorScheme;
 
     await showQuestopiaSheet<void>(
       context: context,
@@ -495,8 +844,30 @@ abstract final class SettingsPickerSheets {
     SettingsNotifier notifier,
     SettingsState settings,
   ) async {
-    final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    if (MiuixTheme.maybeOf(context) != null) {
+      await _showMiuixPickerSheet(
+        context,
+        title: l10n.binaryPrefixesTitle,
+        bodyBuilder: (ctx) => _miuixGroup([
+          for (final value in const [1000, 1024])
+            _miuixOptionTile(
+              ctx,
+              title:
+                  '$value (${value == 1024 ? l10n.binaryKiB : l10n.decimalKB})',
+              selected: value == settings.binaryPrefixes,
+              leading: const Icon(Icons.memory_outlined),
+              onTap: () async {
+                await notifier.setBinaryPrefixes(value);
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+            ),
+        ]),
+      );
+      return;
+    }
+
+    final colors = Theme.of(context).colorScheme;
 
     await showQuestopiaSheet<void>(
       context: context,

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
 
@@ -88,6 +89,77 @@ class _CatalogFilterBarState extends ConsumerState<CatalogFilterBar> {
     final notifier = ref.read(libraryProvider.notifier);
     final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+
+    if (widget.miuix) {
+      return NotificationListener<ScrollNotification>(
+        onNotification: _onScroll,
+        child: AnimatedSize(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: _isVisible
+              ? SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
+                  child: Row(
+                    children: [
+                      MiuixButton(
+                        onPressed: () => _showSortPickerSheet(context, state),
+                        colors: MiuixButtonDefaults.buttonColorsPrimary(context),
+                        minHeight: 36,
+                        insideMargin: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.sort_rounded, size: 17),
+                            const SizedBox(width: 6),
+                            Text(
+                              _sortLabel(l10n, state.catalogSort),
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      for (final lang in const ['', 'ru', 'en']) ...[
+                        _MiuixFilterPill(
+                          label: lang.isEmpty
+                              ? l10n.allLanguages
+                              : lang.toUpperCase(),
+                          isSelected: state.catalogLanguage == lang,
+                          onTap: () =>
+                              notifier.setCatalogFilter(language: lang),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      _MiuixFilterPill(
+                        label: l10n.featured,
+                        isSelected: state.catalogFeaturedOnly,
+                        leading: Icon(
+                          state.catalogFeaturedOnly
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
+                          size: 16,
+                          color: state.catalogFeaturedOnly
+                              ? Colors.amber
+                              : MiuixTheme.of(context)
+                                  .colors
+                                  .onSecondaryVariant,
+                        ),
+                        onTap: () => notifier.setCatalogFilter(
+                          featuredOnly: !state.catalogFeaturedOnly,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : const SizedBox(width: double.infinity),
+        ),
+      );
+    }
 
     return NotificationListener<ScrollNotification>(
       onNotification: _onScroll,
@@ -179,6 +251,78 @@ class _CatalogFilterBarState extends ConsumerState<CatalogFilterBar> {
   void _showSortPickerSheet(BuildContext context, LibraryState state) {
     final notifier = ref.read(libraryProvider.notifier);
     final l10n = AppLocalizations.of(context)!;
+    if (widget.miuix) {
+      final miuix = MiuixTheme.of(context);
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: miuix.colors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (ctx) => MiuixTheme(
+          data: miuix,
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: Text(
+                      l10n.sortCatalog,
+                      textAlign: TextAlign.center,
+                      style: miuix.textStyles.title4.copyWith(
+                        color: miuix.colors.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  MiuixCard(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (var i = 0;
+                            i < CatalogSortOption.values.length;
+                            i++) ...[
+                          if (i > 0) const MiuixHorizontalDivider(),
+                          MiuixBasicComponent(
+                            title: _sortLabel(l10n, CatalogSortOption.values[i]),
+                            endActions: [
+                              MiuixRadioButton(
+                                selected: state.catalogSort ==
+                                    CatalogSortOption.values[i],
+                                onChanged: (_) {
+                                  Navigator.pop(ctx);
+                                  notifier.setCatalogFilter(
+                                    sort: CatalogSortOption.values[i],
+                                  );
+                                },
+                              ),
+                            ],
+                            onClick: () {
+                              Navigator.pop(ctx);
+                              notifier.setCatalogFilter(
+                                sort: CatalogSortOption.values[i],
+                              );
+                            },
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+
     showQuestopiaSheet<void>(
       context: context,
       builder: (ctx) {
@@ -279,6 +423,42 @@ class _FilterChip extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MiuixFilterPill extends StatelessWidget {
+  const _MiuixFilterPill({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    this.leading,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final Widget? leading;
+
+  @override
+  Widget build(BuildContext context) {
+    return MiuixButton(
+      onPressed: onTap,
+      colors: isSelected
+          ? MiuixButtonDefaults.buttonColorsPrimary(context)
+          : MiuixButtonDefaults.buttonColors(context),
+      minHeight: 36,
+      insideMargin: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (leading != null) ...[
+            leading!,
+            const SizedBox(width: 6),
+          ],
+          Text(label, style: const TextStyle(fontSize: 13)),
+        ],
       ),
     );
   }

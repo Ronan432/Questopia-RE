@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
 
@@ -36,8 +37,209 @@ class LocalGameCard extends ConsumerWidget {
     WidgetRef ref,
     PlayStats playStats,
   ) async {
-    final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    if (miuix) {
+      final miuixTheme = MiuixTheme.of(context);
+      final mColors = miuixTheme.colors;
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: mColors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (sheetCtx) => MiuixTheme(
+          data: miuixTheme,
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: SizedBox(
+                          width: 44,
+                          height: 44,
+                          child: GamePoster(
+                            localPath: game.posterPath,
+                            isLocal: true,
+                            title: game.title,
+                            height: 44,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              game.title,
+                              style: miuixTheme.textStyles.title4.copyWith(
+                                color: mColors.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              game.author.isNotEmpty
+                                  ? game.author
+                                  : l10n.qspInteractiveFiction,
+                              style: miuixTheme.textStyles.body2.copyWith(
+                                color: mColors.onSurfaceVariantSummary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  MiuixCard(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        MiuixBasicComponent(
+                          title: l10n.play,
+                          startAction: Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: Icon(
+                              Icons.play_arrow_rounded,
+                              color: mColors.primary,
+                              size: 22,
+                            ),
+                          ),
+                          onClick: () {
+                            Navigator.pop(sheetCtx);
+                            onPlay();
+                          },
+                        ),
+                        if (playStats.hasPlayed) ...[
+                          const Padding(
+                            padding: EdgeInsets.only(left: 50),
+                            child: MiuixHorizontalDivider(),
+                          ),
+                          MiuixBasicComponent(
+                            title: l10n.playStatsTotal,
+                            summary: formatPlayDuration(
+                              l10n,
+                              Duration(seconds: playStats.totalSeconds),
+                            ),
+                            startAction: Padding(
+                              padding: const EdgeInsets.only(right: 12),
+                              child: Icon(
+                                Icons.schedule_rounded,
+                                color: mColors.onSurfaceVariantActions,
+                                size: 22,
+                              ),
+                            ),
+                            endActions: [
+                              Text(
+                                playStats.lastPlayed == null
+                                    ? l10n.neverPlayed
+                                    : formatLastPlayedDate(
+                                        playStats.lastPlayed!,
+                                      ),
+                                style: miuixTheme.textStyles.body2.copyWith(
+                                  color: mColors.onSurfaceVariantSummary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        const Padding(
+                          padding: EdgeInsets.only(left: 50),
+                          child: MiuixHorizontalDivider(),
+                        ),
+                        MiuixBasicComponent(
+                          title: game.isFavorite
+                              ? l10n.removeFromFavorites
+                              : l10n.addToFavorites,
+                          startAction: Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: Icon(
+                              game.isFavorite
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              color: game.isFavorite
+                                  ? mColors.error
+                                  : mColors.onSurfaceVariantActions,
+                              size: 22,
+                            ),
+                          ),
+                          onClick: () {
+                            Navigator.pop(sheetCtx);
+                            onToggleFavorite();
+                          },
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.only(left: 50),
+                          child: MiuixHorizontalDivider(),
+                        ),
+                        MiuixBasicComponent(
+                          title: game.isFromRepo
+                              ? l10n.deleteGame
+                              : l10n.removeFromLibrary,
+                          titleColor: MiuixBasicComponentColors(
+                            color: mColors.error,
+                            disabledColor: mColors.disabledOnSurface,
+                          ),
+                          startAction: Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: Icon(
+                              game.isFromRepo
+                                  ? Icons.delete_forever_rounded
+                                  : Icons.delete_outline_rounded,
+                              color: mColors.error,
+                              size: 22,
+                            ),
+                          ),
+                          onClick: () async {
+                            Navigator.pop(sheetCtx);
+                            final isRepo = game.isFromRepo;
+                            final confirmed = await showQuestopiaDialog<bool>(
+                              context: context,
+                              builder: (ctx) => QuestopiaConfirmationDialog(
+                                icon: isRepo
+                                    ? Icons.delete_forever_rounded
+                                    : Icons.delete_outline_rounded,
+                                isDestructive: true,
+                                title: isRepo
+                                    ? l10n.deleteGameTitle
+                                    : l10n.removeFromLibrary,
+                                message: isRepo
+                                    ? l10n.deleteGameMessage(game.title)
+                                    : l10n.removeFromLibraryMessage(game.title),
+                                confirmLabel:
+                                    isRepo ? l10n.delete : l10n.remove,
+                                cancelLabel: l10n.cancel,
+                              ),
+                            );
+                            if (confirmed == true) onRemove();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final colors = Theme.of(context).colorScheme;
 
     await showQuestopiaSheet<void>(
       context: context,

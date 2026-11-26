@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_miuix/miuix.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/widgets/questopia_frosted_overlay.dart';
 
 class MiuixLibraryShell extends StatelessWidget {
   const MiuixLibraryShell({
@@ -99,15 +100,14 @@ class MiuixLibraryShell extends StatelessWidget {
     final miuixTheme = MiuixTheme.of(context);
 
     return MiuixScaffold(
-      topBar: MiuixTopAppBar(
+      topBar: MiuixSmallTopAppBar(
         title: selectedTab == 2 ? l10n.settings : l10n.appTitle,
         actions: [
-          if (selectedTab != 2)
-            _action(
-              label: l10n.search,
-              iconName: 'search',
-              onPressed: onOpenSearch,
-            ),
+          _action(
+            label: l10n.search,
+            iconName: 'search',
+            onPressed: onOpenSearch,
+          ),
           if (selectedTab == 0)
             _action(
               label: l10n.importGameTooltip,
@@ -156,15 +156,22 @@ class MiuixLibraryShell extends StatelessWidget {
         ),
       ),
       content: (padding) => Padding(
-        padding: padding,
+        padding: EdgeInsets.fromLTRB(
+          padding.left,
+          padding.top,
+          padding.right,
+          0,
+        ),
         child: child,
       ),
-      bottomBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (pagination != null) pagination!,
-          MiuixNavigationBar(
-            children: [
+      bottomBar: QuestopiaFrostedOverlay(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (pagination != null) pagination!,
+            MiuixNavigationBar(
+              color: Colors.transparent,
+              children: [
               MiuixNavigationBarItem(
                 selected: selectedTab == 0,
                 onPressed: () => onTabChanged(0),
@@ -195,6 +202,7 @@ class MiuixLibraryShell extends StatelessWidget {
             ],
           ),
         ],
+      ),
       ),
     );
   }

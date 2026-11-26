@@ -32,7 +32,9 @@ class MiuixAppearanceSection extends StatelessWidget {
               icon: Icons.brightness_6_outlined,
               summary: SettingsPickerSheets.themeLabel(
                 context,
-                settings.themeMode,
+                settings.themeMode == ThemeModeOption.amoled
+                    ? ThemeModeOption.dark
+                    : settings.themeMode,
               ),
               onClick: () => SettingsPickerSheets.showThemeModePicker(
                 context,

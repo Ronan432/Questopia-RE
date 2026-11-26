@@ -40,7 +40,10 @@ class MiuixDesignTheme extends StatelessWidget {
       child: Theme(
         data: materialTheme.copyWith(
           colorScheme: scheme,
-          splashFactory: InkSparkle.splashFactory,
+          splashFactory: NoSplash.splashFactory,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
           textTheme: materialTheme.textTheme.apply(fontFamily: 'MiSans'),
         ),
         child: DefaultTextStyle(

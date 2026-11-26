@@ -55,6 +55,118 @@ class RemoteGameCard extends ConsumerWidget {
   /// Shows the catalogue metadata the app already downloads but never displayed.
   void _showDetails(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    if (miuix) {
+      final miuixTheme = MiuixTheme.of(context);
+      final rows = <(IconData, String)>[
+        if (game.author.isNotEmpty) (Icons.person_outline, game.author),
+        if (game.portedBy.isNotEmpty) (Icons.swap_horiz_rounded, game.portedBy),
+        if (game.version.isNotEmpty) (Icons.sell_outlined, 'v${game.version}'),
+        if (game.lang.isNotEmpty)
+          (Icons.language_outlined, game.lang.toUpperCase()),
+        if (game.player.isNotEmpty)
+          (Icons.videogame_asset_outlined, game.player),
+        if (_sizeLabel.isNotEmpty) (Icons.sd_storage_outlined, _sizeLabel),
+        if (game.modDate.isNotEmpty) (Icons.update_rounded, game.modDate),
+      ];
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: miuixTheme.colors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (ctx) => MiuixTheme(
+          data: miuixTheme,
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: Text(
+                      _title(l10n),
+                      textAlign: TextAlign.center,
+                      style: miuixTheme.textStyles.title4.copyWith(
+                        color: miuixTheme.colors.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  if (rows.isNotEmpty)
+                    MiuixCard(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (var i = 0; i < rows.length; i++) ...[
+                            if (i > 0)
+                              const Padding(
+                                padding: EdgeInsets.only(left: 52),
+                                child: MiuixHorizontalDivider(),
+                              ),
+                            MiuixBasicComponent(
+                              title: rows[i].$2,
+                              startAction: Padding(
+                                padding: const EdgeInsets.only(right: 12),
+                                child: Icon(rows[i].$1, size: 20),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  if (game.descriptionText.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    MiuixCard(
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Text(
+                          game.descriptionText,
+                          style: miuixTheme.textStyles.body2.copyWith(
+                            color: miuixTheme.colors.onSurfaceSecondary,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 14),
+                  MiuixButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      if (isInstalled) {
+                        onPlay?.call();
+                      } else {
+                        onDownload();
+                      }
+                    },
+                    colors: MiuixButtonDefaults.buttonColorsPrimary(ctx),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          isInstalled
+                              ? Icons.play_arrow_rounded
+                              : Icons.download_rounded,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(isInstalled ? l10n.play : l10n.download),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+
     showQuestopiaSheet<void>(
       context: context,
       builder: (ctx) {

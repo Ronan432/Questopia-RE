@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/helpers/dialog_helper.dart';
@@ -71,6 +72,33 @@ class _LibraryStatsRowState extends ConsumerState<LibraryStatsRow>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = Theme.of(context).colorScheme;
+
+    if (widget.miuix) {
+      return _MiuixStatsRow(
+        gamesCount: widget.games.length,
+        favoriteCount: _favoriteCount,
+        showFavoritesOnly: widget.showFavoritesOnly,
+        onToggleFavoritesOnly: widget.onToggleFavoritesOnly,
+        onDeleteAll: widget.games.isEmpty
+            ? null
+            : () async {
+                final confirmed = await showQuestopiaDialog<bool>(
+                  context: context,
+                  builder: (ctx) => QuestopiaConfirmationDialog(
+                    title: l10n.deleteAllGamesTitle,
+                    message: l10n.deleteAllGamesMessage,
+                    confirmLabel: l10n.delete,
+                    cancelLabel: l10n.cancel,
+                    isDestructive: true,
+                    icon: Icons.delete_sweep_rounded,
+                  ),
+                );
+                if (confirmed == true && context.mounted) {
+                  await ref.read(libraryProvider.notifier).removeAllGames();
+                }
+              },
+      );
+    }
 
     return Stack(
       clipBehavior: Clip.none,
@@ -220,6 +248,127 @@ class _DiagonalReveal extends StatelessWidget {
         },
         child: child,
       ),
+    );
+  }
+}
+
+class _MiuixStatsRow extends StatelessWidget {
+  const _MiuixStatsRow({
+    required this.gamesCount,
+    required this.favoriteCount,
+    required this.showFavoritesOnly,
+    required this.onToggleFavoritesOnly,
+    this.onDeleteAll,
+  });
+
+  final int gamesCount;
+  final int favoriteCount;
+  final bool showFavoritesOnly;
+  final VoidCallback onToggleFavoritesOnly;
+  final VoidCallback? onDeleteAll;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final miuix = MiuixTheme.of(context);
+    final colors = miuix.colors;
+
+    return Row(
+      children: [
+        Expanded(
+          child: MiuixCard(
+            onPressed: onDeleteAll,
+            insideMargin:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.library_books_outlined,
+                  size: 22,
+                  color: colors.primary,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$gamesCount',
+                        style: miuix.textStyles.title4.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colors.onSurface,
+                        ),
+                      ),
+                      Text(
+                        l10n.installedGames,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: miuix.textStyles.body2.copyWith(
+                          color: colors.onSurfaceVariantSummary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: MiuixCard(
+            colors: showFavoritesOnly
+                ? MiuixCardColors(
+                    color: colors.primary.withValues(alpha: 0.14),
+                    contentColor: colors.primary,
+                  )
+                : null,
+            onPressed: onToggleFavoritesOnly,
+            insideMargin:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.favorite_rounded,
+                  size: 22,
+                  color: showFavoritesOnly
+                      ? colors.primary
+                      : colors.onSurfaceVariantActions,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$favoriteCount',
+                        style: miuix.textStyles.title4.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: showFavoritesOnly
+                              ? colors.primary
+                              : colors.onSurface,
+                        ),
+                      ),
+                      Text(
+                        l10n.favoriteGames,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: miuix.textStyles.body2.copyWith(
+                          color: showFavoritesOnly
+                              ? colors.primary
+                              : colors.onSurfaceVariantSummary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 
 enum QuestopiaMorphButtonStyle { filled, tonal, outlined }
 
@@ -67,6 +68,35 @@ class _QuestopiaMorphButtonState extends State<QuestopiaMorphButton> {
 
   @override
   Widget build(BuildContext context) {
+    final miuixTheme = MiuixTheme.maybeOf(context);
+    if (miuixTheme != null) {
+      final miuixColors = miuixTheme.colors;
+      final buttonColors = widget.isDestructive
+          ? MiuixButtonColors(
+              color: miuixColors.error,
+              disabledColor: miuixColors.error.withValues(alpha: 0.5),
+              contentColor: miuixColors.onError,
+              disabledContentColor: miuixColors.onError.withValues(alpha: 0.5),
+            )
+          : (widget.style == QuestopiaMorphButtonStyle.filled
+              ? MiuixButtonDefaults.buttonColorsPrimary(context)
+              : MiuixButtonDefaults.buttonColors(context));
+      return MiuixButton(
+        onPressed: widget.onPressed,
+        colors: buttonColors,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.icon != null) ...[
+              widget.icon!,
+              const SizedBox(width: 8),
+            ],
+            widget.child,
+          ],
+        ),
+      );
+    }
+
     final colors = Theme.of(context).colorScheme;
     final isEnabled = widget.onPressed != null;
 

@@ -66,12 +66,12 @@ class QuestopiaApp extends ConsumerWidget {
           locale: appLocale,
           theme: QuestopiaTheme.light(
             accent: settings.themeColor,
-            dynamicScheme: useDynamic ? lightDynamic : null,
+            dynamicScheme: useDynamic ? _toFlutterScheme(lightDynamic) : null,
           ),
           darkTheme: QuestopiaTheme.dark(
             accent: settings.themeColor,
             amoled: isAmoled,
-            dynamicScheme: useDynamic ? darkDynamic : null,
+            dynamicScheme: useDynamic ? _toFlutterScheme(darkDynamic) : null,
           ),
           themeMode: mode,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -83,4 +83,38 @@ class QuestopiaApp extends ConsumerWidget {
       },
     );
   }
+}
+
+ColorScheme? _toFlutterScheme(dynamic s) {
+  if (s == null) return null;
+  if (s is ColorScheme) return s;
+  return ColorScheme(
+    brightness: s.brightness as Brightness,
+    primary: s.primary as Color,
+    onPrimary: s.onPrimary as Color,
+    primaryContainer: s.primaryContainer as Color?,
+    onPrimaryContainer: s.onPrimaryContainer as Color?,
+    secondary: s.secondary as Color,
+    onSecondary: s.onSecondary as Color,
+    secondaryContainer: s.secondaryContainer as Color?,
+    onSecondaryContainer: s.onSecondaryContainer as Color?,
+    tertiary: s.tertiary as Color?,
+    onTertiary: s.onTertiary as Color?,
+    tertiaryContainer: s.tertiaryContainer as Color?,
+    onTertiaryContainer: s.onTertiaryContainer as Color?,
+    error: s.error as Color,
+    onError: s.onError as Color,
+    errorContainer: s.errorContainer as Color?,
+    onErrorContainer: s.onErrorContainer as Color?,
+    surface: s.surface as Color,
+    onSurface: s.onSurface as Color,
+    surfaceContainerLowest: s.surfaceContainerLowest as Color?,
+    surfaceContainerLow: s.surfaceContainerLow as Color?,
+    surfaceContainer: s.surfaceContainer as Color?,
+    surfaceContainerHigh: s.surfaceContainerHigh as Color?,
+    surfaceContainerHighest: s.surfaceContainerHighest as Color?,
+    onSurfaceVariant: s.onSurfaceVariant as Color?,
+    outline: s.outline as Color?,
+    outlineVariant: s.outlineVariant as Color?,
+  );
 }

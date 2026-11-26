@@ -48,7 +48,8 @@ class _MiuixSettingsScreenState extends ConsumerState<MiuixSettingsScreen> {
         12,
         12,
         12,
-        32 + MediaQuery.paddingOf(context).bottom,
+        (widget.isInline && settings.isNavBarBlur ? 90 : 32) +
+            MediaQuery.paddingOf(context).bottom,
       ),
       children: [
         MiuixAppearanceSection(settings: settings, notifier: notifier),
