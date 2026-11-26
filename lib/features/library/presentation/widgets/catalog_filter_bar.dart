@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
 
