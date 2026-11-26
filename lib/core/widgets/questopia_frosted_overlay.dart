@@ -25,12 +25,19 @@ class QuestopiaFrostedOverlay extends ConsumerWidget {
 
     final percent = settings.navBarBlurPercent.clamp(10.0, 100.0);
     final sigma = (percent / 100.0) * 24.0;
+    if (sigma <= 0) return child;
 
     return ClipRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
-        child: ColoredBox(
-          color: colors.surface.withValues(alpha: tintAlpha),
+        filter: ImageFilter.blur(
+          sigmaX: sigma,
+          sigmaY: sigma,
+          tileMode: TileMode.mirror,
+        ),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: colors.surface.withValues(alpha: tintAlpha),
+          ),
           child: child,
         ),
       ),

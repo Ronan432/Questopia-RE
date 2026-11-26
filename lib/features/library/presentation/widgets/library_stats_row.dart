@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/helpers/dialog_helper.dart';
@@ -14,11 +15,13 @@ class LibraryStatsRow extends ConsumerStatefulWidget {
     required this.games,
     required this.showFavoritesOnly,
     required this.onToggleFavoritesOnly,
+    this.miuix = false,
   });
 
   final List<LocalGame> games;
   final bool showFavoritesOnly;
   final VoidCallback onToggleFavoritesOnly;
+  final bool miuix;
 
   @override
   ConsumerState<LibraryStatsRow> createState() => _LibraryStatsRowState();

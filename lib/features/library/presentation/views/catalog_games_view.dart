@@ -30,13 +30,13 @@ class CatalogGamesView extends ConsumerWidget {
 
     return Column(
       children: [
-        const CatalogFilterBar(),
+        CatalogFilterBar(miuix: miuix),
         Expanded(
           child: _buildRemoteGrid(context, ref, games, state),
         ),
         // Desktop has no bottom navigation bar, so pagination lives here.
         if (isDesktop && state.totalPages > 1)
-          const CatalogPaginationBar(),
+          CatalogPaginationBar(miuix: miuix),
       ],
     );
   }

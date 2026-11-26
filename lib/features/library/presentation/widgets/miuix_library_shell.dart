@@ -102,11 +102,12 @@ class MiuixLibraryShell extends StatelessWidget {
       topBar: MiuixTopAppBar(
         title: selectedTab == 2 ? l10n.settings : l10n.appTitle,
         actions: [
-          _action(
-            label: l10n.search,
-            iconName: 'search',
-            onPressed: onOpenSearch,
-          ),
+          if (selectedTab != 2)
+            _action(
+              label: l10n.search,
+              iconName: 'search',
+              onPressed: onOpenSearch,
+            ),
           if (selectedTab == 0)
             _action(
               label: l10n.importGameTooltip,
@@ -131,12 +132,16 @@ class MiuixLibraryShell extends StatelessWidget {
         bottomContent: AnimatedSwitcher(
           duration: const Duration(milliseconds: 280),
           reverseDuration: const Duration(milliseconds: 220),
-          transitionBuilder: (child, animation) => FadeTransition(
-            opacity: animation,
-            child: SizeTransition(
-              sizeFactor: animation,
-              axisAlignment: -1,
-              child: child,
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) => ClipRect(
+            child: FadeTransition(
+              opacity: animation,
+              child: SizeTransition(
+                sizeFactor: animation,
+                axisAlignment: -1,
+                child: child,
+              ),
             ),
           ),
           child: isSearchOpen

@@ -104,6 +104,7 @@ class LocalGamesView extends ConsumerWidget {
               games: allGames,
               showFavoritesOnly: showFavoritesOnly,
               onToggleFavoritesOnly: onToggleFavoritesOnly,
+              miuix: miuix,
             ),
           ),
         ),

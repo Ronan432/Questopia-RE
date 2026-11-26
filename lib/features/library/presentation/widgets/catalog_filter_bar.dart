@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
 
@@ -30,7 +31,10 @@ String _sortLabel(AppLocalizations l10n, CatalogSortOption option) {
 }
 
 /// Horizontal filter bar for remote catalog including sort, language, and featured chips.
-class CatalogFilterBar extends ConsumerStatefulWidget {  const CatalogFilterBar({super.key});
+class CatalogFilterBar extends ConsumerStatefulWidget {
+  const CatalogFilterBar({super.key, this.miuix = false});
+
+  final bool miuix;
 
   @override
   ConsumerState<CatalogFilterBar> createState() => _CatalogFilterBarState();

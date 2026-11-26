@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
 
@@ -121,14 +122,23 @@ class SettingsTiles {
           // the handle caving in under the cursor on desktop.
           Padding(
             padding: const EdgeInsets.only(top: 4),
-            child: M3ESlider(
-              value: value.clamp(min, max).toDouble(),
-              min: min,
-              max: max,
-              divisions: divisions,
-              haptic: M3EHapticFeedback.light,
-              onChangeEnd: onChangeEnd,
-              onChanged: onChanged,
+            child: Builder(
+              builder: (context) => MiuixTheme.maybeOf(context) != null
+                  ? MiuixSlider(
+                      value: value.clamp(min, max).toDouble(),
+                      min: min,
+                      max: max,
+                      onValueChanged: onChanged,
+                    )
+                  : M3ESlider(
+                      value: value.clamp(min, max).toDouble(),
+                      min: min,
+                      max: max,
+                      divisions: divisions,
+                      haptic: M3EHapticFeedback.light,
+                      onChangeEnd: onChangeEnd,
+                      onChanged: onChanged,
+                    ),
             ),
           ),
         ],

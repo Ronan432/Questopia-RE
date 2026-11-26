@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
@@ -12,9 +13,14 @@ import '../../providers/library_provider.dart';
 /// blur and tint, so this bar paints nothing of its own and the frozen surface
 /// stays continuous with the navigation bar below it.
 class CatalogPaginationBar extends ConsumerWidget {
-  const CatalogPaginationBar({super.key, this.isInsideOverlay = false});
+  const CatalogPaginationBar({
+    super.key,
+    this.isInsideOverlay = false,
+    this.miuix = false,
+  });
 
   final bool isInsideOverlay;
+  final bool miuix;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,30 +33,53 @@ class CatalogPaginationBar extends ConsumerWidget {
 
     final bottomPadding = MediaQuery.paddingOf(context).bottom > 0 ? 6.0 : 10.0;
 
+    final prevEnabled = state.currentPage > 1 && !state.isLoadingRemote;
+    final nextEnabled =
+        state.currentPage < state.totalPages && !state.isLoadingRemote;
+
     final row = Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        QuestopiaMorphButton.tonal(
-          onPressed: state.currentPage > 1 && !state.isLoadingRemote
-              ? () => notifier.setCatalogPage(state.currentPage - 1)
-              : null,
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          child: Text(l10n.prev),
-        ),
+        if (miuix)
+          MiuixButton(
+            onPressed: prevEnabled
+                ? () => notifier.setCatalogPage(state.currentPage - 1)
+                : null,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
+                const SizedBox(width: 6),
+                Text(l10n.prev),
+              ],
+            ),
+          )
+        else
+          QuestopiaMorphButton.tonal(
+            onPressed: prevEnabled
+                ? () => notifier.setCatalogPage(state.currentPage - 1)
+                : null,
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            child: Text(l10n.prev),
+          ),
         Expanded(
           child: Center(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: state.isLoadingRemote
-                  ? SizedBox(
-                      key: const ValueKey('catalog_page_loading'),
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.2,
-                        color: colors.primary,
-                      ),
-                    )
+                  ? (miuix
+                      ? const MiuixCircularProgressIndicator(
+                          key: ValueKey('catalog_page_loading'),
+                        )
+                      : SizedBox(
+                          key: const ValueKey('catalog_page_loading'),
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            color: colors.primary,
+                          ),
+                        ))
                   : _PageIndicatorPill(
                       key: ValueKey(
                         'catalog_page_${state.currentPage}_${state.totalPages}',
@@ -63,14 +92,28 @@ class CatalogPaginationBar extends ConsumerWidget {
             ),
           ),
         ),
-        QuestopiaMorphButton.tonal(
-          onPressed:
-              state.currentPage < state.totalPages && !state.isLoadingRemote
-                  ? () => notifier.setCatalogPage(state.currentPage + 1)
-                  : null,
-          icon: const Icon(Icons.arrow_forward_ios_rounded),
-          child: Text(l10n.next),
-        ),
+        if (miuix)
+          MiuixButton(
+            onPressed: nextEnabled
+                ? () => notifier.setCatalogPage(state.currentPage + 1)
+                : null,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l10n.next),
+                const SizedBox(width: 6),
+                const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+              ],
+            ),
+          )
+        else
+          QuestopiaMorphButton.tonal(
+            onPressed: nextEnabled
+                ? () => notifier.setCatalogPage(state.currentPage + 1)
+                : null,
+            icon: const Icon(Icons.arrow_forward_ios_rounded),
+            child: Text(l10n.next),
+          ),
       ],
     );
 

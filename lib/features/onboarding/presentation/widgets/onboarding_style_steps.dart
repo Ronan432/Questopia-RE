@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_miuix/miuix.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
@@ -104,14 +105,21 @@ class OnboardingReadingStep extends StatelessWidget {
                       color: colors.primary,
                     ),
                   ),
-                  M3ESlider(
-                    value: settings.fontSize.clamp(12.0, 28.0),
-                    min: 12.0,
-                    max: 28.0,
-                    divisions: 8,
-                    haptic: M3EHapticFeedback.light,
-                    onChanged: onFontSizeChanged,
-                  ),
+                  MiuixTheme.maybeOf(context) != null
+                      ? MiuixSlider(
+                          value: settings.fontSize.clamp(12.0, 28.0),
+                          min: 12.0,
+                          max: 28.0,
+                          onValueChanged: onFontSizeChanged,
+                        )
+                      : M3ESlider(
+                          value: settings.fontSize.clamp(12.0, 28.0),
+                          min: 12.0,
+                          max: 28.0,
+                          divisions: 8,
+                          haptic: M3EHapticFeedback.light,
+                          onChanged: onFontSizeChanged,
+                        ),
                   Text(
                     l10n.livePreviewText,
                     style: TextStyle(

@@ -51,3 +51,8 @@ flutter:
   assets:
     - assets/images/app_logo.png
     - assets/ogv/
+
+  fonts:
+    - family: MiSans
+      fonts:
+        - asset: fonts/MiSans-Normal.ttf

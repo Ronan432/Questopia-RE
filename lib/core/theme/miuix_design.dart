@@ -29,11 +29,27 @@ class MiuixDesignTheme extends StatelessWidget {
       onError: colors.onError,
       outline: colors.outline,
     );
+    final baseTextStyle = (materialTheme.textTheme.bodyMedium ?? const TextStyle())
+        .copyWith(
+      fontFamily: 'MiSans',
+      decoration: TextDecoration.none,
+      color: colors.onSurface,
+    );
     return MiuixTheme(
       data: miuixData,
       child: Theme(
-        data: materialTheme.copyWith(colorScheme: scheme),
-        child: child,
+        data: materialTheme.copyWith(
+          colorScheme: scheme,
+          splashFactory: InkSparkle.splashFactory,
+          textTheme: materialTheme.textTheme.apply(fontFamily: 'MiSans'),
+        ),
+        child: DefaultTextStyle(
+          style: baseTextStyle,
+          child: Material(
+            type: MaterialType.transparency,
+            child: child,
+          ),
+        ),
       ),
     );
   }
