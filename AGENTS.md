@@ -223,3 +223,14 @@ Standing prohibitions recorded here apply to every future session. Agents must r
 | P10 | Never commit local-only skill folders such as `miuix-design/`; keep them ignored. | All tasks |
 
 > New rows go below the last row. Never delete or weaken an existing row unless the user explicitly asks.
+
+---
+
+## 8. Release Pipeline and Versioning
+
+- Every push to `master` or `main`, and every manual `workflow_dispatch`, runs static analysis, builds the split Android APKs, the universal APK and the Windows x64 bundle, then publishes a GitHub Release.
+- Each run publishes a new patch release and keeps every previous release. Never delete older releases or tags from the workflow.
+- The current release line starts at `1.0.1`. `pubspec.yaml` holds `1.0.1+2` as the base; the workflow reads the latest release tag and increments the patch by one, so the sequence is `v1.0.1`, `v1.0.2`, `v1.0.3`, and so on.
+- The build name comes from that computed version and the build number comes from the Actions run number, so the APK and Windows metadata match the published release.
+- Never hardcode a tag or release name in the workflow. The release job derives both from the version job.
+- The release assets are the split per ABI APKs, the universal APK and `Questopia-Windows-x64.zip`.
