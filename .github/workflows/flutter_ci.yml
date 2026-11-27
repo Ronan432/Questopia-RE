@@ -78,6 +78,11 @@ jobs:
           distribution: 'zulu'
           java-version: '21'
 
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -88,10 +93,50 @@ jobs:
         run: flutter pub get
 
       - name: Build Minified Release APKs (Split per ABI)
-        run: flutter build apk --release --split-per-abi --tree-shake-icons --obfuscate --split-debug-info=build/symbols --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
+        run: |
+          run_with_rate_limit_retry() {
+            local attempt=1 output exit_code delay
+            while (( attempt <= 3 )); do
+              if output="$("$@" 2>&1)"; then
+                printf '%s\n' "$output"
+                return 0
+              else
+                exit_code=$?
+                printf '%s\n' "$output"
+                if [[ "$output" != *"429"* || "$attempt" -eq 3 ]]; then
+                  return "$exit_code"
+                fi
+                delay=$((attempt * 30))
+                echo "Maven Central returned HTTP 429. Retrying in ${delay} seconds."
+                sleep "$delay"
+                attempt=$((attempt + 1))
+              fi
+            done
+          }
+          run_with_rate_limit_retry flutter build apk --release --split-per-abi --tree-shake-icons --obfuscate --split-debug-info=build/symbols --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
 
       - name: Build Minified Universal APK (all ABIs)
-        run: flutter build apk --release --tree-shake-icons --obfuscate --split-debug-info=build/symbols --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
+        run: |
+          run_with_rate_limit_retry() {
+            local attempt=1 output exit_code delay
+            while (( attempt <= 3 )); do
+              if output="$("$@" 2>&1)"; then
+                printf '%s\n' "$output"
+                return 0
+              else
+                exit_code=$?
+                printf '%s\n' "$output"
+                if [[ "$output" != *"429"* || "$attempt" -eq 3 ]]; then
+                  return "$exit_code"
+                fi
+                delay=$((attempt * 30))
+                echo "Maven Central returned HTTP 429. Retrying in ${delay} seconds."
+                sleep "$delay"
+                attempt=$((attempt + 1))
+              fi
+            done
+          }
+          run_with_rate_limit_retry flutter build apk --release --tree-shake-icons --obfuscate --split-debug-info=build/symbols --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
 
       - name: Upload Android APKs
         uses: actions/upload-artifact@v4
