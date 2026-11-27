@@ -1,11 +1,12 @@
 # AGENTS.md — Questopia Flutter Architecture & Handover Documentation
 
-> **Last Update:** October 15, 2026 (session 2)  
-> **Target Framework:** Flutter 3.44.6 / Dart 3.12.2  
+> **Last Update:** November 27, 2026 (session 3)  
+> **Target Framework:** Flutter 3.50.1 / Dart 3.14.0  
 > **Branch:** `master`  
-> **`flutter analyze`:** CLEAN (0 issues)  
+> **`flutter analyze`:** CLEAN (0 errors, 0 warnings, 83 info deprecations)  
 > **Cleanup procedure:** [CLEANUP.md](CLEANUP.md) — runs **only on explicit user request**  
-> **AI agent behavior rules:** Section 7 — **mandatory, read before every task**
+> **AI agent behavior rules:** Section 7 — **mandatory, read before every task**  
+> **Next task list:** [task.md](task.md) — finished Miuix work and the pending overlay migration
 
 ---
 
@@ -34,7 +35,7 @@ Questopia-RE is a high-performance cross-platform interpreter and library client
 7. **SANDBOX REGISTRY ISOLATION:** Never write metadata, registry entries, or hidden dot-files into external shared storage. All persistent game records must go through `GameRegistry` inside `getApplicationSupportDirectory()`.
 8. **MODULAR HELPER COHESION:** Utility and helper routines must be encapsulated in dedicated helper files under `lib/core/helpers/` (e.g. `sheet_helper.dart`, `dialog_helper.dart`, `path_picker_helper.dart`, `html_processor.dart`).
 9. **EFFECTIVE SETTINGS LINKAGE:** Every setting field in `SettingsState` must have an active consumer and observable effect in the UI or runtime engine (blur, haptics, action height ratio, immersive mode, square posters, font family, etc.).
-10. **STANDARDIZED COMMIT FORMAT AND USER-FRIENDLY DESCRIPTIONS:** Commit subject lines must strictly adhere to standardized conventional prefix syntax (e.g. `Feat: <reason>`, `Fix: <reason>`, `Ci: <reason>`). Never put multi-line descriptions or markdown headers in commit titles. Commit descriptions/bodies must be written in plain, easily understandable user-facing English explaining what changed and why. **Every commit body must contain a definitive change list:** one bullet per changed file or behaviour, naming the file and stating exactly what changed in it. A vague summary ("various fixes", "cleanup", "improvements") is not acceptable. If a file was touched, it must appear in the list. See Section 6.2 for the exact format.
+10. **CLEAR COMMIT MESSAGES:** Write short, simple, user-facing English that explains the change or its benefit. Do not mention file names, paths, code identifiers, or internal implementation details. Do not use emojis. Markdown is allowed in the body. See Section 6 for the format.
 11. **BAN ON `&` SYMBOL:** The ampersand character (`&`) is strictly forbidden across all user-facing UI strings, headers, button labels, documentation, and commit messages. Always use the full word "and" or "ve".
 12. **ON-DEMAND CLEANUP ONLY:** Code cleanup, dead code removal, and refactoring must be performed **only when the user explicitly requests it**. A cleanup is never started on initiative, never bundled into a feature change, and never committed without a separate request. Every removal must be proven by a zero reference count first, and no cleanup may alter runtime behaviour. The full procedure lives in [CLEANUP.md](CLEANUP.md).
 13. **AI AGENT BEHAVIOR PROTOCOL:** Every AI agent working in this repository must follow Section 7 in full. Section 7 overrides any default habit of the agent. A violation of Section 7 counts as a failed task even if the code compiles.
@@ -116,6 +117,8 @@ Questopia-RE is a high-performance cross-platform interpreter and library client
 | `lib/features/onboarding/presentation/onboarding_screen.dart`     | Seven step first run setup wizard driving theme, locale, reading and helper preferences.                    |
 | `lib/features/onboarding/presentation/widgets/onboarding_behavior_step.dart` | Helper switches step covering immersive mode, auto-scroll, auto-save and the cheat engine.        |
 | `lib/features/game/presentation/sheets/helpers/notes_tab_strip.dart` | Browser style note tab strip with middle click close and a collapse control.                             |
+| `task.md`                                                         | Handover list of the finished Miuix fixes and the remaining overlay migration with acceptance criteria.   |
+| `miuix-design/SKILL.md`                                           | Local-only Miuix design skill, ignored by git; read it before any Miuix UI work.                          |
 
 
 ## 6. Git and Commit Message Standards
@@ -124,7 +127,7 @@ All commits in the repository must adhere to the following standards:
 
 ### 6.1. Subject Line Format
 
-The first line (subject) must be concise and use standard conventional prefixes:
+The first line (subject) must be concise, clear, user-facing, and use a standard prefix:
 
 - `Feat: <short summary of new feature/capability>`
 - `Fix: <short summary of bug fix or issue resolution>`
@@ -133,26 +136,23 @@ The first line (subject) must be concise and use standard conventional prefixes:
 - `Docs: <short summary of documentation updates>`
 - `Chore: <short summary of maintenance tasks or dependency bumps>`
 
-> **Rule:** Never use markdown headers, hashes, or multi-line paragraphs in the commit subject line.
+> **Rule:** Keep the subject to one plain-text line. Markdown is allowed in the body.
 
 ### 6.2. Commit Description / Body
 
-- Must be separated from the subject line by a single blank line.
-- Written strictly in **simple, accessible, plain English** using clear user-facing language.
-- Use concise bullet points to explain what was changed and the user-facing benefit or reason.
-- Avoid overcomplicated technical jargon where simple explanations suffice.
-- **The body must be a definitive change list, not a summary.** One bullet per changed file or behaviour. Each bullet names the file (or the exact behaviour) and says what changed and why. Every file that was touched in the commit must be listed; nothing that changed may be left out, and nothing that did not change may be listed.
-- A vague or partial description (for example "various fixes", "code cleanup", "performance improvements", "updated files") is a failed commit and must be rewritten before it is recorded.
+- Add a body only when the subject does not explain the user-visible change clearly enough; separate it from the subject with one blank line.
+- Write in simple, accessible English and focus on what users can do or experience, and why it matters.
+- Keep the body brief. Markdown bullets are fine when they make the explanation easier to read.
+- Do not mention file names, paths, code identifiers, or internal implementation details. Do not use emojis.
+- Avoid jargon, long technical descriptions, and vague phrases such as "various fixes" or "improvements".
 
 #### Example:
 
 ```text
-Refactor: Unified context dialogs and morph-shaping animations
+Feat: Make game dialogs clearer and easier to use
 
-- Replaced scattered raw dialogs with showQuestopiaDialog and QuestopiaDialog.
-- Added animated morph-shaping transition and backdrop blur to all dialogs.
-- Modularized game dialog components to keep all files under 300 lines.
-- Updated FLUTTER.md architecture documentation.
+- Read important game messages and choices more easily.
+- Enjoy smoother transitions when opening dialogs.
 ```
 
 ---
@@ -220,5 +220,6 @@ Standing prohibitions recorded here apply to every future session. Agents must r
 | P7 | Never revert to or repeat a rejected design variation when a fix fails. | All UI tasks |
 | P8 | Never run `git push` or publish remote changes without explicit user request. | All tasks |
 | P9 | Do not run Flutter build commands for Questopia-RE during this design testing phase. | All tasks |
+| P10 | Never commit local-only skill folders such as `miuix-design/`; keep them ignored. | All tasks |
 
-> New rows go below P6. Never delete or weaken an existing row unless the user explicitly asks.
+> New rows go below the last row. Never delete or weaken an existing row unless the user explicitly asks.

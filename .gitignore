@@ -82,3 +82,6 @@ app.*.map.json
 /.agents/
 /.claude/
 skills-lock.json
+
+# Local Miuix design skill used by agents during the interface overhaul.
+/miuix-design/
