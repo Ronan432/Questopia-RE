@@ -7,18 +7,21 @@ import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
+import '../../../core/helpers/platform_helper.dart';
 import '../../../core/media/qsp_html_view.dart';
 import '../../../core/media/qsp_path_resolver.dart';
 import '../../../core/native/qsp_models.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/theme/game_colors.dart';
-import '../../../core/theme/miuix_icons_helper.dart';
+import '../../../core/theme/glass_effect.dart';
 import '../../../core/theme/questopia_theme.dart';
 import '../../../core/helpers/dialog_helper.dart';
 import '../../../core/helpers/html_processor.dart';
 import '../../../core/helpers/sheet_helper.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/widgets/miuix_nav_bar.dart';
+import '../../../core/widgets/miuix_nav_rail.dart';
+import '../../../core/widgets/window_title_bar.dart';
 import '../../library/providers/play_session_tracker.dart';
 import '../providers/game_engine_provider.dart';
 import 'dialogs/game_dialogs_host.dart';
@@ -215,17 +218,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   GameDialogType _lastDialogShown = GameDialogType.none;
 
-  Future<T?> _openGameSheet<T>(WidgetBuilder builder) {
-    return showQuestopiaSheet<T>(
-      context: context,
-      builder: builder,
-    );
-  }
-
   Future<void> _showOptionsMenu() async {
     debugPrint('[GameScreen] Opening options menu sheet...');
-    await _openGameSheet<void>(
-      (_) => const GameOptionsSheet(),
+    final l10n = AppLocalizations.of(context)!;
+    await showQuestopiaSheet<void>(
+      context: context,
+      title: l10n.gameOptions,
+      builder: (_) => const GameOptionsSheet(),
     );
   }
 
@@ -350,6 +349,111 @@ class _GameScreenState extends ConsumerState<GameScreen>
       return confirmed == true;
     }
 
+    final isDesktop = isDesktopPlatform;
+    final gameTitle = engineState.activeGame?.title ?? widget.title;
+    final gameTabs = <MiuixNavBarItem>[
+      MiuixNavBarItem(
+        icon: Icons.menu_book_rounded,
+        label: l10n.tabGame,
+        showBadge: engineState.gameState.isMainDescChanged && _activeTab != 0,
+      ),
+      MiuixNavBarItem(
+        icon: Icons.tune_rounded,
+        label: l10n.tabStatus,
+        showBadge: engineState.gameState.isVarsDescChanged && _activeTab != 1,
+      ),
+      MiuixNavBarItem(
+        icon: Icons.layers_rounded,
+        label: l10n.tabInventory,
+        showBadge: engineState.gameState.isObjectsChanged && _activeTab != 2,
+      ),
+    ];
+
+    final scaffold = MiuixScaffold(
+          topBar: _isHeaderVisible
+              ? _GameMiuixTopBar(
+                  title: engineState.activeGame?.title ?? widget.title,
+                  blurEnabled: settings.isNavBarBlur,
+                  blurPercent: settings.navBarBlurPercent,
+                  backTooltip:
+                      MaterialLocalizations.of(context).backButtonTooltip,
+                  optionsTooltip: l10n.gameOptionsTooltip,
+                  onBack: () async {
+                    final exit = await confirmExit();
+                    if (exit && context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  onOptions: _showOptionsMenu,
+                )
+              : null,
+          content: (padding) => NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              _onScrollNotification(notification);
+              return false;
+            },
+            child: ExcludeSemantics(
+              child: Padding(
+                padding: padding,
+                child: MediaQuery.removePadding(
+                  context: context,
+                  removeTop: true,
+                  removeBottom: true,
+                  child: engineState.isLoading
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const MiuixCircularProgressIndicator(),
+                              const SizedBox(height: 16),
+                              MiuixText(l10n.loadingGameWorld),
+                            ],
+                          ),
+                        )
+                      : IndexedStack(
+                          index: _activeTab,
+                          children: [
+                            _buildStoryTab(
+                              context,
+                              mainHtml,
+                              engineState,
+                              engineNotifier,
+                              settings,
+                            ),
+                            _buildVarsTab(
+                              context,
+                              varsHtml,
+                              engineState,
+                              settings,
+                            ),
+                            _buildObjectsTab(
+                              context,
+                              engineState,
+                              engineNotifier,
+                              settings,
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ),
+          ),
+          bottomBar: isDesktop
+              ? null
+              : MiuixNavBar(
+                  selectedIndex: _activeTab,
+                  blurEnabled: settings.isNavBarBlur,
+                  blurPercent: settings.navBarBlurPercent,
+                  onSelect: (index) {
+                    setState(() {
+                      _activeTab = index;
+                      _isHeaderVisible = true;
+                    });
+                  },
+                  items: gameTabs,
+                ),
+        );
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
@@ -361,127 +465,35 @@ class _GameScreenState extends ConsumerState<GameScreen>
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: systemOverlay,
-        child: MiuixScaffold(
-          topBar: _isHeaderVisible
-              ? MiuixSmallTopAppBar(
-                  title: engineState.activeGame?.title ?? widget.title,
-                  navigationIcon: MiuixIconButton(
-                    onPressed: () async {
-                      final exit = await confirmExit();
-                      if (exit && context.mounted) {
-                        Navigator.of(context).pop();
-                      }
-                    },
-                    child: MiuixIcon(
-                      vector: MiuixIcons.os4.back,
-                      size: 22,
-                      contentDescription:
-                          MaterialLocalizations.of(context).backButtonTooltip,
+        // A desktop window keeps the title bar hidden, so the game keeps the
+        // draggable window row and moves its tabs to the start side rail, the
+        // same navigation shape as the library and the settings screens.
+        child: isDesktop
+            ? Column(
+                children: [
+                  WindowTitleBar(
+                    title: gameTitle,
+                    leadingWidth: 80,
+                    leading: const QuestopiaLogoIcon(size: 22),
+                  ),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        MiuixNavRail(
+                          items: gameTabs,
+                          selectedIndex: _activeTab,
+                          onSelect: (index) => setState(() {
+                            _activeTab = index;
+                            _isHeaderVisible = true;
+                          }),
+                        ),
+                        Expanded(child: scaffold),
+                      ],
                     ),
                   ),
-                  actions: [
-                    MiuixIconButton(
-                      onPressed: _showOptionsMenu,
-                      child: miuixIcon(
-                        'more',
-                        size: 22,
-                        contentDescription: l10n.gameOptionsTooltip,
-                      ),
-                    ),
-                  ],
-                )
-              : null,
-          content: (padding) => NotificationListener<ScrollNotification>(
-            onNotification: (notification) {
-              _onScrollNotification(notification);
-              return false;
-            },
-            child: ExcludeSemantics(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  padding.left,
-                  padding.top,
-                  padding.right,
-                  0,
-                ),
-                child: engineState.isLoading
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const MiuixCircularProgressIndicator(),
-                            const SizedBox(height: 16),
-                            MiuixText(l10n.loadingGameWorld),
-                          ],
-                        ),
-                      )
-                    : IndexedStack(
-                        index: _activeTab,
-                        children: [
-                          _buildStoryTab(
-                            context,
-                            mainHtml,
-                            engineState,
-                            engineNotifier,
-                            settings,
-                          ),
-                          _buildVarsTab(
-                            context,
-                            varsHtml,
-                            engineState,
-                            settings,
-                          ),
-                          _buildObjectsTab(
-                            context,
-                            engineState,
-                            engineNotifier,
-                            settings,
-                          ),
-                        ],
-                      ),
-              ),
-            ),
-          ),
-          bottomBar: Padding(
-            padding: EdgeInsets.fromLTRB(
-              16,
-              0,
-              16,
-              MediaQuery.paddingOf(context).bottom + 8,
-            ),
-            child: MiuixNavBar(
-              selectedIndex: _activeTab,
-              blurEnabled: settings.isNavBarBlur,
-              blurPercent: settings.navBarBlurPercent,
-              onSelect: (index) {
-                setState(() {
-                  _activeTab = index;
-                  _isHeaderVisible = true;
-                });
-              },
-              items: [
-                MiuixNavBarItem(
-                  icon: miuixVector('read', fallback: MiuixIcons.os4.read),
-                  label: l10n.tabGame,
-                  showBadge:
-                      engineState.gameState.isMainDescChanged && _activeTab != 0,
-                ),
-                MiuixNavBarItem(
-                  icon: miuixVector('tune', fallback: MiuixIcons.os4.tune),
-                  label: l10n.tabStatus,
-                  showBadge:
-                      engineState.gameState.isVarsDescChanged && _activeTab != 1,
-                ),
-                MiuixNavBarItem(
-                  icon: miuixVector('layers', fallback: MiuixIcons.os4.layers),
-                  label: l10n.tabInventory,
-                  showBadge:
-                      engineState.gameState.isObjectsChanged && _activeTab != 2,
-                ),
-              ],
-            ),
-          ),
-        ),
+                ],
+              )
+            : scaffold,
       ),
     );
   }
@@ -653,7 +665,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
     GameEngineNotifier engineNotifier,
     SettingsState settings,
   ) {
-    final colors = Theme.of(context).colorScheme;
     final visual = _parseVisualItem(act.name, act.image);
     // Action labels follow the same size as the story text so the whole game
     // surface scales together.
@@ -678,41 +689,46 @@ class _GameScreenState extends ConsumerState<GameScreen>
       );
     }
 
+    final miuixColors = MiuixTheme.of(context).colors;
+
     if (imageWidget != null && visual.text.isEmpty) {
-      // Pure image button - custom sleek square/pill tile
-      return Material(
-        color: colors.secondaryContainer,
-        borderRadius: BorderRadius.circular(12),
-        elevation: 0.5,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            debugPrint(
-                '[GameScreen] Tapped action #${act.index}: "${act.name}"');
-            engineNotifier.execAction(act.index);
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 32, maxHeight: 44),
-              child: imageWidget,
-            ),
-          ),
+      return MiuixButton(
+        onPressed: () {
+          debugPrint(
+              '[GameScreen] Tapped action #${act.index}: "${act.name}"');
+          engineNotifier.execAction(act.index);
+        },
+        cornerRadius: 14,
+        insideMargin: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        minHeight: 36,
+        colors: MiuixButtonColors(
+          color: miuixColors.surfaceContainerHigh,
+          disabledColor: miuixColors.disabledSecondary,
+          contentColor: miuixColors.onSurface,
+          disabledContentColor: miuixColors.disabledOnSecondary,
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 28, maxHeight: 44),
+          child: imageWidget,
         ),
       );
     }
 
-    return FilledButton.tonal(
+    return MiuixButton(
       onPressed: () {
         debugPrint('[GameScreen] Tapped action #${act.index}: "${act.name}"');
         engineNotifier.execAction(act.index);
       },
-      style: FilledButton.styleFrom(
-        padding: EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: imageWidget != null ? 8 : 10,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      cornerRadius: 14,
+      insideMargin: EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: imageWidget != null ? 8 : 10,
+      ),
+      colors: MiuixButtonColors(
+        color: miuixColors.surfaceContainerHigh,
+        disabledColor: miuixColors.disabledSecondary,
+        contentColor: miuixColors.onSurface,
+        disabledContentColor: miuixColors.disabledOnSecondary,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -723,12 +739,14 @@ class _GameScreenState extends ConsumerState<GameScreen>
           ],
           if (visual.text.isNotEmpty)
             Flexible(
-              child: Text(
+              child: MiuixText(
                 visual.text,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: actionFontSize,
-                ),
+                style: MiuixTheme.of(context).textStyles.main.copyWith(
+                      fontWeight: FontWeight.w500,
+                      fontSize: actionFontSize,
+                      color: miuixColors.onSurface,
+                    ),
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -808,10 +826,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
     SettingsState settings,
   ) {
     final objects = engineState.gameState.objects;
-    final colors = Theme.of(context).colorScheme;
-    // The inventory keeps the Material surface: its cards are Material widgets,
-    // so a reading preset would fight the card colours. Only the font size is
-    // shared with the reading panes.
+    final miuix = MiuixTheme.of(context);
+    final miuixColors = miuix.colors;
     final objectFontSize = settings.fontSize.clamp(
       QuestopiaTheme.minGameFontSize,
       QuestopiaTheme.maxGameFontSize,
@@ -822,17 +838,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            MiuixIcon(
-              vector: MiuixIcons.os4.layers,
+            Icon(
+              Icons.layers_rounded,
               size: 48,
-              tint: colors.outline,
+              color: miuixColors.outline,
             ),
             const SizedBox(height: 12),
-            Text(
+            MiuixText(
               AppLocalizations.of(context)!.inventoryIsEmpty,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: colors.outline,
-                  ),
+              style: miuix.textStyles.body2.copyWith(
+                color: miuixColors.onSurfaceVariantSummary,
+              ),
             ),
           ],
         ),
@@ -864,36 +880,22 @@ class _GameScreenState extends ConsumerState<GameScreen>
         itemCount: parsedObjects.length,
         itemBuilder: (context, index) {
           final item = parsedObjects[index];
-          return Card(
-            elevation: 1,
-            margin: EdgeInsets.zero,
-            color: colors.surfaceContainerHigh,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-              side: BorderSide(
-                color: colors.outlineVariant.withValues(alpha: 0.6),
-                width: 1,
-              ),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () {
-                debugPrint(
-                    '[GameScreen] Selected object #${item.obj.index}: "${item.obj.name}"');
-                engineNotifier.selectObject(item.obj.index);
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Center(
-                  child: Image.file(
-                    item.file!,
-                    fit: BoxFit.contain,
-                    gaplessPlayback: true,
-                    errorBuilder: (_, __, ___) => MiuixIcon(
-                      vector: MiuixIcons.os4.layers,
-                      tint: colors.outline,
-                    ),
-                  ),
+          return MiuixCard(
+            cornerRadius: 16,
+            insideMargin: const EdgeInsets.all(8),
+            onPressed: () {
+              debugPrint(
+                  '[GameScreen] Selected object #${item.obj.index}: "${item.obj.name}"');
+              engineNotifier.selectObject(item.obj.index);
+            },
+            child: Center(
+              child: Image.file(
+                item.file!,
+                fit: BoxFit.contain,
+                gaplessPlayback: true,
+                errorBuilder: (_, __, ___) => Icon(
+                  Icons.layers_rounded,
+                  color: miuixColors.outline,
                 ),
               ),
             ),
@@ -909,30 +911,30 @@ class _GameScreenState extends ConsumerState<GameScreen>
         final item = parsedObjects[index];
         final hasImage = item.file != null && item.file!.existsSync();
 
-        return Card(
-          margin: const EdgeInsets.only(bottom: 10),
-          elevation: 0.5,
-          color: colors.surfaceContainerLow,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: BorderSide(
-              color: colors.outlineVariant.withValues(alpha: 0.4),
-              width: 0.5,
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: MiuixCard(
+            cornerRadius: 20,
+            insideMargin: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 10,
             ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            leading: hasImage
-                ? Container(
+            onPressed: () {
+              debugPrint(
+                  '[GameScreen] Selected object #${item.obj.index}: "${item.obj.name}"');
+              engineNotifier.selectObject(item.obj.index);
+            },
+            child: Row(
+              children: [
+                if (hasImage)
+                  Container(
                     width: 52,
                     height: 52,
                     decoration: BoxDecoration(
-                      color: colors.surfaceContainerHighest,
+                      color: miuixColors.surfaceContainerHigh,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: colors.outlineVariant.withValues(alpha: 0.5),
+                        color: miuixColors.outline.withValues(alpha: 0.3),
                         width: 0.5,
                       ),
                     ),
@@ -941,37 +943,131 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       item.file!,
                       fit: BoxFit.contain,
                       gaplessPlayback: true,
-                      errorBuilder: (_, __, ___) => MiuixIcon(
-                        vector: MiuixIcons.os4.layers,
-                        tint: colors.outline,
+                      errorBuilder: (_, __, ___) => Icon(
+                        Icons.layers_rounded,
+                        color: miuixColors.outline,
                       ),
                     ),
                   )
-                : CircleAvatar(
-                    backgroundColor: colors.secondaryContainer,
-                    child: MiuixIcon(
-                      vector: MiuixIcons.os4.layers,
-                      tint: colors.onSecondaryContainer,
+                else
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: miuixColors.primary.withValues(alpha: 0.14),
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.layers_rounded,
+                      size: 20,
+                      color: miuixColors.primary,
                     ),
                   ),
-            title: Text(
-              item.visual.text.isNotEmpty
-                  ? item.visual.text
-                  : 'Item #${item.obj.index + 1}',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: objectFontSize,
-                color: colors.onSurface,
-              ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: MiuixText(
+                    item.visual.text.isNotEmpty
+                        ? item.visual.text
+                        : 'Item #${item.obj.index + 1}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: objectFontSize,
+                      color: miuixColors.onSurface,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            onTap: () {
-              debugPrint(
-                  '[GameScreen] Selected object #${item.obj.index}: "${item.obj.name}"');
-              engineNotifier.selectObject(item.obj.index);
-            },
           ),
         );
       },
+    );
+  }
+}
+
+class _GameMiuixTopBar extends StatelessWidget {
+  const _GameMiuixTopBar({
+    required this.title,
+    required this.blurEnabled,
+    required this.blurPercent,
+    required this.backTooltip,
+    required this.optionsTooltip,
+    required this.onBack,
+    required this.onOptions,
+  });
+
+  final String title;
+  final bool blurEnabled;
+  final double blurPercent;
+  final String backTooltip;
+  final String optionsTooltip;
+  final VoidCallback onBack;
+  final VoidCallback onOptions;
+
+  @override
+  Widget build(BuildContext context) {
+    final miuix = MiuixTheme.of(context);
+    final colors = miuix.colors;
+    final topInset = MediaQuery.paddingOf(context).top;
+
+    return GlassEffect.wrap(
+      context,
+      enabled: blurEnabled,
+      percent: blurPercent,
+      baseColor: colors.surface,
+      border: Border(
+        bottom: BorderSide(
+          color: colors.dividerLine.withValues(alpha: 0.35),
+          width: 0.5,
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, topInset + 4, 12, 6),
+        child: SizedBox(
+          height: 48,
+          child: Row(
+            children: [
+              MiuixIconButton(
+                minWidth: 40,
+                minHeight: 40,
+                onPressed: onBack,
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 20,
+                  color: colors.onSurface,
+                  semanticLabel: backTooltip,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: MiuixText(
+                  title,
+                  style: miuix.textStyles.title3.copyWith(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w600,
+                    color: colors.onSurface,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              MiuixIconButton(
+                minWidth: 40,
+                minHeight: 40,
+                onPressed: onOptions,
+                child: Icon(
+                  Icons.more_vert_rounded,
+                  size: 22,
+                  color: colors.onSurface,
+                  semanticLabel: optionsTooltip,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_miuix/miuix.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/providers/settings_provider.dart';
@@ -26,37 +25,45 @@ class MiuixAppearanceSection extends StatelessWidget {
         MiuixSettingsSectionTitle(l10n.sectionAppearance),
         MiuixSettingsGroup(
           children: [
-            miuixArrowPreference(
+            miuixDropdownPreference(
               context: context,
               title: l10n.theme,
               iconName: 'theme',
-              summary: SettingsPickerSheets.themeLabel(
-                context,
-                settings.themeMode == ThemeModeOption.amoled
-                    ? ThemeModeOption.dark
-                    : settings.themeMode,
-              ),
-              onClick: () => SettingsPickerSheets.showThemeModePicker(
-                context,
-                notifier,
-                settings,
-              ),
+              items: [
+                SettingsPickerSheets.themeLabel(context, ThemeModeOption.system),
+                SettingsPickerSheets.themeLabel(context, ThemeModeOption.light),
+                SettingsPickerSheets.themeLabel(context, ThemeModeOption.dark),
+              ],
+              selectedIndex: switch (settings.themeMode) {
+                ThemeModeOption.system => 0,
+                ThemeModeOption.light => 1,
+                ThemeModeOption.dark || ThemeModeOption.amoled => 2,
+              },
+              onSelectedIndexChange: (index) {
+                const modes = [
+                  ThemeModeOption.system,
+                  ThemeModeOption.light,
+                  ThemeModeOption.dark,
+                ];
+                notifier.setThemeMode(modes[index]);
+              },
             ),
-            miuixArrowPreference(
-              context: context,
-              title: l10n.language,
-              iconName: 'translate',
-              summary: SettingsPickerSheets.languageOptions(context)
-                  .firstWhere(
-                    (option) => option.$1 == settings.language,
-                    orElse: () => ('system', l10n.followSystem),
-                  )
-                  .$2,
-              onClick: () => SettingsPickerSheets.showLanguagePicker(
-                context,
-                notifier,
-                settings,
-              ),
+            Builder(
+              builder: (context) {
+                final options = SettingsPickerSheets.languageOptions(context);
+                final currentIndex = options.indexWhere(
+                  (option) => option.$1 == settings.language,
+                );
+                return miuixDropdownPreference(
+                  context: context,
+                  title: l10n.language,
+                  iconName: 'translate',
+                  items: [for (final option in options) option.$2],
+                  selectedIndex: currentIndex < 0 ? 0 : currentIndex,
+                  onSelectedIndexChange: (index) =>
+                      notifier.setLanguage(options[index].$1),
+                );
+              },
             ),
             miuixSwitchPreference(
               context: context,
@@ -65,6 +72,32 @@ class MiuixAppearanceSection extends StatelessWidget {
               iconName: 'theme',
               value: settings.isMiuixDynamicColor,
               onChanged: notifier.setMiuixDynamicColor,
+            ),
+            miuixSwitchPreference(
+              context: context,
+              title: l10n.navBarBlur,
+              iconName: 'layers',
+              value: settings.isNavBarBlur,
+              onChanged: notifier.setNavBarBlur,
+            ),
+            if (settings.isNavBarBlur)
+              miuixSliderPreference(
+                context: context,
+                title: '',
+                iconName: 'tune',
+                value: settings.navBarBlurPercent,
+                min: 10,
+                max: 100,
+                steps: 9,
+                valueText: '${settings.navBarBlurPercent.round()}%',
+                onChanged: notifier.setNavBarBlurPercent,
+              ),
+            miuixSwitchPreference(
+              context: context,
+              title: l10n.immersiveMode,
+              iconName: 'screenMirroring',
+              value: settings.isImmersiveMode,
+              onChanged: notifier.setImmersiveMode,
             ),
           ],
         ),
@@ -93,46 +126,6 @@ class MiuixGeneralSection extends StatelessWidget {
         MiuixSettingsSectionTitle(l10n.sectionGeneral),
         MiuixSettingsGroup(
           children: [
-            miuixSwitchPreference(
-              context: context,
-              title: l10n.immersiveMode,
-              iconName: 'screenMirroring',
-              value: settings.isImmersiveMode,
-              onChanged: notifier.setImmersiveMode,
-            ),
-            miuixSwitchPreference(
-              context: context,
-              title: l10n.autoscroll,
-              iconName: 'expandMore',
-              value: settings.isUseAutoscroll,
-              onChanged: notifier.setAutoscroll,
-            ),
-            miuixSwitchPreference(
-              context: context,
-              title: l10n.separatorLine,
-              iconName: 'listView',
-              value: settings.isUseSeparator,
-              onChanged: notifier.setSeparator,
-            ),
-            miuixSwitchPreference(
-              context: context,
-              title: l10n.navBarBlur,
-              iconName: 'layers',
-              value: settings.isNavBarBlur,
-              onChanged: notifier.setNavBarBlur,
-            ),
-            if (settings.isNavBarBlur)
-              miuixSliderPreference(
-                context: context,
-                title: l10n.navBarBlur,
-                iconName: 'tune',
-                value: settings.navBarBlurPercent,
-                min: 10,
-                max: 100,
-                steps: 9,
-                valueText: '${settings.navBarBlurPercent.round()}%',
-                onChanged: notifier.setNavBarBlurPercent,
-              ),
             miuixSwitchPreference(
               context: context,
               title: l10n.autoSave,
@@ -166,29 +159,6 @@ class MiuixGeneralSection extends StatelessWidget {
               iconName: 'memoryFunction',
               value: settings.isExecStringEnabled,
               onChanged: notifier.setExecStringEnabled,
-            ),
-            miuixArrowPreference(
-              context: context,
-              title: l10n.actionsPanelHeight,
-              iconName: 'verticalSplit',
-              summary: settings.actionsHeightRatio,
-              onClick: () => SettingsPickerSheets.showActionsHeightPicker(
-                context,
-                notifier,
-                settings,
-              ),
-            ),
-            miuixArrowPreference(
-              context: context,
-              title: l10n.binaryPrefixes,
-              iconName: 'backup',
-              fallbackIcon: MiuixIcons.os4.backup,
-              summary: settings.binaryPrefixes == 1024 ? '1024' : '1000',
-              onClick: () => SettingsPickerSheets.showBinaryPrefixesPicker(
-                context,
-                notifier,
-                settings,
-              ),
             ),
           ],
         ),

@@ -137,6 +137,17 @@ class _NoteTabChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final title = tab.title.trim().isEmpty ? renameTooltip : tab.title;
+    final miuix = MiuixTheme.of(context);
+    final mColors = miuix.colors;
+    final shape = MiuixSquircleBorder(
+      cornerRadius: 16,
+      side: BorderSide(
+        color: isSelected
+            ? mColors.primary.withValues(alpha: 0.55)
+            : mColors.outline.withValues(alpha: 0.2),
+        width: 1,
+      ),
+    );
 
     return Listener(
       onPointerDown: (event) {
@@ -148,56 +159,53 @@ class _NoteTabChip extends StatelessWidget {
       child: Tooltip(
         message: title,
         child: GestureDetector(
-          onTap: () {
-            HapticFeedback.selectionClick();
-            onSelect();
-          },
           onLongPress: () {
             HapticFeedback.mediumImpact();
             onRename();
           },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.only(left: 16, right: 6),
-            constraints: BoxConstraints(maxWidth: maxWidth, minWidth: 96),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? colors.secondaryContainer
-                  : colors.surfaceContainerHighest.withValues(alpha: 0.45),
-              borderRadius: BorderRadius.circular(23),
-              border: Border.all(
+          child: MiuixPressable(
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              onSelect();
+            },
+            shape: MiuixSquircleBorder(cornerRadius: 16),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.only(left: 14, right: 6),
+              constraints: BoxConstraints(maxWidth: maxWidth, minWidth: 96),
+              decoration: ShapeDecoration(
                 color: isSelected
-                    ? colors.primary.withValues(alpha: 0.55)
-                    : colors.outlineVariant.withValues(alpha: 0.4),
-                width: 1,
+                    ? mColors.secondaryContainer
+                    : mColors.surfaceContainerHigh,
+                shape: shape,
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14.5,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.w500,
-                      color: isSelected
-                          ? colors.onSecondaryContainer
-                          : colors.onSurfaceVariant,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: MiuixText(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: miuix.textStyles.footnote1.copyWith(
+                        fontSize: 14.5,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.w500,
+                        color: isSelected
+                            ? mColors.onSecondaryContainer
+                            : mColors.onSurfaceVariantSummary,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                _TabDeleteButton(
-                  colors: colors,
-                  tooltip: deleteTooltip,
-                  onPressed: onDelete,
-                ),
-              ],
+                  const SizedBox(width: 4),
+                  _TabDeleteButton(
+                    colors: colors,
+                    tooltip: deleteTooltip,
+                    onPressed: onDelete,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -220,20 +228,21 @@ class _TabDeleteButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mColors = MiuixTheme.of(context).colors;
     return Tooltip(
       message: tooltip,
-      child: InkWell(
-        onTap: () {
+      child: MiuixPressable(
+        onPressed: () {
           HapticFeedback.selectionClick();
           onPressed();
         },
-        borderRadius: BorderRadius.circular(16),
+        shape: MiuixSquircleBorder(cornerRadius: 12),
         child: Padding(
           padding: const EdgeInsets.all(6),
-          child: MiuixIcon(
-            vector: MiuixIcons.os4.close,
+          child: Icon(
+            Icons.close_rounded,
             size: 16,
-            tint: colors.onSecondaryContainer,
+            color: mColors.onSecondaryContainer,
           ),
         ),
       ),

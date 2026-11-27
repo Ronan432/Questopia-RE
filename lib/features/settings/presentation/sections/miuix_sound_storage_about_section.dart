@@ -97,7 +97,7 @@ class _MiuixStorageSectionState extends ConsumerState<MiuixStorageSection> {
         miuixVectorIcon: miuixVector('delete', fallback: MiuixIcons.os4.delete),
         title: l10n.storageCleanup,
         message: l10n.storageCleanupHint,
-        confirmLabel: l10n.storageCleanup,
+        confirmLabel: 'OK',
         cancelLabel: l10n.cancel,
       ),
     );
@@ -150,6 +150,16 @@ class _MiuixStorageSectionState extends ConsumerState<MiuixStorageSection> {
                   : '${l10n.storageTotal}: '
                       '${formatBytes(stats.totalBytes, binaryPrefix: prefix)}',
               endAction: MiuixText('${stats.gameCount}'),
+            ),
+            miuixDropdownPreference(
+              context: context,
+              title: l10n.binaryPrefixes,
+              iconName: 'backup',
+              fallbackIcon: MiuixIcons.os4.backup,
+              items: const ['1000', '1024'],
+              selectedIndex: widget.settings.binaryPrefixes == 1024 ? 1 : 0,
+              onSelectedIndexChange: (index) =>
+                  widget.notifier.setBinaryPrefixes(index == 1 ? 1024 : 1000),
             ),
             miuixArrowPreference(
               context: context,

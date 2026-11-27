@@ -3,46 +3,43 @@ import 'package:flutter_miuix/miuix.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/providers/settings_provider.dart';
-import '../../../../core/widgets/window_title_bar.dart';
-import 'onboarding_option_card.dart';
+import '../../../settings/presentation/sheets/settings_picker_sheets.dart';
+import '../../../settings/presentation/widgets/miuix_settings_tiles.dart';
 import 'onboarding_step_layout.dart';
 
-/// Welcome step: logo, application name and a one line description.
+/// Welcome step: the title and the opening line, nothing else.
 class OnboardingWelcomeStep extends StatelessWidget {
   const OnboardingWelcomeStep({super.key});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = Theme.of(context).colorScheme;
+    final miuix = MiuixTheme.of(context);
+    final colors = miuix.colors;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
+          constraints: const BoxConstraints(maxWidth: 560),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const QuestopiaLogoIcon(size: 96),
-              const SizedBox(height: 24),
-              Text(
-                l10n.appTitle,
+              MiuixText(
+                l10n.onboardingWelcomeTitle,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.4,
+                style: miuix.textStyles.title2.copyWith(
+                  fontWeight: FontWeight.w600,
                   color: colors.onSurface,
                 ),
               ),
-              const SizedBox(height: 14),
-              Text(
+              const SizedBox(height: 8),
+              MiuixText(
                 l10n.onboardingWelcomeBody,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15,
+                style: miuix.textStyles.body2.copyWith(
                   height: 1.5,
-                  color: colors.onSurfaceVariant,
+                  color: colors.onSurfaceVariantSummary,
                 ),
               ),
             ],
@@ -53,7 +50,7 @@ class OnboardingWelcomeStep extends StatelessWidget {
   }
 }
 
-/// Language step: automatic, English or Russian.
+/// Language step: the same language dropdown row the settings screen uses.
 class OnboardingLanguageStep extends StatelessWidget {
   const OnboardingLanguageStep({
     super.key,
@@ -67,48 +64,23 @@ class OnboardingLanguageStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = Theme.of(context).colorScheme;
+    final options = SettingsPickerSheets.languageOptions(context);
+    final currentIndex = options.indexWhere(
+      (option) => option.$1 == settings.language,
+    );
 
     return OnboardingStepLayout(
-      icon: MiuixIcons.os4.translate,
       title: l10n.onboardingLanguageTitle,
       description: l10n.onboardingLanguageBody,
-      child: Column(
+      child: MiuixSettingsGroup(
         children: [
-          OnboardingOptionCard(
-            title: l10n.languageAuto,
-            isSelected: settings.language == 'system',
-            leading: MiuixIcon(
-              vector: MiuixIcons.os4.settings,
-              tint: settings.language == 'system' ? colors.primary : null,
-            ),
-            onTap: () => onChanged('system'),
-          ),
-          OnboardingOptionCard(
-            title: 'English',
-            isSelected: settings.language == 'en',
-            leading: Text(
-              'EN',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: settings.language == 'en' ? colors.primary : null,
-              ),
-            ),
-            onTap: () => onChanged('en'),
-          ),
-          OnboardingOptionCard(
-            title: 'Русский',
-            isSelected: settings.language == 'ru',
-            leading: Text(
-              'RU',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: settings.language == 'ru' ? colors.primary : null,
-              ),
-            ),
-            onTap: () => onChanged('ru'),
+          miuixDropdownPreference(
+            context: context,
+            title: l10n.language,
+            iconName: 'translate',
+            items: [for (final option in options) option.$2],
+            selectedIndex: currentIndex < 0 ? 0 : currentIndex,
+            onSelectedIndexChange: (index) => onChanged(options[index].$1),
           ),
         ],
       ),
@@ -116,8 +88,8 @@ class OnboardingLanguageStep extends StatelessWidget {
   }
 }
 
-/// Theme step: a four card grid, with the automatic entry spanning the row and
-/// the three fixed appearances beneath it.
+/// Theme step: the theme dropdown row from the settings screen. Amoled is not
+/// offered because the Miuix theme renders it as the plain dark surface.
 class OnboardingThemeStep extends StatelessWidget {
   const OnboardingThemeStep({
     super.key,
@@ -128,63 +100,36 @@ class OnboardingThemeStep extends StatelessWidget {
   final SettingsState settings;
   final ValueChanged<ThemeModeOption> onChanged;
 
-  static MiuixVectorIcon iconFor(ThemeModeOption mode) => switch (mode) {
-        ThemeModeOption.system => MiuixIcons.os4.settings,
-        ThemeModeOption.light => MiuixIcons.os4.theme,
-        ThemeModeOption.dark => MiuixIcons.os4.theme,
-        ThemeModeOption.amoled => MiuixIcons.os4.theme,
-      };
-
-  static String labelFor(AppLocalizations l10n, ThemeModeOption mode) =>
-      switch (mode) {
-        ThemeModeOption.system => l10n.systemTheme,
-        ThemeModeOption.light => l10n.lightTheme,
-        ThemeModeOption.dark => l10n.darkTheme,
-        ThemeModeOption.amoled => l10n.amoledTheme,
-      };
+  static const List<ThemeModeOption> _modes = [
+    ThemeModeOption.system,
+    ThemeModeOption.light,
+    ThemeModeOption.dark,
+  ];
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
-    // The automatic entry answers a different question than the three fixed
-    // appearances, so it gets its own full width card and they share the row
-    // below it.
-    const fixed = <ThemeModeOption>[
-      ThemeModeOption.light,
-      ThemeModeOption.dark,
-      ThemeModeOption.amoled,
-    ];
+    final selectedIndex = switch (settings.themeMode) {
+      ThemeModeOption.system => 0,
+      ThemeModeOption.light => 1,
+      ThemeModeOption.dark || ThemeModeOption.amoled => 2,
+    };
 
     return OnboardingStepLayout(
-      icon: MiuixIcons.os4.theme,
       title: l10n.onboardingThemeTitle,
       description: l10n.onboardingThemeBody,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: MiuixSettingsGroup(
         children: [
-          OnboardingChoiceCard(
-            title: labelFor(l10n, ThemeModeOption.system),
-            icon: iconFor(ThemeModeOption.system),
-            isSelected: settings.themeMode == ThemeModeOption.system,
-            onTap: () => onChanged(ThemeModeOption.system),
-          ),
-          const SizedBox(height: 3),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (var i = 0; i < fixed.length; i++) ...[
-                if (i > 0) const SizedBox(width: 3),
-                Expanded(
-                  child: OnboardingChoiceCard(
-                    title: labelFor(l10n, fixed[i]),
-                    icon: iconFor(fixed[i]),
-                    isSelected: settings.themeMode == fixed[i],
-                    onTap: () => onChanged(fixed[i]),
-                  ),
-                ),
-              ],
+          miuixDropdownPreference(
+            context: context,
+            title: l10n.theme,
+            iconName: 'theme',
+            items: [
+              for (final mode in _modes)
+                SettingsPickerSheets.themeLabel(context, mode),
             ],
+            selectedIndex: selectedIndex,
+            onSelectedIndexChange: (index) => onChanged(_modes[index]),
           ),
         ],
       ),

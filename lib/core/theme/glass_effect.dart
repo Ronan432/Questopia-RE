@@ -7,35 +7,10 @@ import 'package:flutter_miuix/miuix.dart';
 class GlassEffect {
   GlassEffect._();
 
-  static ImageFilter _saturationMatrix(double s) => ColorFilter.matrix(<double>[
-        0.213 + 0.787 * s,
-        0.715 - 0.715 * s,
-        0.072 - 0.072 * s,
-        0,
-        0,
-        0.213 - 0.213 * s,
-        0.715 + 0.285 * s,
-        0.072 - 0.072 * s,
-        0,
-        0,
-        0.213 - 0.213 * s,
-        0.715 - 0.715 * s,
-        0.072 + 0.928 * s,
-        0,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-      ]);
-
-  static final ImageFilter _saturationFilter = _saturationMatrix(1.5);
-
   /// Calculates the blur sigma from a 10..100 percent setting.
   static double getSigma(double percent) {
     final intensity = (percent.clamp(10.0, 100.0)) / 100.0;
-    return (intensity * 18.0).clamp(1.0, 18.0);
+    return (intensity * 10.0).clamp(1.0, 10.0);
   }
 
   /// Calculates the translucent background color from a 10..100 percent setting.
@@ -53,8 +28,8 @@ class GlassEffect {
     if (!enabled) return color;
 
     final intensity = (percent.clamp(10.0, 100.0)) / 100.0;
-    final baseAlpha = (0.76 - (intensity * 0.14)).clamp(0.55, 0.85);
-    final alpha = isDark ? baseAlpha : (baseAlpha - 0.05).clamp(0.48, 0.82);
+    final baseAlpha = (0.76 + (intensity * 0.14)).clamp(0.68, 0.90);
+    final alpha = isDark ? baseAlpha : (baseAlpha - 0.05).clamp(0.55, 0.88);
     return color.withValues(alpha: alpha);
   }
 
@@ -117,30 +92,10 @@ class GlassEffect {
     }
 
     final sigma = getSigma(percent);
-    final theme = Theme.of(context);
-    final primary = MiuixTheme.maybeOf(context)?.colors.primary ?? theme.colorScheme.primary;
-    final secondary =
-        MiuixTheme.maybeOf(context)?.colors.secondary ?? theme.colorScheme.secondary;
-    final isMonochrome = (primary == Colors.black ||
-            primary == Colors.white ||
-            primary == const Color(0xFF000000) ||
-            primary == const Color(0xFFFFFFFF)) &&
-        primary.computeLuminance() == secondary.computeLuminance();
-
-    final ImageFilter filter = isMonochrome
-        ? ImageFilter.blur(
-            sigmaX: sigma,
-            sigmaY: sigma,
-            tileMode: TileMode.mirror,
-          )
-        : ImageFilter.compose(
-            outer: _saturationFilter,
-            inner: ImageFilter.blur(
-              sigmaX: sigma,
-              sigmaY: sigma,
-              tileMode: TileMode.mirror,
-            ),
-          );
+    final ImageFilter filter = ImageFilter.blur(
+      sigmaX: sigma,
+      sigmaY: sigma,
+    );
 
     if (shape != null) {
       return ClipPath(

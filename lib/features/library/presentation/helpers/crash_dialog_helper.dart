@@ -63,7 +63,7 @@ class CrashDialogHelper {
                 );
               },
               icon: MiuixIcon(vector: MiuixIcons.os4.copy, size: 18),
-              child: Text(l10n.copyDetails),
+              child: const Text('Copy'),
             ),
           ],
         );

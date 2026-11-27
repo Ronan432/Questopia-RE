@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_miuix/miuix.dart';
-import 'package:material_segmented_list/material_segmented_list.dart';
 
 import '../helpers/sheet_helper.dart';
 import '../l10n/app_localizations.dart';
@@ -15,12 +14,15 @@ Future<void> showPosterMenuSheet({
   String languageCode = 'en',
 }) {
   final service = mediaService ?? MediaService();
+  final l10n = AppLocalizations.of(context)!;
   return showQuestopiaSheet<void>(
     context: context,
+    title: l10n.imageOptions,
     showDragHandle: true,
     builder: (sheetContext) {
-      final colors = Theme.of(sheetContext).colorScheme;
-      final l10n = AppLocalizations.of(sheetContext)!;
+      final miuix = MiuixTheme.of(sheetContext);
+      final colors = miuix.colors;
+      final sheetL10n = AppLocalizations.of(sheetContext)!;
       Future<void> run(
         Future<bool> Function() action,
         String ok,
@@ -42,72 +44,85 @@ Future<void> showPosterMenuSheet({
         return Image.file(File(imageUri), fit: BoxFit.cover);
       }
 
+      const rowMargin = EdgeInsets.symmetric(horizontal: 14, vertical: 12);
+
       return Padding(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 4, bottom: 16),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                decoration: BoxDecoration(
-                  color: colors.secondaryContainer.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  l10n.imageOptions,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: colors.onSecondaryContainer,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-              ),
-            ),
             ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               child: Container(
                 constraints: const BoxConstraints(maxHeight: 200),
-                color: colors.surfaceContainerHighest,
+                color: colors.surfaceContainerHigh,
                 child: buildPreview(),
               ),
             ),
-            const SizedBox(height: 16),
-            SegmentedListSection(
-              children: [
-                SegmentedListTile(
-                  leading: MiuixIcon(vector: MiuixIcons.os4.copy, size: 20),
-                  title: Text(l10n.copyImage),
-                  onTap: () => run(
-                    () => service.copyImage(imageUri),
-                    l10n.imageReferenceCopied,
-                    l10n.couldNotCopyImage,
+            const SizedBox(height: 14),
+            // One seamless card, the same shape the settings rows use.
+            MiuixCard(
+              cornerRadius: 20,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  MiuixBasicComponent(
+                    title: sheetL10n.copyImage,
+                    insideMargin: rowMargin,
+                    startAction: Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: Icon(
+                        Icons.copy_rounded,
+                        size: 20,
+                        color: colors.onSurfaceVariantActions,
+                      ),
+                    ),
+                    onClick: () => run(
+                      () => service.copyImage(imageUri),
+                      sheetL10n.imageReferenceCopied,
+                      sheetL10n.couldNotCopyImage,
+                    ),
                   ),
-                ),
-                SegmentedListTile(
-                  leading: MiuixIcon(vector: MiuixIcons.os4.download, size: 20),
-                  title: Text(l10n.saveToGallery),
-                  onTap: () => run(
-                    () => service.saveToGallery(imageUri),
-                    l10n.imageSavedToGallery,
-                    l10n.couldNotSaveImage,
+                  MiuixBasicComponent(
+                    title: sheetL10n.saveToGallery,
+                    insideMargin: rowMargin,
+                    startAction: Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: Icon(
+                        Icons.download_rounded,
+                        size: 20,
+                        color: colors.onSurfaceVariantActions,
+                      ),
+                    ),
+                    onClick: () => run(
+                      () => service.saveToGallery(imageUri),
+                      sheetL10n.imageSavedToGallery,
+                      sheetL10n.couldNotSaveImage,
+                    ),
                   ),
-                ),
-                SegmentedListTile(
-                  leading: MiuixIcon(vector: MiuixIcons.basic.search, size: 20),
-                  title: Text(l10n.searchImageOnYandex),
-                  onTap: () => run(
-                    () => service.searchImage(imageUri, languageCode: languageCode),
-                    l10n.openingYandexSearch,
-                    l10n.couldNotOpenYandexSearch,
+                  MiuixBasicComponent(
+                    title: sheetL10n.searchImageOnYandex,
+                    insideMargin: rowMargin,
+                    startAction: Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: Icon(
+                        Icons.image_search_rounded,
+                        size: 20,
+                        color: colors.onSurfaceVariantActions,
+                      ),
+                    ),
+                    onClick: () => run(
+                      () => service.searchImage(
+                        imageUri,
+                        languageCode: languageCode,
+                      ),
+                      sheetL10n.openingYandexSearch,
+                      sheetL10n.couldNotOpenYandexSearch,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

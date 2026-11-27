@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_miuix/miuix.dart';
-import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:material_segmented_list/material_segmented_list.dart';
 
 import '../../../../../core/helpers/sheet_ui_helper.dart';
 import '../../../../../core/l10n/app_localizations.dart';
@@ -23,6 +20,8 @@ class CheatTeleportView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final miuix = MiuixTheme.of(context);
+    final miuixColors = miuix.colors;
     final l10n = AppLocalizations.of(context)!;
 
     return SingleChildScrollView(
@@ -31,9 +30,11 @@ class CheatTeleportView extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.all(4),
-            child: Text(
+            child: MiuixText(
               l10n.jumpToLocationHint,
-              style: TextStyle(color: colors.onSurfaceVariant),
+              style: miuix.textStyles.body2.copyWith(
+                color: miuixColors.onSurfaceSecondary,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -41,9 +42,10 @@ class CheatTeleportView extends StatelessWidget {
             controller: controller,
             decoration: InputDecoration(
               hintText: l10n.locationNameHint,
-              prefixIcon: Padding(
-                padding: const EdgeInsets.all(12),
-                child: MiuixIcon(vector: MiuixIcons.os4.location, size: 18),
+              prefixIcon: Icon(
+                Icons.location_on_rounded,
+                size: 18,
+                color: miuixColors.onSurfaceVariantActions,
               ),
               filled: true,
               fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.5),
@@ -56,13 +58,27 @@ class CheatTeleportView extends StatelessWidget {
             onSubmitted: onTeleport,
           ),
           const SizedBox(height: 16),
-          M3EButton.icon(
+          MiuixButton(
             onPressed: () => onTeleport(controller.text),
-            icon: MiuixIcon(vector: MiuixIcons.os4.location, size: 18),
-            label: Text(l10n.teleport),
-            style: M3EButtonStyle.filled,
-            size: M3EButtonSize.md,
-            shape: M3EButtonShape.round,
+            colors: MiuixButtonDefaults.buttonColorsPrimary(context),
+            cornerRadius: 16,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.location_on_rounded,
+                  size: 18,
+                  color: miuixColors.onPrimary,
+                ),
+                const SizedBox(width: 8),
+                MiuixText(
+                  l10n.teleport,
+                  style: miuix.textStyles.button.copyWith(
+                    color: miuixColors.onPrimary,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -88,6 +104,8 @@ class CheatInventoryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final miuix = MiuixTheme.of(context);
+    final miuixColors = miuix.colors;
     final l10n = AppLocalizations.of(context)!;
     final objects = engineState.gameState.objects;
 
@@ -100,9 +118,10 @@ class CheatInventoryView extends StatelessWidget {
                 controller: itemController,
                 decoration: InputDecoration(
                   hintText: l10n.newItemNameHint,
-                  prefixIcon: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: MiuixIcon(vector: MiuixIcons.os4.add, size: 18),
+                  prefixIcon: Icon(
+                    Icons.add_rounded,
+                    size: 18,
+                    color: miuixColors.onSurfaceVariantActions,
                   ),
                   isDense: true,
                   filled: true,
@@ -117,13 +136,33 @@ class CheatInventoryView extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            M3EButton.icon(
+            MiuixButton(
               onPressed: () => onAddItem(itemController.text),
-              icon: MiuixIcon(vector: MiuixIcons.os4.add, size: 18),
-              label: Text(l10n.add),
-              style: M3EButtonStyle.filled,
-              size: M3EButtonSize.sm,
-              shape: M3EButtonShape.round,
+              minHeight: 40,
+              cornerRadius: 14,
+              insideMargin: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 8,
+              ),
+              colors: MiuixButtonDefaults.buttonColorsPrimary(context),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.add_rounded,
+                    size: 18,
+                    color: miuixColors.onPrimary,
+                  ),
+                  const SizedBox(width: 6),
+                  MiuixText(
+                    l10n.add,
+                    style: miuix.textStyles.footnote1.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: miuixColors.onPrimary,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -131,41 +170,61 @@ class CheatInventoryView extends StatelessWidget {
         Expanded(
           child: objects.isEmpty
               ? QuestopiaSheetEmptyState(
-                  miuixVectorIcon: MiuixIcons.os4.layers,
+                  icon: Icons.inventory_2_rounded,
                   message: l10n.inventoryIsEmpty,
                 )
               : ListView(
                   children: [
-                    SegmentedListSection(
-                      children: [
-                        for (final item in objects)
-                          SegmentedListTile(
-                            leading: MiuixIcon(
-                              vector: MiuixIcons.os4.layers,
-                              tint: colors.primary,
-                              size: 20,
-                            ),
-                            title: Text(item.name,
-                                style: const TextStyle(fontWeight: FontWeight.w600)),
-                            trailing: IconButton(
-                              tooltip: l10n.remove,
-                              icon: MiuixIcon(
-                                vector: MiuixIcons.os4.delete,
-                                tint: colors.error,
-                                size: 20,
+                    MiuixCard(
+                      cornerRadius: 20,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (var i = 0; i < objects.length; i++) ...[
+                            if (i > 0)
+                              const Padding(
+                                padding: EdgeInsets.only(left: 48),
+                                child: MiuixHorizontalDivider(),
                               ),
-                              onPressed: () {
-                                final ok = notifier.removeItem(item.name);
-                                if (!ok) {
-                                  showSheetSnackBar(
-                                    context,
-                                    l10n.couldNotRemoveItem,
-                                  );
-                                }
-                              },
+                            MiuixBasicComponent(
+                              title: objects[i].name,
+                              insideMargin: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 11,
+                              ),
+                              startAction: Padding(
+                                padding: const EdgeInsets.only(right: 12),
+                                child: Icon(
+                                  Icons.inventory_2_rounded,
+                                  color: colors.primary,
+                                  size: 20,
+                                ),
+                              ),
+                              endActions: [
+                                IconButton(
+                                  tooltip: l10n.remove,
+                                  visualDensity: VisualDensity.compact,
+                                  icon: Icon(
+                                    Icons.delete_outline_rounded,
+                                    color: colors.error,
+                                    size: 20,
+                                  ),
+                                  onPressed: () {
+                                    final ok =
+                                        notifier.removeItem(objects[i].name);
+                                    if (!ok) {
+                                      showSheetSnackBar(
+                                        context,
+                                        l10n.couldNotRemoveItem,
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
                             ),
-                          ),
-                      ],
+                          ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -191,21 +250,17 @@ class CheatConsoleView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final miuix = MiuixTheme.of(context);
+    final miuixColors = miuix.colors;
     final l10n = AppLocalizations.of(context)!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: colors.surfaceContainerHighest.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: colors.outlineVariant.withValues(alpha: 0.3),
-              ),
-            ),
+          child: MiuixCard(
+            cornerRadius: 20,
+            insideMargin: const EdgeInsets.all(14),
             child: SingleChildScrollView(
               child: Text(
                 consoleOutput.isEmpty ? l10n.qspConsoleReady : consoleOutput,
@@ -238,13 +293,33 @@ class CheatConsoleView extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            M3EButton.icon(
+            MiuixButton(
               onPressed: onRunConsole,
-              icon: MiuixIcon(vector: MiuixIcons.os4.play, size: 18),
-              label: Text(l10n.run),
-              style: M3EButtonStyle.filled,
-              size: M3EButtonSize.sm,
-              shape: M3EButtonShape.round,
+              minHeight: 40,
+              cornerRadius: 14,
+              insideMargin: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 8,
+              ),
+              colors: MiuixButtonDefaults.buttonColorsPrimary(context),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.play_arrow_rounded,
+                    size: 18,
+                    color: miuixColors.onPrimary,
+                  ),
+                  const SizedBox(width: 6),
+                  MiuixText(
+                    l10n.run,
+                    style: miuix.textStyles.footnote1.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: miuixColors.onPrimary,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/helpers/platform_helper.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/theme/miuix_design.dart';
+import '../../../core/widgets/window_title_bar.dart';
 import 'widgets/onboarding_basic_steps.dart';
 import 'widgets/onboarding_behavior_step.dart';
 import 'widgets/onboarding_style_steps.dart';
@@ -85,24 +87,54 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       child: Builder(
         builder: (miuixCtx) {
           final miuix = MiuixTheme.of(miuixCtx);
-          return MiuixScaffold(
+          final scaffold = MiuixScaffold(
             content: (padding) => SafeArea(
-              child: Column(
+              child: Stack(
                 children: [
-                  _buildProgressRow(miuix, l10n),
-                  Expanded(
-                    child: PageView(
-                      controller: _pageController,
-                      physics: const ClampingScrollPhysics(),
-                      onPageChanged: (index) =>
-                          setState(() => _currentStep = index),
-                      children: _buildSteps(settings),
-                    ),
+                  Column(
+                    children: [
+                      _buildProgressRow(miuix, l10n),
+                      Expanded(
+                        child: PageView(
+                          controller: _pageController,
+                          physics: const ClampingScrollPhysics(),
+                          onPageChanged: (index) =>
+                              setState(() => _currentStep = index),
+                          children: _buildSteps(settings),
+                        ),
+                      ),
+                    ],
                   ),
-                  _buildNavigationRow(miuixCtx, miuix, l10n, isLastStep),
+                  // The step arrows float in the vertical center of each side
+                  // instead of sitting in a bottom button row.
+                  if (_currentStep > 0)
+                    _SideArrow(
+                      alignment: Alignment.centerLeft,
+                      icon: MiuixIcons.os4.back,
+                      tooltip: l10n.prev,
+                      onPressed: () => _goTo(_currentStep - 1),
+                    ),
+                  _SideArrow(
+                    alignment: Alignment.centerRight,
+                    icon: isLastStep
+                        ? MiuixIcons.basic.check
+                        : MiuixIcons.os4.forward,
+                    tooltip: isLastStep ? l10n.getStarted : l10n.next,
+                    onPressed:
+                        isLastStep ? _finish : () => _goTo(_currentStep + 1),
+                  ),
                 ],
               ),
             ),
+          );
+          if (!isDesktopPlatform) return scaffold;
+          // The desktop window hides the native title bar, so the first run
+          // flow needs the same draggable window row as the main shell.
+          return Column(
+            children: [
+              const WindowTitleBar(),
+              Expanded(child: scaffold),
+            ],
           );
         },
       ),
@@ -142,59 +174,38 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ),
     );
   }
+}
 
-  Widget _buildNavigationRow(
-    BuildContext context,
-    MiuixThemeData miuix,
-    AppLocalizations l10n,
-    bool isLastStep,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Row(
-        children: [
-          if (_currentStep > 0)
-            MiuixButton(
-              onPressed: () => _goTo(_currentStep - 1),
-              minHeight: 38,
-              insideMargin:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  MiuixIcon(
-                    vector: MiuixIcons.os4.back,
-                    size: 16,
-                    tint: miuix.colors.onSecondary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(l10n.prev),
-                ],
-              ),
-            ),
-          const Spacer(),
-          MiuixButton(
-            onPressed: isLastStep ? _finish : () => _goTo(_currentStep + 1),
-            colors: MiuixButtonDefaults.buttonColorsPrimary(context),
-            minHeight: 38,
-            insideMargin:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(isLastStep ? l10n.getStarted : l10n.next),
-                const SizedBox(width: 6),
-                MiuixIcon(
-                  vector: isLastStep
-                      ? MiuixIcons.basic.check
-                      : MiuixIcons.basic.arrowRight,
-                  size: 16,
-                  tint: miuix.colors.onPrimary,
-                ),
-              ],
-            ),
+/// A single page arrow pinned to the vertical center of one side.
+class _SideArrow extends StatelessWidget {
+  const _SideArrow({
+    required this.alignment,
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final Alignment alignment;
+  final MiuixVectorIcon icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: alignment,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: MiuixIconButton(
+          onPressed: onPressed,
+          minWidth: 44,
+          minHeight: 44,
+          child: MiuixIcon(
+            vector: icon,
+            size: 24,
+            contentDescription: tooltip,
           ),
-        ],
+        ),
       ),
     );
   }
@@ -211,26 +222,19 @@ class OnboardingFinishStep extends StatelessWidget {
     final colors = miuix.colors;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
+          constraints: const BoxConstraints(maxWidth: 560),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 88,
-                height: 88,
-                decoration: BoxDecoration(
-                  color: colors.primaryContainer,
-                  shape: BoxShape.circle,
-                ),
-                child: MiuixIcon(
-                  vector: MiuixIcons.basic.check,
-                  size: 44,
-                  tint: colors.onPrimaryContainer,
-                ),
+              MiuixIcon(
+                vector: MiuixIcons.basic.check,
+                size: 40,
+                tint: colors.primary,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 14),
               MiuixText(
                 l10n.onboardingFinishTitle,
                 textAlign: TextAlign.center,
@@ -239,7 +243,7 @@ class OnboardingFinishStep extends StatelessWidget {
                   color: colors.onSurface,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               MiuixText(
                 l10n.onboardingFinishBody,
                 textAlign: TextAlign.center,

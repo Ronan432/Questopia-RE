@@ -95,7 +95,7 @@ class GameMenuDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final miuixColors = MiuixTheme.of(context).colors;
     final l10n = AppLocalizations.of(context)!;
 
     return QuestopiaDialog(
@@ -103,9 +103,9 @@ class GameMenuDialog extends StatelessWidget {
       content: SizedBox(
         width: double.maxFinite,
         child: items.isEmpty
-            ? Text(
+            ? MiuixText(
                 l10n.noOptions,
-                style: TextStyle(color: colors.onSurfaceVariant),
+                style: TextStyle(color: miuixColors.onSurfaceVariantSummary),
               )
             : ListView.builder(
                 shrinkWrap: true,
@@ -118,23 +118,24 @@ class GameMenuDialog extends StatelessWidget {
                         '',
                       )
                       .trim();
-                  return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    title: Text(
-                      cleanTitle.isNotEmpty ? cleanTitle : items[index].name,
-                      style: TextStyle(
-                        color: colors.onSurface,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 15,
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: MiuixCard(
+                      cornerRadius: 16,
+                      insideMargin: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      onPressed: () => onSelect(index),
+                      child: MiuixText(
+                        cleanTitle.isNotEmpty ? cleanTitle : items[index].name,
+                        style: TextStyle(
+                          color: miuixColors.onSurface,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 15,
+                        ),
                       ),
                     ),
-                    onTap: () => onSelect(index),
                   );
                 },
               ),

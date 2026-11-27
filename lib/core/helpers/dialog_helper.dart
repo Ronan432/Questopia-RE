@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_miuix/miuix.dart';
 
@@ -7,60 +5,120 @@ import '../l10n/app_localizations.dart';
 
 export '../widgets/questopia_morph_button.dart';
 
-/// Shows a unified Miuix modal dialog with scale/fade and backdrop blur.
+/// Shows a declarative Compose-Miuix [MiuixOverlayDialog] hosted inside a
+/// transparent route so existing `Navigator.pop` callers work unchanged.
 Future<T?> showQuestopiaDialog<T>({
   required BuildContext context,
   required WidgetBuilder builder,
   bool barrierDismissible = true,
   bool useRootNavigator = true,
 }) {
-  final capturedThemes =
-      InheritedTheme.capture(from: context, to: Navigator.of(context).context);
-  final barrierLabel = AppLocalizations.of(context)?.dismiss ?? 'Dismiss';
+  final capturedThemes = InheritedTheme.capture(
+    from: context,
+    to: Navigator.of(context, rootNavigator: useRootNavigator).context,
+  );
 
-  return showGeneralDialog<T>(
-    context: context,
-    barrierDismissible: barrierDismissible,
-    barrierLabel: barrierLabel,
-    barrierColor: Colors.black.withValues(alpha: 0.50),
-    useRootNavigator: useRootNavigator,
-    transitionDuration: const Duration(milliseconds: 220),
-    pageBuilder: (dialogContext, animation, secondaryAnimation) {
-      return capturedThemes.wrap(builder(dialogContext));
-    },
-    transitionBuilder: (dialogContext, animation, secondaryAnimation, child) {
-      final curvedAnimation = CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutCubic,
-        reverseCurve: Curves.easeInCubic,
-      );
-
-      return FadeTransition(
-        opacity: curvedAnimation,
-        child: AnimatedBuilder(
-          animation: curvedAnimation,
-          builder: (context, _) {
-            final scale =
-                lerpDouble(0.92, 1.0, curvedAnimation.value) ?? 1.0;
-            final sigma = curvedAnimation.value * 8.0;
-
-            return BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
-              child: Center(
-                child: Transform.scale(
-                  scale: scale,
-                  child: child,
-                ),
-              ),
-            );
-          },
-        ),
-      );
-    },
+  return Navigator.of(context, rootNavigator: useRootNavigator).push<T>(
+    _MiuixOverlayDialogRoute<T>(
+      capturedThemes: capturedThemes,
+      builder: builder,
+      barrierDismissible: barrierDismissible,
+    ),
   );
 }
 
-/// Unified Miuix modal dialog frame with squircle geometry.
+class _MiuixOverlayDialogRoute<T> extends PageRoute<T> {
+  _MiuixOverlayDialogRoute({
+    required this.capturedThemes,
+    required this.builder,
+    required this.barrierDismissible,
+  });
+
+  final CapturedThemes capturedThemes;
+  final WidgetBuilder builder;
+  @override
+  final bool barrierDismissible;
+
+  final ValueNotifier<bool> _showNotifier = ValueNotifier<bool>(false);
+  bool _disposed = false;
+
+  @override
+  bool get opaque => false;
+  @override
+  Color? get barrierColor => null;
+  @override
+  String? get barrierLabel => null;
+  @override
+  bool get maintainState => true;
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 300);
+  @override
+  Duration get reverseTransitionDuration => const Duration(milliseconds: 220);
+
+  @override
+  TickerFuture didPush() {
+    final future = super.didPush();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_disposed) _showNotifier.value = true;
+    });
+    return future;
+  }
+
+  @override
+  bool didPop(T? result) {
+    _showNotifier.value = false;
+    return super.didPop(result);
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _showNotifier.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget buildTransitions(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) =>
+      child;
+
+  @override
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) {
+    return capturedThemes.wrap(
+      MiuixPopupScope(
+        establishRoot: true,
+        child: Stack(
+          children: [
+            ValueListenableBuilder<bool>(
+              valueListenable: _showNotifier,
+              builder: (hostCtx, show, _) {
+                return MiuixOverlayDialog(
+                  show: show,
+                  insideMargin: const Size(20, 20),
+                  onDismissRequest: barrierDismissible
+                      ? () => Navigator.of(hostCtx).maybePop()
+                      : null,
+                  content: Builder(builder: builder),
+                );
+              },
+            ),
+            const MiuixPopupHost(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Unified Miuix modal dialog content frame hosted inside [MiuixOverlayDialog].
 class QuestopiaDialog extends StatelessWidget {
   const QuestopiaDialog({
     super.key,
@@ -82,8 +140,6 @@ class QuestopiaDialog extends StatelessWidget {
     final miuix = MiuixTheme.maybeOf(context);
     final colors = miuix?.colors;
     final themeColors = Theme.of(context).colorScheme;
-    final bg = colors?.surfaceContainer ?? themeColors.surfaceContainer;
-    final outline = colors?.outline ?? themeColors.outlineVariant;
     final onSurface = colors?.onSurface ?? themeColors.onSurface;
     final primary = colors?.primary ?? themeColors.primary;
 
@@ -92,70 +148,60 @@ class QuestopiaDialog extends StatelessWidget {
         maxWidth: maxWidth,
         minWidth: 260,
       ),
-      child: Material(
-        color: bg,
-        elevation: 8,
-        shadowColor: Colors.black.withValues(alpha: 0.32),
-        shape: MiuixSquircleBorder(
-          cornerRadius: 24,
-          side: BorderSide(
-            color: outline.withValues(alpha: 0.24),
-            width: 0.75,
-          ),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (icon != null) ...[
-                Align(
-                  alignment: Alignment.center,
-                  child: IconTheme(
-                    data: IconThemeData(
-                      size: 26,
-                      color: primary,
-                    ),
-                    child: icon!,
-                  ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (icon != null) ...[
+            Align(
+              alignment: Alignment.center,
+              child: IconTheme(
+                data: IconThemeData(
+                  size: 26,
+                  color: primary,
                 ),
-                const SizedBox(height: 12),
-              ],
-              if (title != null) ...[
-                DefaultTextStyle(
-                  style: (miuix?.textStyles.title4 ?? const TextStyle(fontSize: 17))
-                      .copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: onSurface,
-                  ),
-                  textAlign:
-                      icon != null ? TextAlign.center : TextAlign.start,
-                  child: title!,
-                ),
-                const SizedBox(height: 10),
-              ],
-              Flexible(
-                child: SingleChildScrollView(
-                  child: content,
-                ),
+                child: icon!,
               ),
-              if (actions != null && actions!.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    for (var i = 0; i < actions!.length; i++) ...[
-                      if (i > 0) const SizedBox(width: 8),
-                      actions![i],
-                    ],
-                  ],
-                ),
-              ],
-            ],
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (title != null) ...[
+            DefaultTextStyle(
+              style: (miuix?.textStyles.title4 ?? const TextStyle(fontSize: 17))
+                  .copyWith(
+                fontWeight: FontWeight.w600,
+                color: onSurface,
+              ),
+              textAlign: TextAlign.center,
+              child: title!,
+            ),
+            const SizedBox(height: 12),
+          ],
+          // The hosting Miuix dialog measures its children with an unbounded
+          // main axis, so a Flexible child cannot shrink there and a long
+          // message overflows the panel. A bounded scroll area keeps any
+          // content inside the dialog.
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight:
+                  (MediaQuery.sizeOf(context).height * 0.3).clamp(120.0, 340.0),
+            ),
+            child: SingleChildScrollView(
+              child: content,
+            ),
           ),
-        ),
+          if (actions != null && actions!.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                for (var i = 0; i < actions!.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 12),
+                  Expanded(child: actions![i]),
+                ],
+              ],
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -223,26 +269,14 @@ class QuestopiaConfirmationDialog extends StatelessWidget {
       ),
       actions: [
         MiuixButton(
-          onPressed: () {
-            if (onCancel != null) {
-              onCancel!();
-            } else {
-              Navigator.of(context).pop(false);
-            }
-          },
-          minHeight: 38,
-          insideMargin:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          onPressed: onCancel ?? () => Navigator.of(context).pop(false),
+          minHeight: 46,
+          cornerRadius: 16,
+          insideMargin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           child: Text(resolvedCancelLabel),
         ),
         MiuixButton(
-          onPressed: () {
-            if (onConfirm != null) {
-              onConfirm!();
-            } else {
-              Navigator.of(context).pop(true);
-            }
-          },
+          onPressed: onConfirm ?? () => Navigator.of(context).pop(true),
           colors: isDestructive
               ? MiuixButtonColors(
                   color: error,
@@ -253,9 +287,9 @@ class QuestopiaConfirmationDialog extends StatelessWidget {
                           .withValues(alpha: 0.38),
                 )
               : MiuixButtonDefaults.buttonColorsPrimary(context),
-          minHeight: 38,
-          insideMargin:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          minHeight: 46,
+          cornerRadius: 16,
+          insideMargin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           child: Text(resolvedConfirmLabel),
         ),
       ],

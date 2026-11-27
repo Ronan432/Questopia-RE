@@ -9,6 +9,7 @@ class WindowTitleBar extends StatefulWidget implements PreferredSizeWidget {
     super.key,
     this.title,
     this.leading,
+    this.leadingWidth = 40,
     this.titleWidget,
     this.actions,
   });
@@ -16,6 +17,10 @@ class WindowTitleBar extends StatefulWidget implements PreferredSizeWidget {
   /// Window title override; falls back to the localized application title.
   final String? title;
   final Widget? leading;
+
+  /// Width reserved for [leading]. A desktop layout sets it to the width of
+  /// the navigation rail so the application mark lines up with the rail.
+  final double leadingWidth;
   final Widget? titleWidget;
   final List<Widget>? actions;
 
@@ -76,7 +81,7 @@ class _WindowTitleBarState extends State<WindowTitleBar> with WindowListener {
           if (widget.leading != null)
             SizedBox(
               height: 40,
-              width: 40,
+              width: widget.leadingWidth,
               child: Center(child: widget.leading),
             )
           else ...[

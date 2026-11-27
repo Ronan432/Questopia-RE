@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_miuix/miuix.dart';
-import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:material_segmented_list/material_segmented_list.dart';
 
 import '../../../../../core/helpers/sheet_ui_helper.dart';
 import '../../../../../core/l10n/app_localizations.dart';
@@ -31,6 +28,8 @@ class CheatVariablesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final miuix = MiuixTheme.of(context);
+    final miuixColors = miuix.colors;
     final l10n = AppLocalizations.of(context)!;
     final query = searchController.text.trim().toLowerCase();
     final vars = query.isEmpty
@@ -48,9 +47,10 @@ class CheatVariablesView extends StatelessWidget {
                 controller: addVarController,
                 decoration: InputDecoration(
                   hintText: l10n.addVariableHint,
-                  prefixIcon: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: MiuixIcon(vector: MiuixIcons.os4.add, size: 18),
+                  prefixIcon: Icon(
+                    Icons.add_rounded,
+                    size: 18,
+                    color: miuixColors.onSurfaceVariantActions,
                   ),
                   isDense: true,
                   filled: true,
@@ -68,17 +68,44 @@ class CheatVariablesView extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            M3EButton.icon(
-              tooltip: l10n.scanAllVariables,
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                notifier.refresh();
-              },
-              icon: MiuixIcon(vector: MiuixIcons.os4.refresh, size: 18),
-              label: Text(l10n.scan),
-              style: M3EButtonStyle.tonal,
-              size: M3EButtonSize.sm,
-              shape: M3EButtonShape.round,
+            Tooltip(
+              message: l10n.scanAllVariables,
+              child: MiuixButton(
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  notifier.refresh();
+                },
+                minHeight: 40,
+                cornerRadius: 14,
+                insideMargin: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                colors: MiuixButtonColors(
+                  color: miuixColors.secondaryContainer,
+                  disabledColor: miuixColors.disabledSecondary,
+                  contentColor: miuixColors.onSecondaryContainer,
+                  disabledContentColor: miuixColors.disabledOnSecondary,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.refresh_rounded,
+                      size: 18,
+                      color: miuixColors.onSecondaryContainer,
+                    ),
+                    const SizedBox(width: 6),
+                    MiuixText(
+                      l10n.scan,
+                      style: miuix.textStyles.footnote1.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: miuixColors.onSecondaryContainer,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -92,16 +119,32 @@ class CheatVariablesView extends StatelessWidget {
         Expanded(
           child: vars.isEmpty
               ? QuestopiaSheetEmptyState(
-                  miuixVectorIcon: MiuixIcons.basic.search,
+                  icon: Icons.search_rounded,
                   message: l10n.noVariablesFound,
                 )
               : ListView(
                   children: [
-                    SegmentedListSection(
-                      children: [
-                        for (final v in vars)
-                          _buildVarTile(context, v, cheat, notifier, colors),
-                      ],
+                    MiuixCard(
+                      cornerRadius: 20,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (var i = 0; i < vars.length; i++) ...[
+                            if (i > 0)
+                              const Padding(
+                                padding: EdgeInsets.only(left: 56),
+                                child: MiuixHorizontalDivider(),
+                              ),
+                            _buildVarTile(
+                              context,
+                              vars[i],
+                              cheat,
+                              notifier,
+                              colors,
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -110,7 +153,7 @@ class CheatVariablesView extends StatelessWidget {
     );
   }
 
-  SegmentedListTile _buildVarTile(
+  Widget _buildVarTile(
     BuildContext context,
     CheatVar v,
     CheatState cheat,
@@ -119,69 +162,61 @@ class CheatVariablesView extends StatelessWidget {
   ) {
     final l10n = AppLocalizations.of(context)!;
     final frozen = cheat.frozen.containsKey(v.name);
-    return SegmentedListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: (frozen ? colors.tertiaryContainer : colors.primaryContainer)
-              .withValues(alpha: 0.4),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: MiuixIcon(
-          vector: frozen
-              ? MiuixIcons.os4.lock
-              : (v.isNumeric ? MiuixIcons.os4.tune : MiuixIcons.os4.read),
-          size: 18,
-          tint: frozen ? colors.tertiary : colors.primary,
-        ),
-      ),
-      title: Text(
-        v.name,
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-      ),
-      subtitle: Text(
-        v.displayValue.isEmpty ? l10n.emptyStringValue : v.displayValue,
-        style: TextStyle(
-          color: colors.primary,
-          fontWeight: FontWeight.bold,
-          fontSize: 13,
-        ),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            tooltip: frozen ? l10n.unlock : l10n.lockValue,
-            icon: MiuixIcon(
-              vector: frozen ? MiuixIcons.os4.lock : MiuixIcons.os4.unlock,
-              size: 20,
-              tint: frozen ? colors.tertiary : null,
-            ),
-            onPressed: () {
-              HapticFeedback.selectionClick();
-              notifier.toggleFreeze(
-                v.name,
-                v.isNumeric ? v.numValue.toString() : "'${v.strValue}'",
-              );
-            },
+    return MiuixBasicComponent(
+      title: v.name,
+      summary: v.displayValue.isEmpty ? l10n.emptyStringValue : v.displayValue,
+      insideMargin: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      startAction: Padding(
+        padding: const EdgeInsets.only(right: 12),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: (frozen ? colors.tertiaryContainer : colors.primaryContainer)
+                .withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(10),
           ),
-          IconButton(
-            tooltip: l10n.editValue,
-            icon: MiuixIcon(vector: MiuixIcons.os4.edit, size: 20),
-            onPressed: () => onEditVar(v.name, v.displayValue),
+          child: Icon(
+            frozen
+                ? Icons.lock_rounded
+                : (v.isNumeric ? Icons.tune_rounded : Icons.article_rounded),
+            size: 18,
+            color: frozen ? colors.tertiary : colors.primary,
           ),
-          IconButton(
-            tooltip: l10n.remove,
-            icon: MiuixIcon(vector: MiuixIcons.os4.close, size: 20),
-            onPressed: () {
-              HapticFeedback.selectionClick();
-              notifier.removeWatch(v.name);
-            },
-          ),
-        ],
+        ),
       ),
+      endActions: [
+        IconButton(
+          tooltip: frozen ? l10n.unlock : l10n.lockValue,
+          visualDensity: VisualDensity.compact,
+          icon: Icon(
+            frozen ? Icons.lock_rounded : Icons.lock_open_rounded,
+            size: 20,
+            color: frozen ? colors.tertiary : null,
+          ),
+          onPressed: () {
+            HapticFeedback.selectionClick();
+            notifier.toggleFreeze(
+              v.name,
+              v.isNumeric ? v.numValue.toString() : "'${v.strValue}'",
+            );
+          },
+        ),
+        IconButton(
+          tooltip: l10n.editValue,
+          visualDensity: VisualDensity.compact,
+          icon: const Icon(Icons.edit_rounded, size: 20),
+          onPressed: () => onEditVar(v.name, v.displayValue),
+        ),
+        IconButton(
+          tooltip: l10n.remove,
+          visualDensity: VisualDensity.compact,
+          icon: const Icon(Icons.close_rounded, size: 20),
+          onPressed: () {
+            HapticFeedback.selectionClick();
+            notifier.removeWatch(v.name);
+          },
+        ),
+      ],
     );
   }
 }
@@ -203,34 +238,61 @@ class CheatLocksView extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     if (cheat.frozen.isEmpty) {
       return QuestopiaSheetEmptyState(
-        miuixVectorIcon: MiuixIcons.os4.unlock,
+        icon: Icons.lock_open_rounded,
         message: l10n.noLockedVariables,
       );
     }
     final entries = cheat.frozen.entries.toList();
     return ListView(
       children: [
-        SegmentedListSection(
-          children: [
-            for (final entry in entries)
-              SegmentedListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: colors.tertiaryContainer.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(8),
+        MiuixCard(
+          cornerRadius: 20,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < entries.length; i++) ...[
+                if (i > 0)
+                  const Padding(
+                    padding: EdgeInsets.only(left: 56),
+                    child: MiuixHorizontalDivider(),
                   ),
-                  child: MiuixIcon(vector: MiuixIcons.os4.lock, size: 18, tint: colors.tertiary),
+                MiuixBasicComponent(
+                  title: entries[i].key,
+                  summary: l10n.lockedTo(entries[i].value),
+                  insideMargin: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 11,
+                  ),
+                  startAction: Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: colors.tertiaryContainer.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.lock_rounded,
+                        size: 18,
+                        color: colors.tertiary,
+                      ),
+                    ),
+                  ),
+                  endActions: [
+                    IconButton(
+                      tooltip: l10n.unlock,
+                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(Icons.lock_open_rounded, size: 20),
+                      onPressed: () => notifier.toggleFreeze(
+                        entries[i].key,
+                        entries[i].value,
+                      ),
+                    ),
+                  ],
                 ),
-                title: Text(entry.key, style: const TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: Text(l10n.lockedTo(entry.value), style: TextStyle(color: colors.tertiary)),
-                trailing: IconButton(
-                  tooltip: l10n.unlock,
-                  icon: MiuixIcon(vector: MiuixIcons.os4.unlock, size: 20),
-                  onPressed: () => notifier.toggleFreeze(entry.key, entry.value),
-                ),
-              ),
-          ],
+              ],
+            ],
+          ),
         ),
       ],
     );
@@ -250,7 +312,7 @@ class CheatDiffView extends StatelessWidget {
     final diff = cheat.diff;
     if (!cheat.hasSnapshotSave || diff.isEmpty) {
       return QuestopiaSheetEmptyState(
-        miuixVectorIcon: MiuixIcons.os4.listView,
+        icon: Icons.compare_arrows_rounded,
         message: !cheat.hasSnapshotSave
             ? l10n.noSnapshotYet
             : l10n.noChangesSinceSnapshot,
@@ -258,18 +320,36 @@ class CheatDiffView extends StatelessWidget {
     }
     return ListView(
       children: [
-        SegmentedListSection(
-          children: [
-            for (final d in diff)
-              SegmentedListTile(
-                leading: MiuixIcon(vector: MiuixIcons.os4.listView, tint: colors.primary, size: 20),
-                title: Text(d.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: Text(
-                  '${d.before}  ->  ${d.after}',
-                  style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold),
+        MiuixCard(
+          cornerRadius: 20,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < diff.length; i++) ...[
+                if (i > 0)
+                  const Padding(
+                    padding: EdgeInsets.only(left: 48),
+                    child: MiuixHorizontalDivider(),
+                  ),
+                MiuixBasicComponent(
+                  title: diff[i].name,
+                  summary: '${diff[i].before}  ->  ${diff[i].after}',
+                  insideMargin: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 11,
+                  ),
+                  startAction: Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: Icon(
+                      Icons.compare_arrows_rounded,
+                      color: colors.primary,
+                      size: 20,
+                    ),
+                  ),
                 ),
-              ),
-          ],
+              ],
+            ],
+          ),
         ),
       ],
     );

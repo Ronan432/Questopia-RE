@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_miuix/miuix.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/providers/settings_provider.dart';
-import '../../../../core/theme/game_colors.dart';
 import '../../../settings/presentation/sheets/settings_picker_sheets.dart';
-import 'onboarding_option_card.dart';
+import '../../../settings/presentation/widgets/miuix_settings_tiles.dart';
 import 'onboarding_step_layout.dart';
 
-/// Accent color step: every entry of `kThemeColorOptions`, including the
-/// dynamic Material You palette.
+/// Accent color step: the accent dropdown row from the settings screen.
 class OnboardingAccentStep extends StatelessWidget {
   const OnboardingAccentStep({
     super.key,
@@ -23,42 +20,32 @@ class OnboardingAccentStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = Theme.of(context).colorScheme;
     final labels = SettingsPickerSheets.accentLabels(context);
+    final currentIndex = kThemeColorOptions.indexOf(settings.themeColor);
 
     return OnboardingStepLayout(
-      icon: MiuixIcons.os4.theme,
       title: l10n.onboardingAccentTitle,
       description: l10n.onboardingAccentBody,
-      child: Column(
+      child: MiuixSettingsGroup(
         children: [
-          for (final id in kThemeColorOptions)
-            OnboardingOptionCard(
-              title: labels[id] ?? id,
-              isSelected: settings.themeColor == id,
-              leading: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: SettingsPickerSheets.accentColors[id] ?? colors.primary,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: settings.themeColor == id
-                        ? colors.primary
-                        : colors.outlineVariant,
-                    width: settings.themeColor == id ? 3 : 1,
-                  ),
-                ),
-              ),
-              onTap: () => onChanged(id),
-            ),
+          miuixDropdownPreference(
+            context: context,
+            title: l10n.colorAccent,
+            iconName: 'theme',
+            items: [
+              for (final id in kThemeColorOptions) labels[id] ?? id,
+            ],
+            selectedIndex: currentIndex < 0 ? 0 : currentIndex,
+            onSelectedIndexChange: (index) =>
+                onChanged(kThemeColorOptions[index]),
+          ),
         ],
       ),
     );
   }
 }
 
-/// Reading experience step: game text size and the reading surface preset.
+/// Reading experience step: the text size slider and the reading theme row.
 class OnboardingReadingStep extends StatelessWidget {
   const OnboardingReadingStep({
     super.key,
@@ -74,80 +61,36 @@ class OnboardingReadingStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = Theme.of(context).colorScheme;
-    final brightness = Theme.of(context).brightness;
+    final currentIndex = kReadingThemeIds.indexOf(settings.readingTheme);
 
     return OnboardingStepLayout(
-      icon: MiuixIcons.os4.book,
       title: l10n.onboardingReadingTitle,
       description: l10n.onboardingReadingBody,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: MiuixSettingsGroup(
         children: [
-          MiuixCard(
-            insideMargin: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${l10n.onboardingReadingFontSize}: '
-                  '${settings.fontSize.toStringAsFixed(0)} pt',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: MiuixTheme.of(context).colors.primary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                MiuixSlider(
-                  value: settings.fontSize.clamp(12.0, 28.0),
-                  min: 12.0,
-                  max: 28.0,
-                  steps: 8,
-                  showKeyPoints: true,
-                  onValueChanged: onFontSizeChanged,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.livePreviewText,
-                  style: TextStyle(
-                    fontSize: settings.fontSize,
-                    color: MiuixTheme.of(context).colors.onSurface,
-                  ),
-                ),
-              ],
-            ),
+          miuixSliderPreference(
+            context: context,
+            title: l10n.onboardingReadingFontSize,
+            iconName: 'edit',
+            value: settings.fontSize.clamp(12.0, 28.0),
+            min: 12,
+            max: 28,
+            steps: 8,
+            valueText: '${settings.fontSize.toStringAsFixed(0)} pt',
+            onChanged: onFontSizeChanged,
           ),
-          const SizedBox(height: 16),
-          Text(
-            l10n.readingTheme,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: colors.onSurfaceVariant,
-            ),
+          miuixDropdownPreference(
+            context: context,
+            title: l10n.readingTheme,
+            iconName: 'book',
+            items: [
+              for (final id in kReadingThemeIds)
+                SettingsPickerSheets.readingThemeLabel(context, id),
+            ],
+            selectedIndex: currentIndex < 0 ? 0 : currentIndex,
+            onSelectedIndexChange: (index) =>
+                onReadingThemeChanged(kReadingThemeIds[index]),
           ),
-          const SizedBox(height: 8),
-          for (final id in kReadingThemeIds)
-            OnboardingOptionCard(
-              title: SettingsPickerSheets.readingThemeLabel(context, id),
-              isSelected: settings.readingTheme == id,
-              leading: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: ReadingThemeColors.background(id, brightness),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: settings.readingTheme == id
-                        ? colors.primary
-                        : colors.outlineVariant,
-                    width: settings.readingTheme == id ? 3 : 1,
-                  ),
-                ),
-              ),
-              onTap: () => onReadingThemeChanged(id),
-            ),
         ],
       ),
     );

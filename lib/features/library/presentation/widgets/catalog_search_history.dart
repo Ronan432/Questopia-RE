@@ -28,37 +28,43 @@ class CatalogSearchHistory extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final history = ref.watch(searchHistoryProvider);
     final notifier = ref.read(searchHistoryProvider.notifier);
-    final colors = Theme.of(context).colorScheme;
+    final miuix = MiuixTheme.of(context);
+    final miuixColors = miuix.colors;
     final l10n = AppLocalizations.of(context)!;
 
     // An empty history must not reserve any layout space at all.
     if (history.isEmpty) return const SizedBox.shrink();
 
-    return Material(
-      elevation: 3,
-      borderRadius: BorderRadius.circular(16),
-      color: colors.surfaceContainerHigh,
-      clipBehavior: Clip.antiAlias,
+    return MiuixCard(
+      cornerRadius: 20,
+      colors: MiuixCardColors(
+        color: miuixColors.surfaceContainerHigh,
+        contentColor: miuixColors.onSurface,
+      ),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(context, ref, l10n, colors),
-            const Divider(height: 1),
+            _buildHeader(context, ref, l10n, miuix, miuixColors),
+            const MiuixHorizontalDivider(),
             Flexible(
-              child: ListView.builder(
+              child: ListView.separated(
                 shrinkWrap: true,
                 padding: EdgeInsets.zero,
                 itemCount: history.queries.length,
+                separatorBuilder: (_, __) => const Padding(
+                  padding: EdgeInsets.only(left: 42),
+                  child: MiuixHorizontalDivider(),
+                ),
                 itemBuilder: (context, index) {
                   final query = history.queries[index];
                   return _buildEntry(
                     context,
                     query,
                     l10n,
-                    colors,
+                    miuixColors,
                     onRemove: () => notifier.remove(query),
                   );
                 },
@@ -75,30 +81,49 @@ class CatalogSearchHistory extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     AppLocalizations l10n,
-    ColorScheme colors,
+    MiuixThemeData miuix,
+    MiuixColors miuixColors,
   ) {
     return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 4, top: 4, bottom: 4),
+      padding: const EdgeInsets.only(left: 14, right: 8, top: 6, bottom: 6),
       child: Row(
         children: [
-          MiuixIcon(vector: MiuixIcons.os4.recent, size: 16, tint: colors.onSurfaceVariant),
+          Icon(
+            Icons.history_rounded,
+            size: 16,
+            color: miuixColors.onSurfaceVariantSummary,
+          ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
+            child: MiuixText(
               l10n.searchHistoryTitle,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: colors.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: miuix.textStyles.footnote1.copyWith(
+                color: miuixColors.onSurfaceVariantSummary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-          TextButton(
+          MiuixButton(
             onPressed: () => _confirmClear(context, ref, l10n),
-            style: TextButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
+            minHeight: 30,
+            cornerRadius: 12,
+            insideMargin: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 4,
             ),
-            child: Text(l10n.searchHistoryClearAll),
+            colors: MiuixButtonColors(
+              color: Colors.transparent,
+              disabledColor: Colors.transparent,
+              contentColor: miuixColors.primary,
+              disabledContentColor: miuixColors.disabledOnSecondary,
+            ),
+            child: MiuixText(
+              l10n.searchHistoryClearAll,
+              style: miuix.textStyles.footnote1.copyWith(
+                color: miuixColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -110,26 +135,33 @@ class CatalogSearchHistory extends ConsumerWidget {
     BuildContext context,
     String query,
     AppLocalizations l10n,
-    ColorScheme colors, {
+    MiuixColors miuixColors, {
     required VoidCallback onRemove,
   }) {
-    return ListTile(
-      dense: true,
-      visualDensity: VisualDensity.compact,
-      leading: MiuixIcon(vector: MiuixIcons.basic.search, size: 18, tint: colors.outline),
-      title: Text(
-        query,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontSize: 14, color: colors.onSurface),
+    return MiuixBasicComponent(
+      title: query,
+      insideMargin: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      startAction: Padding(
+        padding: const EdgeInsets.only(right: 10),
+        child: Icon(
+          Icons.history_rounded,
+          size: 18,
+          color: miuixColors.onSurfaceVariantActions,
+        ),
       ),
-      trailing: IconButton(
-        icon: MiuixIcon(vector: MiuixIcons.os4.close, size: 18, tint: colors.outline),
-        tooltip: l10n.searchHistoryRemove,
-        visualDensity: VisualDensity.compact,
-        onPressed: onRemove,
-      ),
-      onTap: () => onQuerySelected(query),
+      endActions: [
+        IconButton(
+          icon: Icon(
+            Icons.close_rounded,
+            size: 18,
+            color: miuixColors.onSurfaceVariantActions,
+          ),
+          tooltip: l10n.searchHistoryRemove,
+          visualDensity: VisualDensity.compact,
+          onPressed: onRemove,
+        ),
+      ],
+      onClick: () => onQuerySelected(query),
     );
   }
 
@@ -147,7 +179,7 @@ class CatalogSearchHistory extends ConsumerWidget {
         message: l10n.searchHistoryClearMessage,
         confirmLabel: l10n.searchHistoryClearAll,
         isDestructive: true,
-        miuixVectorIcon: MiuixIcons.os4.delete,
+        icon: Icons.delete_outline_rounded,
         onConfirm: () {
           Navigator.of(dialogContext).pop();
           notifier.clear();

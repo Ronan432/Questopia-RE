@@ -6,7 +6,6 @@ import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/helpers/dialog_helper.dart';
-import '../../../../core/helpers/sheet_helper.dart';
 import '../../../../core/helpers/sheet_ui_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../library/providers/play_session_tracker.dart';
@@ -253,10 +252,6 @@ class _NotesSheetState extends ConsumerState<NotesSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            QuestopiaSheetHeaderPill(
-              title: l10n.gameNotes,
-              miuixVectorIcon: MiuixIcons.os4.notes,
-            ),
             if (id == null)
               Expanded(
                 child: QuestopiaSheetEmptyState(
@@ -278,7 +273,7 @@ class _NotesSheetState extends ConsumerState<NotesSheet> {
     return <Widget>[
       Expanded(
         child: asyncTabs.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: MiuixCircularProgressIndicator()),
           error: (_, __) => QuestopiaSheetEmptyState(
             miuixVectorIcon: MiuixIcons.os4.report,
             message: l10n.noStatusInformation,

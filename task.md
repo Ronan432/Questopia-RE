@@ -193,11 +193,12 @@ Kabul kriteri: en az ayar secici sheet'leri ve katalog filtre sheet'i gercek
 - `lib/core/helpers/sheet_helper.dart`
 - `lib/features/game/presentation/game_screen.dart`
 - `task.md`
+- `miuix.md`
 
-## 7. Git Durumu
+## 7. Son Durum (27 Kasim 2026)
 
-- Yerel branch `master`; son commit `a35dd6fb` (Miuix arayuz yenilemesi).
-- Bu commit'in ardindan kullanici push edecek ve baska ajana devredecek.
-- Uzak depo: `https://github.com/Ronan432/Questopia-RE`
-- Not: oturumdaki `gh` hesabi `ByAyzen` sadece okuma yetkisine sahipti; push
-  denemesi 403 donuyordu. Push'u kullanici kendisi yapacak.
+- **Katalog & Ana Sayfa:** KoWSU tarzi 2 kartli bento (`Installed Games` yesil tik + `Favorites` kalp filigranli/kirmizi aktif), dairesel kalin `+` FAB, `MiuixCatalogGameRow` liste tasarimi, `IndexedStack` ile animasyonsuz/kaydirmasiz sekme gecisi.
+- **Arama & Ust Cubuk:** `SuperSearchBar.kt` kapsul arama (`SizedBox(height: 45)`, normal kalinlik `Cancel`), Katalog ve Ayarlar'da kaydirinca daralan ve sag ustte kalin arama ikonuna donusen baslik + `GlassEffect` blur.
+- **Ayarlar & Oyun Menuleri:** `SingleChildScrollView` + `Column` ile `MiuixOverlayDropdownPreference` dispose hatasi cozuldu; Envanter, Kayit Slotlari, Hile Motoru, Notlar ve Katalog Arama Gecmisi Miuix bilesenlerine gecirildi.
+- **Renderer:** `AndroidManifest.xml` icinde `EnableImpeller = false` (Skia) ayarlandi (yeni APK/cold run'da aktif olur).
+- **Dokumantasyon:** Tum Miuix mimarisi, tuzaklar ve bilesen eslesmeleri `miuix.md` dosyasina eklendi.

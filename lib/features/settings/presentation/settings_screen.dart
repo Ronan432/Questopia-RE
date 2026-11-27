@@ -16,9 +16,16 @@ import 'sections/typography_media_section.dart';
 
 /// Segmented expressive settings screen with horizontal category tabs and swipeable page views.
 class SettingsScreen extends ConsumerStatefulWidget {
-  const SettingsScreen({super.key, this.isInline = false});
+  const SettingsScreen({
+    super.key,
+    this.isInline = false,
+    this.searchQuery = '',
+    this.onScrollNotification,
+  });
 
   final bool isInline;
+  final String searchQuery;
+  final bool Function(ScrollNotification)? onScrollNotification;
 
   @override
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
@@ -92,7 +99,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
     if (shouldUseMiuixDesign(settings)) {
-      return MiuixSettingsScreen(isInline: widget.isInline);
+      return MiuixSettingsScreen(
+        isInline: widget.isInline,
+        searchQuery: widget.searchQuery,
+        onScrollNotification: widget.onScrollNotification,
+      );
     }
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;

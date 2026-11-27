@@ -146,6 +146,7 @@ class PathPickerHelper {
 
     final option = await showQuestopiaSheet<int>(
       context: context,
+      title: l10n.importGame,
       builder: (ctx) {
         final miuix = MiuixTheme.of(ctx);
         final colors = miuix.colors;
@@ -156,10 +157,6 @@ class PathPickerHelper {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              QuestopiaSheetHeaderPill(
-                title: l10n.importGame,
-                miuixVectorIcon: MiuixIcons.os4.add,
-              ),
               MiuixCard(
                 cornerRadius: 20,
                 child: Column(

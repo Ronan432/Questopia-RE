@@ -7,6 +7,28 @@ import '../providers/settings_provider.dart';
 
 bool shouldUseMiuixDesign(SettingsState settings) => true;
 
+/// Global scroll behavior matching Compose Miuix `overScrollVertical()` with
+/// elastic spring bounce and no Android stretch/glow overlay.
+class MiuixOverscrollScrollBehavior extends MaterialScrollBehavior {
+  const MiuixOverscrollScrollBehavior();
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const BouncingScrollPhysics(
+      parent: AlwaysScrollableScrollPhysics(),
+    );
+  }
+
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return child;
+  }
+}
+
 class MiuixDesignTheme extends ConsumerWidget {
   const MiuixDesignTheme({super.key, required this.child});
 
@@ -68,7 +90,6 @@ class MiuixDesignTheme extends ConsumerWidget {
           final baseTextStyle =
               (materialTheme.textTheme.bodyMedium ?? const TextStyle())
                   .copyWith(
-            fontFamily: 'MiSans',
             decoration: TextDecoration.none,
             color: colors.onSurface,
           );
@@ -92,9 +113,12 @@ class MiuixDesignTheme extends ConsumerWidget {
                 colorScheme: scheme,
                 splashFactory: NoSplash.splashFactory,
                 splashColor: Colors.transparent,
-                highlightColor: Colors.transparent,
-                hoverColor: Colors.transparent,
-                textTheme: materialTheme.textTheme.apply(fontFamily: 'MiSans'),
+                highlightColor: darkBrightness
+                    ? Colors.white.withValues(alpha: 0.14)
+                    : Colors.black.withValues(alpha: 0.08),
+                hoverColor: darkBrightness
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.05),
               ),
               child: DefaultTextStyle(
                 style: baseTextStyle,

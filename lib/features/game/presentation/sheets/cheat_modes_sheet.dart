@@ -4,7 +4,6 @@ import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/helpers/dialog_helper.dart';
-import '../../../../core/helpers/sheet_helper.dart';
 import '../../../../core/helpers/sheet_ui_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../providers/cheat_provider.dart';
@@ -37,13 +36,13 @@ class _CheatModesSheetState extends ConsumerState<CheatModesSheet> {
     'diff',
   ];
 
-  static final _tabIcons = [
-    MiuixIcons.os4.tune,
-    MiuixIcons.os4.lock,
-    MiuixIcons.os4.location,
-    MiuixIcons.os4.layers,
-    MiuixIcons.os4.memoryFunction,
-    MiuixIcons.os4.listView,
+  static const _tabIcons = [
+    Icons.tune_rounded,
+    Icons.lock_rounded,
+    Icons.location_on_rounded,
+    Icons.inventory_2_rounded,
+    Icons.terminal_rounded,
+    Icons.compare_arrows_rounded,
   ];
 
   /// Maps a tab index to its localized title.
@@ -81,14 +80,13 @@ class _CheatModesSheetState extends ConsumerState<CheatModesSheet> {
     final notifier = ref.read(cheatProvider.notifier);
     final engineState = ref.watch(gameEngineProvider);
     final l10n = AppLocalizations.of(context)!;
+    final miuix = MiuixTheme.of(context);
+    final miuixColors = miuix.colors;
 
     return QuestopiaSheetContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          QuestopiaSheetHeaderPill(title: l10n.cheatEngineAndEditor),
-          const SizedBox(height: 12),
-
           // Category Tabs Bar
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -96,19 +94,48 @@ class _CheatModesSheetState extends ConsumerState<CheatModesSheet> {
               children: [
                 for (var i = 0; i < _tabTitleKeys.length; i++) ...[
                   if (i > 0) const SizedBox(width: 8),
-                  ChoiceChip(
-                    showCheckmark: false,
-                    avatar: MiuixIcon(vector: _tabIcons[i], size: 16),
-                    label: Text(_localizedTabTitle(l10n, i)),
-                    selected: _activeTabIndex == i,
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(_activeTabIndex == i ? 24 : 8),
-                    ),
-                    onSelected: (_) {
+                  MiuixButton(
+                    onPressed: () {
                       HapticFeedback.lightImpact();
                       setState(() => _activeTabIndex = i);
                     },
+                    minHeight: 36,
+                    cornerRadius: _activeTabIndex == i ? 20 : 12,
+                    insideMargin: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    colors: _activeTabIndex == i
+                        ? MiuixButtonDefaults.buttonColorsPrimary(context)
+                        : MiuixButtonColors(
+                            color: miuixColors.surfaceContainerHigh,
+                            disabledColor: miuixColors.disabledSecondary,
+                            contentColor: miuixColors.onSurface,
+                            disabledContentColor:
+                                miuixColors.disabledOnSecondary,
+                          ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _tabIcons[i],
+                          size: 16,
+                          color: _activeTabIndex == i
+                              ? miuixColors.onPrimary
+                              : miuixColors.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        MiuixText(
+                          _localizedTabTitle(l10n, i),
+                          style: miuix.textStyles.footnote1.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: _activeTabIndex == i
+                                ? miuixColors.onPrimary
+                                : miuixColors.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ],
@@ -162,7 +189,7 @@ class _CheatModesSheetState extends ConsumerState<CheatModesSheet> {
     showQuestopiaDialog<void>(
       context: context,
       builder: (ctx) => QuestopiaDialog(
-        icon: MiuixIcon(vector: MiuixIcons.os4.edit, size: 20),
+        icon: Icon(Icons.edit_rounded, size: 20, color: colors.primary),
         title: Text(l10n.editVarTitle(varName)),
         content: TextField(
           controller: controller,

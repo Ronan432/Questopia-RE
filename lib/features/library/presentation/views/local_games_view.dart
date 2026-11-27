@@ -70,6 +70,7 @@ class LocalGamesView extends ConsumerWidget {
       if (!miuix) return child;
       return MiuixPullToRefresh(
         isRefreshing: state.isLoadingLocal,
+        contentPadding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
         onRefresh: () =>
             ref.read(libraryProvider.notifier).refreshLocalGames(force: true),
         refreshTexts: [
@@ -85,7 +86,7 @@ class LocalGamesView extends ConsumerWidget {
     if (games.isEmpty) {
       return wrapPullToRefresh(
         ListView(
-          padding: const EdgeInsets.only(top: 16),
+          padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + 16),
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
             Center(
@@ -139,12 +140,14 @@ class LocalGamesView extends ConsumerWidget {
 
     return wrapPullToRefresh(
       CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
+        physics: const ClampingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         slivers: [
           SliverPadding(
             padding: EdgeInsets.fromLTRB(
               horizontalPadding,
-              10,
+              MediaQuery.paddingOf(context).top + 10,
               horizontalPadding,
               12,
             ),

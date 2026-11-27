@@ -6,11 +6,13 @@ import 'package:flutter_miuix/miuix.dart';
 
 import 'platform_helper.dart';
 
-/// Shows a Modal Bottom Sheet with backdrop blur, constrained strictly so its
-/// drag handle and top edges never cross or overlap the status bar or custom titlebar.
+/// Shows a Miuix-styled modal bottom sheet with backdrop blur and an optional
+/// header row with a top-right close button.
 Future<T?> showQuestopiaSheet<T>({
   required BuildContext context,
   required WidgetBuilder builder,
+  String? title,
+  bool showCloseButton = true,
   bool isScrollControlled = true,
   bool showDragHandle = true,
   bool useRootNavigator = true,
@@ -29,15 +31,14 @@ Future<T?> showQuestopiaSheet<T>({
   final isDark =
       ThemeData.estimateBrightnessForColor(sheetBgColor) == Brightness.dark;
 
-  // A desktop window is far wider than a phone, and a bottom sheet stretched
-  // across it turns into a full width panel that reads as a page rather than a
-  // sheet. Clamping the width and centering keeps the phone proportions.
   final maxSheetWidth = isDesktopPlatform
       ? (mediaQuery.size.width * 0.6).clamp(360.0, 560.0)
       : mediaQuery.size.width;
 
-  final capturedThemes =
-      InheritedTheme.capture(from: context, to: Navigator.of(context).context);
+  final capturedThemes = InheritedTheme.capture(
+    from: context,
+    to: Navigator.of(context, rootNavigator: useRootNavigator).context,
+  );
 
   return Navigator.of(context, rootNavigator: useRootNavigator).push<T>(
     _BlurredModalBottomSheetRoute<T>(
@@ -107,12 +108,13 @@ Future<T?> showQuestopiaSheet<T>({
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (showDragHandle) ...[
-                        _InteractiveDragHandle(isDark: isDark),
-                      ],
-                      Flexible(
-                        child: builder(sheetContext),
-                      ),
+                      if (showDragHandle) _InteractiveDragHandle(isDark: isDark),
+                      if (title != null || showCloseButton)
+                        _SheetTitleBar(
+                          title: title,
+                          showCloseButton: showCloseButton,
+                        ),
+                      Flexible(child: builder(sheetContext)),
                     ],
                   ),
                 ),
@@ -125,30 +127,93 @@ Future<T?> showQuestopiaSheet<T>({
   );
 }
 
+class _SheetTitleBar extends StatelessWidget {
+  const _SheetTitleBar({
+    required this.title,
+    required this.showCloseButton,
+  });
+
+  final String? title;
+  final bool showCloseButton;
+
+  @override
+  Widget build(BuildContext context) {
+    final miuix = MiuixTheme.maybeOf(context);
+    final colors = Theme.of(context).colorScheme;
+    final isDark = (miuix?.brightness ?? colors.brightness) == Brightness.dark;
+    final onSurface = miuix?.colors.onSurface ?? colors.onSurface;
+    final iconTint = isDark ? Colors.white : Colors.black;
+    final overlayBg = isDark
+        ? Colors.black.withValues(alpha: 0.55)
+        : Colors.black.withValues(alpha: 0.10);
+    final textStyle =
+        (miuix?.textStyles.title4 ?? const TextStyle(fontSize: 17)).copyWith(
+      fontWeight: FontWeight.w600,
+      color: onSurface,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 2, 14, 8),
+      child: SizedBox(
+        height: 36,
+        child: Row(
+          children: [
+            const SizedBox(width: 34),
+            Expanded(
+              child: title != null
+                  ? Text(
+                      title!,
+                      textAlign: TextAlign.center,
+                      style: textStyle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            if (showCloseButton)
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => Navigator.of(context).maybePop(),
+                child: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: overlayBg,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: MiuixIcon(
+                    vector: MiuixIcons.os4.close,
+                    size: 18,
+                    tint: iconTint,
+                  ),
+                ),
+              )
+            else
+              const SizedBox(width: 34),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _BlurredModalBottomSheetRoute<T> extends ModalBottomSheetRoute<T> {
   _BlurredModalBottomSheetRoute({
     required super.builder,
     super.capturedThemes,
-    super.barrierLabel,
-    super.barrierOnTapHint,
     super.backgroundColor,
     super.elevation,
-    super.shape,
-    super.clipBehavior,
     super.modalBarrierColor,
     super.isDismissible = true,
     super.enableDrag = true,
-    super.showDragHandle,
     super.isScrollControlled = false,
-    super.settings,
-    super.transitionAnimationController,
-    super.anchorPoint,
     super.useSafeArea = false,
     super.constraints,
   });
 
   @override
-  ImageFilter? get filter => ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0);
+  ImageFilter? get filter => ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0);
 }
 
 /// Centered Miuix style title row for modal bottom sheets.
@@ -227,7 +292,7 @@ class _InteractiveDragHandleState extends State<_InteractiveDragHandle> {
       onPointerUp: (_) => setState(() => _isPressed = false),
       onPointerCancel: (_) => setState(() => _isPressed = false),
       child: SizedBox(
-        height: 24,
+        height: 20,
         width: double.infinity,
         child: Center(
           child: AnimatedContainer(

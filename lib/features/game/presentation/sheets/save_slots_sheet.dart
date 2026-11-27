@@ -3,12 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:material_segmented_list/material_segmented_list.dart';
 
 import '../../../../core/helpers/save_preview_helper.dart';
-import '../../../../core/helpers/sheet_helper.dart';
 import '../../../../core/helpers/sheet_ui_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../providers/game_engine_provider.dart';
@@ -29,7 +25,8 @@ class _SaveSlotsSheetState extends ConsumerState<SaveSlotsSheet> {
   Widget build(BuildContext context) {
     final engineState = ref.watch(gameEngineProvider);
     final engineNotifier = ref.read(gameEngineProvider.notifier);
-    final themeColors = Theme.of(context).colorScheme;
+    final miuix = MiuixTheme.of(context);
+    final mColors = miuix.colors;
     final l10n = AppLocalizations.of(context)!;
 
     final startSlot = _page * 6;
@@ -39,32 +36,26 @@ class _SaveSlotsSheetState extends ConsumerState<SaveSlotsSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          QuestopiaSheetHeaderPill(title: l10n.savesAndSlots),
-
           // Mode Tabs (Save / Load)
           Row(
             children: [
               Expanded(
-                child: M3EButton.icon(
+                child: _buildModeTabButton(
+                  context: context,
+                  label: l10n.save,
+                  icon: Icons.save_rounded,
+                  selected: isSaveMode,
                   onPressed: () => setState(() => _selectedTab = 0),
-                  size: M3EButtonSize.sm,
-                  style: isSaveMode
-                      ? M3EButtonStyle.filled
-                      : M3EButtonStyle.outlined,
-                  icon: MiuixIcon(vector: MiuixIcons.os4.save, size: 18),
-                  label: Text(l10n.save),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: M3EButton.icon(
+                child: _buildModeTabButton(
+                  context: context,
+                  label: l10n.load,
+                  icon: Icons.download_rounded,
+                  selected: !isSaveMode,
                   onPressed: () => setState(() => _selectedTab = 1),
-                  size: M3EButtonSize.sm,
-                  style: !isSaveMode
-                      ? M3EButtonStyle.filled
-                      : M3EButtonStyle.outlined,
-                  icon: MiuixIcon(vector: MiuixIcons.os4.download, size: 18),
-                  label: Text(l10n.load),
                 ),
               ),
             ],
@@ -78,32 +69,44 @@ class _SaveSlotsSheetState extends ConsumerState<SaveSlotsSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (!isSaveMode) ...[
-                    _buildAutoSaveSection(engineState, engineNotifier, themeColors),
+                    _buildAutoSaveSection(engineState, engineNotifier, miuix),
                     const SizedBox(height: 16),
                   ],
 
                   Padding(
-                    padding: const EdgeInsets.only(left: 8, bottom: 8),
-                    child: Text(
+                    padding: const EdgeInsets.only(left: 4, bottom: 8),
+                    child: MiuixText(
                       isSaveMode ? l10n.selectSlotToSave : l10n.selectSlotToLoad,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: themeColors.primary,
-                          ),
+                      style: miuix.textStyles.footnote1.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: mColors.primary,
+                      ),
                     ),
                   ),
 
                   // Manual Slots
-                  SegmentedListSection(
-                    children: List.generate(6, (index) {
-                      final slotIndex = startSlot + index;
-                      return _buildSlotTile(
-                        slotIndex,
-                        isSaveMode,
-                        engineNotifier,
-                        themeColors,
-                      );
-                    }),
+                  MiuixCard(
+                    cornerRadius: 20,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (int index = 0; index < 6; index++) ...[
+                          if (index > 0)
+                            const Padding(
+                              padding: EdgeInsets.only(left: 60),
+                              child: MiuixHorizontalDivider(),
+                            ),
+                          _buildSlotTile(
+                            startSlot + index,
+                            isSaveMode,
+                            engineState,
+                            engineNotifier,
+                            miuix,
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -129,156 +132,243 @@ class _SaveSlotsSheetState extends ConsumerState<SaveSlotsSheet> {
     );
   }
 
+  Widget _buildModeTabButton({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onPressed,
+  }) {
+    final miuix = MiuixTheme.of(context);
+    final mColors = miuix.colors;
+    final fg = selected ? mColors.onPrimary : mColors.onSurface;
+
+    return MiuixButton(
+      onPressed: onPressed,
+      cornerRadius: 16,
+      minHeight: 40,
+      insideMargin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      colors: selected
+          ? MiuixButtonDefaults.buttonColorsPrimary(context)
+          : MiuixButtonColors(
+              color: mColors.surfaceContainerHigh,
+              disabledColor: mColors.disabledSecondary,
+              contentColor: mColors.onSurface,
+              disabledContentColor: mColors.disabledOnSecondary,
+            ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 18, color: fg),
+          const SizedBox(width: 8),
+          MiuixText(
+            label,
+            style: miuix.textStyles.footnote1.copyWith(
+              fontWeight: FontWeight.w600,
+              color: fg,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAutoSaveSection(
     GameEngineState engineState,
     GameEngineNotifier engineNotifier,
-    ColorScheme colors,
+    MiuixThemeData miuix,
   ) {
     final l10n = AppLocalizations.of(context)!;
+    final mColors = miuix.colors;
+    final hasAutoSave = engineState.autoSaveData != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 8, bottom: 8),
-          child: Text(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: MiuixText(
             l10n.autoSave,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: colors.primary,
-                ),
+            style: miuix.textStyles.footnote1.copyWith(
+              fontWeight: FontWeight.w600,
+              color: mColors.primary,
+            ),
           ),
         ),
-        SegmentedListSection(
-          children: [
-            SegmentedListTile(
-              leading: MiuixIcon(vector: MiuixIcons.os4.refresh, tint: colors.primary),
-              title: Text(l10n.autoSaveSlot),
-              subtitle: engineState.autoSaveData != null
-                  ? _buildSlotSubtitle(
-                      engineState.autoSaveData!,
-                      engineState.autoSaveTimestamp,
-                      colors,
-                    )
-                  : Text(
-                      l10n.noAutoSaveDataFound,
-                      style: TextStyle(
-                        color: colors.outline,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-              trailing: engineState.autoSaveData != null
-                  ? M3EButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        engineNotifier.loadFromSlot(-1);
-                      },
-                      size: M3EButtonSize.sm,
-                      style: M3EButtonStyle.tonal,
-                      icon: MiuixIcon(vector: MiuixIcons.os4.play, size: 18),
-                      label: Text(l10n.load),
-                    )
-                  : null,
+        MiuixCard(
+          cornerRadius: 20,
+          child: MiuixBasicComponent(
+            title: l10n.autoSaveSlot,
+            summary: hasAutoSave
+                ? _buildSlotSummary(
+                    engineState.autoSaveData!,
+                    engineState.autoSaveTimestamp,
+                    l10n,
+                  )
+                : l10n.noAutoSaveDataFound,
+            insideMargin: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
             ),
-          ],
+            startAction: Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Icon(
+                Icons.autorenew_rounded,
+                color: mColors.primary,
+                size: 22,
+              ),
+            ),
+            endActions: [
+              if (hasAutoSave)
+                _buildActionButton(
+                  context: context,
+                  label: l10n.load,
+                  icon: Icons.play_arrow_rounded,
+                  isPrimary: true,
+                  onPressed: () {
+                    Navigator.pop(context);
+                    engineNotifier.loadFromSlot(-1);
+                  },
+                ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  /// Builds the two-line subtitle for an occupied slot: the stripped preview
+  /// Formats the two-line summary for an occupied slot: the stripped preview
   /// of the saved game text plus a human readable "saved at" line.
-  Widget _buildSlotSubtitle(
+  String _buildSlotSummary(
     Uint8List data,
     DateTime? savedAt,
-    ColorScheme colors,
+    AppLocalizations l10n,
   ) {
-    final l10n = AppLocalizations.of(context)!;
     final preview = SavePreviewHelper.extractPreview(data);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          preview.isEmpty ? l10n.savedGameState : preview,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: colors.onSurface),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          savedAt == null
-              ? l10n.emptySlotHint
-              : SavePreviewHelper.formatSavedAt(l10n, savedAt),
-          style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant),
-        ),
-      ],
-    );
+    final previewLine = preview.isEmpty ? l10n.savedGameState : preview;
+    final timeLine = savedAt == null
+        ? l10n.emptySlotHint
+        : SavePreviewHelper.formatSavedAt(l10n, savedAt);
+    return '$previewLine\n$timeLine';
   }
 
-  SegmentedListTile _buildSlotTile(
+  Widget _buildSlotTile(
     int slotIndex,
     bool isSaveMode,
+    GameEngineState engineState,
     GameEngineNotifier engineNotifier,
-    ColorScheme colors,
+    MiuixThemeData miuix,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    final engineState = ref.watch(gameEngineProvider);
+    final mColors = miuix.colors;
     final data = engineState.saveSlots[slotIndex];
     final hasData = data != null && data.isNotEmpty;
     final savedAt = engineState.saveSlotTimestamps[slotIndex];
 
-    final subtitle = hasData
-        ? _buildSlotSubtitle(data, savedAt, colors)
-        : Text(
-            l10n.emptySlotHint,
-            style: TextStyle(
-              color: colors.outline,
-              fontStyle: FontStyle.italic,
-            ),
-          );
+    final summary = hasData
+        ? _buildSlotSummary(data, savedAt, l10n)
+        : l10n.emptySlotHint;
 
-    return SegmentedListTile(
-      leading: CircleAvatar(
-        backgroundColor:
-            hasData ? colors.primaryContainer : colors.surfaceContainerHigh,
-        child: Text(
-          '${slotIndex + 1}',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: hasData ? colors.onPrimaryContainer : colors.outline,
+    return MiuixBasicComponent(
+      title: l10n.slotTitle(slotIndex + 1),
+      summary: summary,
+      insideMargin: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      startAction: Padding(
+        padding: const EdgeInsets.only(right: 12),
+        child: Container(
+          width: 34,
+          height: 34,
+          alignment: Alignment.center,
+          decoration: ShapeDecoration(
+            color: hasData
+                ? mColors.primaryContainer
+                : mColors.surfaceContainerHigh,
+            shape: MiuixSquircleBorder(cornerRadius: 10),
+          ),
+          child: MiuixText(
+            '${slotIndex + 1}',
+            style: miuix.textStyles.footnote1.copyWith(
+              fontWeight: FontWeight.bold,
+              color: hasData
+                  ? mColors.onPrimaryContainer
+                  : mColors.onSurfaceVariantSummary,
+            ),
           ),
         ),
       ),
-      title: Text(l10n.slotTitle(slotIndex + 1)),
-      subtitle: subtitle,
-      trailing: isSaveMode
-          ? M3EButton.icon(
-              onPressed: () {
-                engineNotifier.saveToSlot(slotIndex);
-                showSheetSnackBar(
-                  context,
-                  l10n.savedGameToSlot(slotIndex + 1),
-                );
-              },
-              size: M3EButtonSize.sm,
-              style: hasData ? M3EButtonStyle.outlined : M3EButtonStyle.filled,
-              icon: MiuixIcon(vector: MiuixIcons.os4.save, size: 18),
-              label: Text(hasData ? l10n.overwrite : l10n.save),
-            )
-          : (hasData
-              ? M3EButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    engineNotifier.loadFromSlot(slotIndex);
-                  },
-                  size: M3EButtonSize.sm,
-                  style: M3EButtonStyle.filled,
-                  icon: MiuixIcon(vector: MiuixIcons.os4.play, size: 18),
-                  label: Text(l10n.load),
-                )
-              : null),
+      endActions: [
+        if (isSaveMode)
+          _buildActionButton(
+            context: context,
+            label: hasData ? l10n.overwrite : l10n.save,
+            icon: Icons.save_rounded,
+            isPrimary: !hasData,
+            onPressed: () {
+              engineNotifier.saveToSlot(slotIndex);
+              showSheetSnackBar(
+                context,
+                l10n.savedGameToSlot(slotIndex + 1),
+              );
+            },
+          )
+        else if (hasData)
+          _buildActionButton(
+            context: context,
+            label: l10n.load,
+            icon: Icons.play_arrow_rounded,
+            isPrimary: true,
+            onPressed: () {
+              Navigator.pop(context);
+              engineNotifier.loadFromSlot(slotIndex);
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    required bool isPrimary,
+    required VoidCallback onPressed,
+  }) {
+    final miuix = MiuixTheme.of(context);
+    final mColors = miuix.colors;
+    final fg = isPrimary ? mColors.onPrimary : mColors.onSurface;
+
+    return MiuixButton(
+      onPressed: onPressed,
+      cornerRadius: 14,
+      minHeight: 34,
+      insideMargin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      colors: isPrimary
+          ? MiuixButtonDefaults.buttonColorsPrimary(context)
+          : MiuixButtonColors(
+              color: mColors.surfaceContainerHigh,
+              disabledColor: mColors.disabledSecondary,
+              contentColor: mColors.onSurface,
+              disabledContentColor: mColors.disabledOnSecondary,
+            ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: isPrimary ? mColors.onPrimary : mColors.primary,
+          ),
+          const SizedBox(width: 6),
+          MiuixText(
+            label,
+            style: miuix.textStyles.footnote1.copyWith(
+              fontWeight: FontWeight.w600,
+              color: fg,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

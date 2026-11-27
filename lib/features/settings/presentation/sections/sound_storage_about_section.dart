@@ -93,7 +93,7 @@ class _StorageSectionState extends ConsumerState<StorageSection> {
         icon: Icons.cleaning_services_rounded,
         title: l10n.storageCleanup,
         message: l10n.storageCleanupHint,
-        confirmLabel: l10n.storageCleanup,
+        confirmLabel: 'OK',
         cancelLabel: l10n.cancel,
       ),
     );

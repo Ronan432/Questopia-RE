@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/helpers/dialog_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../data/local_game.dart';
 import '../../providers/library_provider.dart';
+import 'miuix_home_hero.dart';
 
 /// A pair of summary tiles shown above the library grid, with inline accordion expansion.
 class LibraryStatsRow extends ConsumerStatefulWidget {
@@ -74,7 +74,7 @@ class _LibraryStatsRowState extends ConsumerState<LibraryStatsRow>
     final colors = Theme.of(context).colorScheme;
 
     if (widget.miuix) {
-      return _MiuixStatsRow(
+      return MiuixHomeHero(
         gamesCount: widget.games.length,
         favoriteCount: _favoriteCount,
         showFavoritesOnly: widget.showFavoritesOnly,
@@ -247,102 +247,6 @@ class _DiagonalReveal extends StatelessWidget {
           );
         },
         child: child,
-      ),
-    );
-  }
-}
-
-class _MiuixStatsRow extends StatelessWidget {
-  const _MiuixStatsRow({
-    required this.gamesCount,
-    required this.favoriteCount,
-    required this.showFavoritesOnly,
-    required this.onToggleFavoritesOnly,
-    this.onDeleteAll,
-  });
-
-  final int gamesCount;
-  final int favoriteCount;
-  final bool showFavoritesOnly;
-  final VoidCallback onToggleFavoritesOnly;
-  final VoidCallback? onDeleteAll;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final miuix = MiuixTheme.of(context);
-    final colors = miuix.colors;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          MiuixIcon(
-            vector: MiuixIcons.os4.folder,
-            size: 18,
-            tint: colors.primary,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: MiuixText(
-              '$gamesCount ${l10n.installedGames}',
-              style: miuix.textStyles.subtitle.copyWith(
-                color: colors.onSurface,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          MiuixButton(
-            onPressed: onToggleFavoritesOnly,
-            colors: showFavoritesOnly
-                ? MiuixButtonDefaults.buttonColorsPrimary(context)
-                : MiuixButtonDefaults.buttonColors(context),
-            minHeight: 36,
-            insideMargin: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 6,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                MiuixIcon(
-                  vector: showFavoritesOnly
-                      ? MiuixIcons.os4.favoritesFill
-                      : MiuixIcons.os4.favorites,
-                  size: 16,
-                  tint: showFavoritesOnly
-                      ? colors.onPrimary
-                      : colors.onSecondary,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  '${l10n.favoriteGames} ($favoriteCount)',
-                  style: miuix.textStyles.footnote1.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: showFavoritesOnly
-                        ? colors.onPrimary
-                        : colors.onSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (onDeleteAll != null) ...[
-            const SizedBox(width: 6),
-            MiuixIconButton(
-              onPressed: onDeleteAll,
-              minWidth: 38,
-              minHeight: 38,
-              child: MiuixIcon(
-                vector: MiuixIcons.os4.delete,
-                size: 20,
-                tint: colors.error,
-                contentDescription: l10n.deleteAll,
-              ),
-            ),
-          ],
-        ],
       ),
     );
   }

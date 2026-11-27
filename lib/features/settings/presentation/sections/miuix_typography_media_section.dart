@@ -37,31 +37,31 @@ class MiuixTypographySection extends StatelessWidget {
               valueText: '${settings.fontSize.toStringAsFixed(0)} pt',
               onChanged: notifier.setFontSize,
             ),
-            miuixArrowPreference(
+            miuixDropdownPreference(
               context: context,
               title: l10n.typeface,
               iconName: 'edit',
-              summary: typefaces[
-                  settings.typefaceIndex.clamp(0, typefaces.length - 1)],
-              onClick: () => SettingsPickerSheets.showTypefacePicker(
-                context,
-                notifier,
-                settings,
-              ),
+              items: typefaces,
+              selectedIndex:
+                  settings.typefaceIndex.clamp(0, typefaces.length - 1),
+              onSelectedIndexChange: notifier.setTypefaceIndex,
             ),
-            miuixArrowPreference(
-              context: context,
-              title: l10n.readingTheme,
-              iconName: 'theme',
-              summary: SettingsPickerSheets.readingThemeLabel(
-                context,
-                settings.readingTheme,
-              ),
-              onClick: () => SettingsPickerSheets.showReadingThemePicker(
-                context,
-                notifier,
-                settings,
-              ),
+            Builder(
+              builder: (context) {
+                final idx = kReadingThemeIds.indexOf(settings.readingTheme);
+                return miuixDropdownPreference(
+                  context: context,
+                  title: l10n.readingTheme,
+                  iconName: 'theme',
+                  items: [
+                    for (final id in kReadingThemeIds)
+                      SettingsPickerSheets.readingThemeLabel(context, id),
+                  ],
+                  selectedIndex: idx < 0 ? 0 : idx,
+                  onSelectedIndexChange: (index) =>
+                      notifier.setReadingTheme(kReadingThemeIds[index]),
+                );
+              },
             ),
             miuixSwitchPreference(
               context: context,
@@ -114,6 +114,32 @@ class MiuixTypographySection extends StatelessWidget {
                   onPick: (c) => notifier.setGameLinkColor(c.toARGB32()),
                 ),
               ),
+            miuixSwitchPreference(
+              context: context,
+              title: l10n.autoscroll,
+              iconName: 'expandMore',
+              value: settings.isUseAutoscroll,
+              onChanged: notifier.setAutoscroll,
+            ),
+            miuixSwitchPreference(
+              context: context,
+              title: l10n.separatorLine,
+              iconName: 'listView',
+              value: settings.isUseSeparator,
+              onChanged: notifier.setSeparator,
+            ),
+            miuixDropdownPreference(
+              context: context,
+              title: l10n.actionsPanelHeight,
+              iconName: 'verticalSplit',
+              items: const ['1/2', '1/3', '1/4', '1/5'],
+              selectedIndex: const ['1/2', '1/3', '1/4', '1/5']
+                  .indexOf(settings.actionsHeightRatio)
+                  .clamp(0, 3),
+              onSelectedIndexChange: (index) => notifier.setActionsHeightRatio(
+                const ['1/2', '1/3', '1/4', '1/5'][index],
+              ),
+            ),
           ],
         ),
       ],

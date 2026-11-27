@@ -19,29 +19,32 @@ class AddNoteTabChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mColors = MiuixTheme.of(context).colors;
     return Tooltip(
       message: tooltip,
-      child: InkWell(
-        onTap: () {
+      child: MiuixPressable(
+        onPressed: () {
           HapticFeedback.selectionClick();
           onTap();
         },
-        borderRadius: BorderRadius.circular(size / 2),
+        shape: MiuixSquircleBorder(cornerRadius: 16),
         child: Container(
           width: size,
           height: size,
-          decoration: BoxDecoration(
-            color: colors.primaryContainer.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(size / 2),
-            border: Border.all(
-              color: colors.primary.withValues(alpha: 0.35),
-              width: 1,
+          decoration: ShapeDecoration(
+            color: mColors.primaryContainer.withValues(alpha: 0.55),
+            shape: MiuixSquircleBorder(
+              cornerRadius: 16,
+              side: BorderSide(
+                color: mColors.primary.withValues(alpha: 0.35),
+                width: 1,
+              ),
             ),
           ),
-          child: MiuixIcon(
-            vector: MiuixIcons.os4.add,
+          child: Icon(
+            Icons.add_rounded,
             size: 20,
-            tint: colors.onPrimaryContainer,
+            color: mColors.onPrimaryContainer,
           ),
         ),
       ),
@@ -66,31 +69,34 @@ class NoteTabCollapseButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
+    final mColors = MiuixTheme.of(context).colors;
+    return MiuixPressable(
+      onPressed: () {
         HapticFeedback.selectionClick();
         onPressed();
       },
-      borderRadius: BorderRadius.circular(size / 2),
+      shape: MiuixSquircleBorder(cornerRadius: 16),
       child: Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(
-          color: colors.surfaceContainerHighest.withValues(alpha: 0.45),
-          borderRadius: BorderRadius.circular(size / 2),
-          border: Border.all(
-            color: colors.outlineVariant.withValues(alpha: 0.4),
-            width: 1,
+        decoration: ShapeDecoration(
+          color: mColors.surfaceContainerHigh,
+          shape: MiuixSquircleBorder(
+            cornerRadius: 16,
+            side: BorderSide(
+              color: mColors.outline.withValues(alpha: 0.2),
+              width: 1,
+            ),
           ),
         ),
         child: AnimatedRotation(
           duration: const Duration(milliseconds: 180),
           // The strip folds horizontally, so the affordance points sideways.
           turns: isCollapsed ? 0.5 : 0,
-          child: MiuixIcon(
-            vector: MiuixIcons.os4.chevronForward,
+          child: Icon(
+            Icons.chevron_right_rounded,
             size: 20,
-            tint: colors.onSurfaceVariant,
+            color: mColors.onSurfaceVariantActions,
           ),
         ),
       ),

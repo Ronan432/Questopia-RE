@@ -106,6 +106,16 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
     COMPONENT Runtime)
 endforeach(bundled_library)
 
+# Bundle the prebuilt QSP engine shared library that the Dart FFI bindings load.
+# The library is produced from native/qsp with -fshort-wchar so its wchar_t
+# width matches Android and the rest of the FFI contract.
+set(QSP_NATIVE_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/../libs/native/linux-x64/libqsp.so")
+if(EXISTS "${QSP_NATIVE_LIBRARY}")
+  install(FILES "${QSP_NATIVE_LIBRARY}"
+    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+    COMPONENT Runtime)
+endif()
+
 # Copy the native assets provided by the hook/build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")
 install(DIRECTORY "${NATIVE_ASSETS_DIR}"

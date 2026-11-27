@@ -155,6 +155,19 @@ class QspFfi {
         instance = QspFfi._(DynamicLibrary.open('qsp.dll'));
         return instance;
       }
+      if (Platform.isLinux) {
+        // The Linux bundle ships the engine next to the executable, so the
+        // absolute bundle path is resolved first and the plain soname stays as
+        // a fallback for a system-wide install.
+        final bundled = File(
+          '${File(Platform.resolvedExecutable).parent.path}/lib/libqsp.so',
+        );
+        debugPrint('[QSP FFI] Opening libqsp.so on Linux...');
+        instance = QspFfi._(
+          DynamicLibrary.open(bundled.existsSync() ? bundled.path : 'libqsp.so'),
+        );
+        return instance;
+      }
     } catch (e, st) {
       debugPrint('[QSP FFI] Error opening native library: $e\n$st');
       return null;

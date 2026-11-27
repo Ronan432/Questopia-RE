@@ -10,9 +10,16 @@ import 'sections/miuix_sound_storage_about_section.dart';
 import 'sections/miuix_typography_media_section.dart';
 
 class MiuixSettingsScreen extends ConsumerStatefulWidget {
-  const MiuixSettingsScreen({super.key, this.isInline = false});
+  const MiuixSettingsScreen({
+    super.key,
+    this.isInline = false,
+    this.searchQuery = '',
+    this.onScrollNotification,
+  });
 
   final bool isInline;
+  final String searchQuery;
+  final bool Function(ScrollNotification)? onScrollNotification;
 
   @override
   ConsumerState<MiuixSettingsScreen> createState() =>
@@ -43,34 +50,73 @@ class _MiuixSettingsScreenState extends ConsumerState<MiuixSettingsScreen> {
     final notifier = ref.read(settingsProvider.notifier);
     final l10n = AppLocalizations.of(context)!;
 
-    final content = ListView(
-      padding: EdgeInsets.fromLTRB(
-        12,
-        6,
-        12,
-        (widget.isInline && settings.isNavBarBlur ? 90 : 32) +
-            MediaQuery.paddingOf(context).bottom,
-      ),
-      children: [
+    final query = widget.searchQuery.trim().toLowerCase();
+    final sections = <(String, Widget)>[
+      (
+        '${l10n.sectionAppearance} ${l10n.theme} ${l10n.language} ${l10n.miuixDynamicColor}',
         MiuixAppearanceSection(settings: settings, notifier: notifier),
-        const SizedBox(height: 10),
+      ),
+      (
+        '${l10n.sectionGeneral} ${l10n.immersiveMode} ${l10n.autoscroll} ${l10n.separatorLine} ${l10n.navBarBlur}',
         MiuixGeneralSection(settings: settings, notifier: notifier),
-        const SizedBox(height: 10),
+      ),
+      (
+        '${l10n.sectionTypography} ${l10n.fontSize}',
         MiuixTypographySection(settings: settings, notifier: notifier),
-        const SizedBox(height: 10),
+      ),
+      (
+        l10n.sectionMedia,
         MiuixMediaSection(settings: settings, notifier: notifier),
-        const SizedBox(height: 10),
+      ),
+      (
+        l10n.sectionSound,
         MiuixSoundSection(settings: settings, notifier: notifier),
-        const SizedBox(height: 10),
+      ),
+      (
+        l10n.sectionStorage,
         MiuixStorageSection(settings: settings, notifier: notifier),
-        const SizedBox(height: 10),
+      ),
+      (
+        '${l10n.sectionAbout} ${l10n.version}',
         MiuixAboutSection(
           settings: settings,
           notifier: notifier,
           packageInfo: _packageInfo,
         ),
-      ],
+      ),
+    ];
+
+    final visibleSections = query.isEmpty
+        ? [for (final s in sections) s.$2]
+        : [
+            for (final s in sections)
+              if (s.$1.toLowerCase().contains(query)) s.$2,
+          ];
+
+    final listView = SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        12,
+        (widget.isInline ? MediaQuery.paddingOf(context).top : 0) + 6,
+        12,
+        (widget.isInline ? 110 : 32) + MediaQuery.paddingOf(context).bottom,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < visibleSections.length; i++) ...[
+            if (i > 0) const SizedBox(height: 12),
+            visibleSections[i],
+          ],
+        ],
+      ),
     );
+
+    final content = widget.onScrollNotification != null
+        ? NotificationListener<ScrollNotification>(
+            onNotification: widget.onScrollNotification,
+            child: listView,
+          )
+        : listView;
 
     if (widget.isInline) return content;
 

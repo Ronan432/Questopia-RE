@@ -89,9 +89,15 @@ class _QuestopiaMorphButtonState extends State<QuestopiaMorphButton> {
           children: [
             if (widget.icon != null) ...[
               widget.icon!,
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
             ],
-            widget.child,
+            Flexible(
+              child: DefaultTextStyle.merge(
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                child: widget.child,
+              ),
+            ),
           ],
         ),
       );

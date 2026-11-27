@@ -4,17 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
 
 import '../../../core/helpers/path_picker_helper.dart';
 import '../../../core/helpers/platform_helper.dart';
-import '../../../core/l10n/app_localizations.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/theme/miuix_design.dart';
-import '../../../core/theme/questopia_theme.dart';
-import '../../../core/widgets/questopia_frosted_overlay.dart';
-import '../../../core/widgets/questopia_scaffold.dart';
-import '../../../core/widgets/window_title_bar.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../providers/library_provider.dart';
 import '../providers/search_history_provider.dart';
@@ -24,9 +18,6 @@ import 'helpers/library_import_helper.dart';
 import 'views/catalog_games_view.dart';
 import 'views/local_games_view.dart';
 import 'widgets/catalog_pagination_bar.dart';
-import 'widgets/library_desktop_view.dart';
-import 'widgets/library_mobile_app_bar.dart';
-import 'widgets/library_mobile_bottom_bar.dart';
 import 'widgets/miuix_library_shell.dart';
 
 /// Main hub containing the local game library, remote catalog, and inline settings.
@@ -39,19 +30,19 @@ class LibraryScreen extends ConsumerStatefulWidget {
 
 class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   int _selectedTab = 0;
-  final PageController _libraryPageController = PageController();
   String _searchQuery = '';
   bool _isSearchOpen = false;
   bool _showFavoritesOnly = false;
   final FocusNode _searchFocusNode = FocusNode();
   final TextEditingController _searchController = TextEditingController();
-  final FocusNode _desktopSearchFocusNode = FocusNode();
-  bool _isDesktopSearchFocused = false;
+  final MiuixExitUntilCollapsedScrollBehavior _settingsScrollBehavior =
+      miuixScrollBehavior();
+  final MiuixExitUntilCollapsedScrollBehavior _catalogScrollBehavior =
+      miuixScrollBehavior();
 
   @override
   void initState() {
     super.initState();
-    _desktopSearchFocusNode.addListener(_onDesktopFocusChanged);
     if (!isDesktopPlatform) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     }
@@ -66,21 +57,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     });
   }
 
-  /// Keeps the desktop search suggestions in sync with the field focus.
-  void _onDesktopFocusChanged() {
-    if (!mounted) return;
-    final focused = _desktopSearchFocusNode.hasFocus;
-    if (focused == _isDesktopSearchFocused) return;
-    setState(() => _isDesktopSearchFocused = focused);
-  }
-
   @override
   void dispose() {
-    _desktopSearchFocusNode.removeListener(_onDesktopFocusChanged);
-    _libraryPageController.dispose();
     _searchFocusNode.dispose();
     _searchController.dispose();
-    _desktopSearchFocusNode.dispose();
     super.dispose();
   }
 
@@ -105,17 +85,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     ref.read(searchHistoryProvider.notifier).record(trimmed);
   }
 
-  /// Applies a query picked from the catalog search history.
-  void _applyHistoryQuery(String query) {
-    _searchController
-      ..text = query
-      ..selection = TextSelection.fromPosition(
-        TextPosition(offset: query.length),
-      );
-    setState(() => _searchQuery = query);
-    FocusScope.of(context).unfocus();
-  }
-
   Future<void> _importGameFolder() =>
       LibraryImportHelper.pickAndImport(context, ref);
 
@@ -124,13 +93,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     HapticFeedback.selectionClick();
     _closeSearch();
     setState(() => _selectedTab = index);
-    if (_libraryPageController.hasClients) {
-      _libraryPageController.animateToPage(
-        index,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-      );
-    }
     _ensureCatalogLoaded(index);
   }
 
@@ -147,10 +109,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(libraryProvider);
     final settings = ref.watch(settingsProvider);
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final isDesktop = isDesktopPlatform;
-    final l10n = AppLocalizations.of(context)!;
     // Search covers the author as well as the title, and the catalogue also
     // matches on its description text.
     final filteredLocalGames = LibraryFilterHelper.filterLocalGames(
@@ -180,69 +138,20 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           return CatalogGamesView(
             games: filteredRemoteGames,
             miuix: shouldUseMiuixDesign(settings),
+            onScrollNotification: _catalogScrollBehavior.handleScroll,
           );
         case 2:
-          return const SettingsScreen(isInline: true);
+          return SettingsScreen(
+            isInline: true,
+            searchQuery: _selectedTab == 2 ? _searchQuery : '',
+            onScrollNotification: _settingsScrollBehavior.handleScroll,
+          );
         default:
           return const SizedBox.shrink();
       }
     }
-    final pageViews = PageView(
-      controller: _libraryPageController,
-      physics: const ClampingScrollPhysics(),
-      onPageChanged: (value) {
-        if (value != _selectedTab) {
-          HapticFeedback.selectionClick();
-        }
-        _closeSearch();
-        setState(() => _selectedTab = value);
-        _ensureCatalogLoaded(value);
-      },
-      children: [
-        mainContentFor(0),
-        mainContentFor(1),
-        mainContentFor(2),
-      ],
-    );
 
-    if (shouldUseMiuixDesign(settings) && !isDesktop) {
-      return MiuixDesignTheme(
-        child: PopScope(
-          canPop: !_isSearchOpen && _selectedTab == 0,
-          onPopInvokedWithResult: (didPop, result) {
-            if (didPop) return;
-            if (_isSearchOpen) {
-              _closeSearch();
-              return;
-            }
-            if (_selectedTab != 0) _onTabChanged(0);
-          },
-          child: MiuixLibraryShell(
-            selectedTab: _selectedTab,
-            onTabChanged: _onTabChanged,
-            isSearchOpen: _isSearchOpen,
-            searchQuery: _searchQuery,
-            searchController: _searchController,
-            searchFocusNode: _searchFocusNode,
-            onSearchChanged: (value) => setState(() => _searchQuery = value),
-            onSearchSubmitted: _rememberCatalogSearch,
-            onOpenSearch: _openSearch,
-            onCloseSearch: _closeSearch,
-            onImportGame: _importGameFolder,
-            showFavoritesOnly: _showFavoritesOnly,
-            onToggleFavorites: () =>
-                setState(() => _showFavoritesOnly = !_showFavoritesOnly),
-            pagination: _selectedTab == 1 && state.totalPages > 1
-                ? const CatalogPaginationBar(isInsideOverlay: true, miuix: true)
-                : null,
-            child: pageViews,
-          ),
-        ),
-      );
-    }
-
-    return M3ETheme(
-      data: QuestopiaTheme.m3eThemeDataFrom(Theme.of(context)),
+    return MiuixDesignTheme(
       child: PopScope(
         canPop: !_isSearchOpen && _selectedTab == 0,
         onPopInvokedWithResult: (didPop, result) {
@@ -251,89 +160,36 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             _closeSearch();
             return;
           }
-          if (_selectedTab != 0) {
-            _onTabChanged(0);
-          }
+          if (_selectedTab != 0) _onTabChanged(0);
         },
-        child: QuestopiaScaffold(
-          title: l10n.appTitle,
-          leading: isDesktop
-              ? const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: QuestopiaLogoIcon(size: 24),
-                )
+        child: MiuixLibraryShell(
+          selectedTab: _selectedTab,
+          onTabChanged: _onTabChanged,
+          settingsScrollBehavior: _settingsScrollBehavior,
+          catalogScrollBehavior: _catalogScrollBehavior,
+          isSearchOpen: _isSearchOpen,
+          searchQuery: _searchQuery,
+          searchController: _searchController,
+          searchFocusNode: _searchFocusNode,
+          onSearchChanged: (value) => setState(() => _searchQuery = value),
+          onSearchSubmitted: _rememberCatalogSearch,
+          onOpenSearch: _openSearch,
+          onCloseSearch: _closeSearch,
+          onImportGame: _importGameFolder,
+          showFavoritesOnly: _showFavoritesOnly,
+          onToggleFavorites: () =>
+              setState(() => _showFavoritesOnly = !_showFavoritesOnly),
+          pagination: _selectedTab == 1 && state.totalPages > 1
+              ? const CatalogPaginationBar(isInsideOverlay: true, miuix: true)
               : null,
-          actions: isDesktop
-              ? [
-                  if (_selectedTab == 0)
-                    IconButton(
-                      tooltip: _showFavoritesOnly
-                          ? l10n.showAllGames
-                          : l10n.showFavoritesOnly,
-                      icon: MiuixIcon(
-                        vector: _showFavoritesOnly
-                            ? MiuixIcons.os4.favoritesFill
-                            : MiuixIcons.os4.favorites,
-                        tint: _showFavoritesOnly ? colors.error : null,
-                      ),
-                      onPressed: () => setState(
-                          () => _showFavoritesOnly = !_showFavoritesOnly),
-                    ),
-                  const SizedBox(width: 8),
-                ]
-              : null,
-          customAppBar: isDesktop
-              ? null
-              : LibraryMobileAppBar(
-                  selectedTab: _selectedTab,
-                  isSearchOpen: _isSearchOpen,
-                  showFavoritesOnly: _showFavoritesOnly,
-                  searchController: _searchController,
-                  searchFocusNode: _searchFocusNode,
-                  onSearchChanged: (value) =>
-                      setState(() => _searchQuery = value),
-                  onSearchSubmitted: _rememberCatalogSearch,
-                  onHistoryQuerySelected: _applyHistoryQuery,
-                  onOpenSearch: _openSearch,
-                  onCloseSearch: _closeSearch,
-                  onToggleFavorites: () => setState(
-                      () => _showFavoritesOnly = !_showFavoritesOnly),
-                  onImportGame: _importGameFolder,
-                ),
-          body: isDesktop
-              ? LibraryDesktopView(
-                  selectedTab: _selectedTab,
-                  searchQuery: _searchQuery,
-                  isSearchFocused: _isDesktopSearchFocused,
-                  searchFocusNode: _desktopSearchFocusNode,
-                  onTabChanged: _onTabChanged,
-                  onSearchChanged: (val) => setState(() => _searchQuery = val),
-                  onSearchSubmitted: _rememberCatalogSearch,
-                  onHistoryQuerySelected: _applyHistoryQuery,
-                  onImportGame: _importGameFolder,
-                  child: mainContentFor(_selectedTab),
-                )
-              : SafeArea(
-                  bottom: !settings.isNavBarBlur,
-                  child: pageViews,
-                ),
-          extendBody: !isDesktop && settings.isNavBarBlur,
-          bottomNavigationBar: isDesktop
-              ? null
-              : QuestopiaFrostedOverlay(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_selectedTab == 1 && state.totalPages > 1)
-                        const CatalogPaginationBar(isInsideOverlay: true),
-                      LibraryMobileBottomBar(
-                        selectedTab: _selectedTab,
-                        onTabSelected: _onTabChanged,
-                        isInsideOverlay: true,
-                      ),
-                    ],
-                  ),
-                ),
+          child: IndexedStack(
+            index: _selectedTab,
+            children: [
+              mainContentFor(0),
+              mainContentFor(1),
+              mainContentFor(2),
+            ],
+          ),
         ),
       ),
     );

@@ -9,7 +9,7 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
-  String get appTitle => 'Questopia';
+  String get appTitle => 'Questopia-RE';
 
   @override
   String get home => 'Главная';
