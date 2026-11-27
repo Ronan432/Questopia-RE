@@ -80,6 +80,8 @@ const Map<String, Color> _kSettingsIconColors = {
   'verticalSplit': Color(0xFF14B8A6),
   'tune': Color(0xFF64748B),
   'expandMore': Color(0xFF64748B),
+  'play': Color(0xFF22C55E),
+  'favorite': Color(0xFFEF4444),
 };
 
 const Map<String, IconData> _kKowsuRoundedIcons = {
@@ -107,6 +109,8 @@ const Map<String, IconData> _kKowsuRoundedIcons = {
   'info': Icons.info_rounded,
   'refresh': Icons.refresh_rounded,
   'search': Icons.search_rounded,
+  'play': Icons.play_arrow_rounded,
+  'favorite': Icons.favorite_rounded,
 };
 
 Widget miuixSettingsIcon(BuildContext context, String iconName,
@@ -203,23 +207,26 @@ MiuixSwitchPreference miuixSwitchPreference({
 MiuixSliderPreference miuixSliderPreference({
   required BuildContext context,
   required String title,
-  required String iconName,
+  String? iconName,
   MiuixVectorIcon? fallbackIcon,
   required double value,
   required double min,
   required double max,
   required int steps,
+  bool snapToSteps = false,
   required String valueText,
   required ValueChanged<double> onChanged,
 }) {
   return MiuixSliderPreference(
     title: title,
     insideMargin: _kCompactRowMargin,
-    startAction: miuixSettingsIcon(context, iconName, fallback: fallbackIcon),
+    startAction: iconName == null
+        ? null
+        : miuixSettingsIcon(context, iconName, fallback: fallbackIcon),
     value: value,
     min: min,
     max: max,
-    steps: 0,
+    steps: snapToSteps ? steps : 0,
     showKeyPoints: false,
     valueText: valueText,
     onValueChange: onChanged,

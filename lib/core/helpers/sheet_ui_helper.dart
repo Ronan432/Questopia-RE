@@ -27,7 +27,12 @@ class QuestopiaSheetContainer extends StatelessWidget {
           height: MediaQuery.sizeOf(context).height * heightFactor,
           child: Padding(
             padding: padding,
-            child: child,
+            child: ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context).copyWith(
+                physics: const ClampingScrollPhysics(),
+              ),
+              child: child,
+            ),
           ),
         ),
       ),

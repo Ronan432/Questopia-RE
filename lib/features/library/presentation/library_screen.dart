@@ -38,7 +38,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   final MiuixExitUntilCollapsedScrollBehavior _settingsScrollBehavior =
       miuixScrollBehavior();
   final MiuixExitUntilCollapsedScrollBehavior _catalogScrollBehavior =
-      miuixScrollBehavior();
+      miuixScrollBehavior(
+        snapDuration: const Duration(milliseconds: 520),
+        snapCurve: Curves.easeInOutCubic,
+      );
 
   @override
   void initState() {

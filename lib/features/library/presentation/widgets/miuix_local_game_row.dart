@@ -7,6 +7,7 @@ import '../../../../core/helpers/duration_format.dart';
 import '../../../../core/helpers/sheet_helper.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/theme/miuix_icons_helper.dart';
+import '../../../settings/presentation/widgets/miuix_settings_tiles.dart';
 import '../../data/local_game.dart';
 import '../../data/play_stats_store.dart';
 import '../../providers/play_stats_provider.dart';
@@ -72,112 +73,92 @@ class MiuixLocalGameRow extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 14),
-            MiuixCard(
-              cornerRadius: 20,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  MiuixBasicComponent(
-                    title: l10n.play,
-                    startAction: Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: MiuixIcon(
-                        vector: MiuixIcons.os4.play,
-                        tint: mColors.primary,
-                        size: 22,
-                      ),
-                    ),
-                    onClick: () {
-                      Navigator.pop(sheetCtx);
-                      onPlay();
-                    },
+            MiuixSettingsGroup(
+              children: [
+                MiuixBasicComponent(
+                  title: l10n.play,
+                  insideMargin: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 14,
                   ),
-                  if (playStats.hasPlayed)
-                    MiuixBasicComponent(
-                      title: l10n.playStatsTotal,
-                      summary: formatPlayDuration(
-                        l10n,
-                        Duration(seconds: playStats.totalSeconds),
-                      ),
-                      startAction: Padding(
-                        padding: const EdgeInsets.only(right: 12),
-                        child: miuixIcon(
-                          'timer',
-                          size: 20,
-                          tint: mColors.onSurfaceVariantActions,
+                  startAction: miuixSettingsIcon(context, 'play'),
+                  onClick: () {
+                    Navigator.pop(sheetCtx);
+                    onPlay();
+                  },
+                ),
+                if (playStats.hasPlayed)
+                  MiuixBasicComponent(
+                    title: l10n.playStatsTotal,
+                    summary: formatPlayDuration(
+                      l10n,
+                      Duration(seconds: playStats.totalSeconds),
+                    ),
+                    insideMargin: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
+                    ),
+                    startAction: miuixSettingsIcon(context, 'timer'),
+                    endActions: [
+                      Text(
+                        playStats.lastPlayed == null
+                            ? l10n.neverPlayed
+                            : formatLastPlayedDate(playStats.lastPlayed!),
+                        style: miuixTheme.textStyles.body2.copyWith(
+                          color: mColors.onSurfaceVariantSummary,
                         ),
                       ),
-                      endActions: [
-                        Text(
-                          playStats.lastPlayed == null
-                              ? l10n.neverPlayed
-                              : formatLastPlayedDate(playStats.lastPlayed!),
-                          style: miuixTheme.textStyles.body2.copyWith(
-                            color: mColors.onSurfaceVariantSummary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  MiuixBasicComponent(
-                    title: game.isFavorite
-                        ? l10n.removeFromFavorites
-                        : l10n.addToFavorites,
-                    startAction: Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: MiuixIcon(
-                        vector: game.isFavorite
-                            ? MiuixIcons.os4.favoritesFill
-                            : MiuixIcons.os4.favorites,
-                        tint: game.isFavorite
-                            ? mColors.error
-                            : mColors.onSurfaceVariantActions,
-                        size: 22,
-                      ),
-                    ),
-                    onClick: () {
-                      Navigator.pop(sheetCtx);
-                      onToggleFavorite();
-                    },
+                    ],
                   ),
-                  MiuixBasicComponent(
-                    title: game.isFromRepo
-                        ? l10n.deleteGame
-                        : l10n.removeFromLibrary,
-                    titleColor: MiuixBasicComponentColors(
-                      color: mColors.error,
-                      disabledColor: mColors.disabledOnSurface,
-                    ),
-                    startAction: Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: MiuixIcon(
-                        vector: MiuixIcons.os4.delete,
-                        tint: mColors.error,
-                        size: 22,
-                      ),
-                    ),
-                    onClick: () async {
-                      Navigator.pop(sheetCtx);
-                      final isRepo = game.isFromRepo;
-                      final confirmed = await showQuestopiaDialog<bool>(
-                        context: context,
-                        builder: (ctx) => QuestopiaConfirmationDialog(
-                          miuixVectorIcon: MiuixIcons.os4.delete,
-                          isDestructive: true,
-                          title: isRepo
-                              ? l10n.deleteGameTitle
-                              : l10n.removeFromLibrary,
-                          message: isRepo
-                              ? l10n.deleteGameMessage(game.title)
-                              : l10n.removeFromLibraryMessage(game.title),
-                          confirmLabel: isRepo ? l10n.delete : l10n.remove,
-                          cancelLabel: l10n.cancel,
-                        ),
-                      );
-                      if (confirmed == true) onRemove();
-                    },
+                MiuixBasicComponent(
+                  title: game.isFavorite
+                      ? l10n.removeFromFavorites
+                      : l10n.addToFavorites,
+                  insideMargin: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 14,
                   ),
-                ],
-              ),
+                  startAction: miuixSettingsIcon(context, 'favorite'),
+                  onClick: () {
+                    Navigator.pop(sheetCtx);
+                    onToggleFavorite();
+                  },
+                ),
+                MiuixBasicComponent(
+                  title: game.isFromRepo
+                      ? l10n.deleteGame
+                      : l10n.removeFromLibrary,
+                  titleColor: MiuixBasicComponentColors(
+                    color: mColors.error,
+                    disabledColor: mColors.disabledOnSurface,
+                  ),
+                  insideMargin: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 14,
+                  ),
+                  startAction: miuixSettingsIcon(context, 'delete'),
+                  onClick: () async {
+                    Navigator.pop(sheetCtx);
+                    final isRepo = game.isFromRepo;
+                    final confirmed = await showQuestopiaDialog<bool>(
+                      context: context,
+                      builder: (ctx) => QuestopiaConfirmationDialog(
+                        miuixVectorIcon: MiuixIcons.os4.delete,
+                        isDestructive: true,
+                        title: isRepo
+                            ? l10n.deleteGameTitle
+                            : l10n.removeFromLibrary,
+                        message: isRepo
+                            ? l10n.deleteGameMessage(game.title)
+                            : l10n.removeFromLibraryMessage(game.title),
+                        confirmLabel: isRepo ? l10n.delete : l10n.remove,
+                        cancelLabel: l10n.cancel,
+                      ),
+                    );
+                    if (confirmed == true) onRemove();
+                  },
+                ),
+              ],
             ),
           ],
         ),

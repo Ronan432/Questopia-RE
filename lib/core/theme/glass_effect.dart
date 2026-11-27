@@ -68,33 +68,20 @@ class GlassEffect {
             boxShadow: boxShadow,
           );
 
-    Widget content = DecoratedBox(
-      decoration: decoration,
-      child: child,
-    );
-
-    if (!enabled) {
-      if (shape != null) {
-        return ClipPath(
-          clipper: ShapeBorderClipper(shape: shape),
-          clipBehavior: clipBehavior,
-          child: content,
-        );
-      }
-      if (borderRadius != null) {
-        return ClipRRect(
-          borderRadius: borderRadius,
-          clipBehavior: clipBehavior,
-          child: content,
-        );
-      }
-      return content;
-    }
-
-    final sigma = getSigma(percent);
+    final sigma = enabled ? getSigma(percent) : 0.0;
     final ImageFilter filter = ImageFilter.blur(
       sigmaX: sigma,
       sigmaY: sigma,
+    );
+
+    // Keep the exact same widget hierarchy whether the blur is on or off.
+    // Swapping between a plain DecoratedBox and a clipped BackdropFilter
+    // rebuilds the whole child subtree when the setting is toggled, which
+    // shows up as a visible flicker on the bars. A zero sigma filter is a
+    // no-op while the opaque background hides it completely.
+    final content = DecoratedBox(
+      decoration: decoration,
+      child: child,
     );
 
     if (shape != null) {

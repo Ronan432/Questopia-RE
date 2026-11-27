@@ -187,6 +187,7 @@ class QuestopiaDialog extends StatelessWidget {
                   (MediaQuery.sizeOf(context).height * 0.3).clamp(120.0, 340.0),
             ),
             child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
               child: content,
             ),
           ),

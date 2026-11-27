@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_miuix/miuix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/helpers/sheet_helper.dart';
@@ -18,13 +17,11 @@ class GameOptionsSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final settings = ref.watch(settingsProvider);
-    const rowMargin = EdgeInsets.symmetric(horizontal: 14, vertical: 11);
-
     final primaryItems = <Widget>[
-      MiuixArrowPreference(
+      miuixArrowPreference(
+        context: context,
         title: l10n.saveAndLoad,
-        insideMargin: rowMargin,
-        startAction: miuixSettingsIcon(context, 'save'),
+        iconName: 'save',
         onClick: () {
           Navigator.pop(context);
           showQuestopiaSheet<void>(
@@ -34,10 +31,10 @@ class GameOptionsSheet extends ConsumerWidget {
           );
         },
       ),
-      MiuixArrowPreference(
+      miuixArrowPreference(
+        context: context,
         title: l10n.gameNotes,
-        insideMargin: rowMargin,
-        startAction: miuixSettingsIcon(context, 'edit'),
+        iconName: 'edit',
         onClick: () {
           Navigator.pop(context);
           showQuestopiaSheet<void>(
@@ -47,10 +44,10 @@ class GameOptionsSheet extends ConsumerWidget {
           );
         },
       ),
-      MiuixArrowPreference(
+      miuixArrowPreference(
+        context: context,
         title: l10n.openSaveFile,
-        insideMargin: rowMargin,
-        startAction: miuixSettingsIcon(context, 'folder'),
+        iconName: 'folder',
         onClick: () {
           Navigator.pop(context);
           ref.read(gameEngineProvider.notifier).showFileLoad();
@@ -60,10 +57,10 @@ class GameOptionsSheet extends ConsumerWidget {
 
     final advancedItems = <Widget>[
       if (settings.isCheatsEnabled)
-        MiuixArrowPreference(
+        miuixArrowPreference(
+          context: context,
           title: l10n.cheatEngine,
-          insideMargin: rowMargin,
-          startAction: miuixSettingsIcon(context, 'tune'),
+          iconName: 'tune',
           onClick: () {
             Navigator.pop(context);
             showQuestopiaSheet<void>(
@@ -74,19 +71,19 @@ class GameOptionsSheet extends ConsumerWidget {
           },
         ),
       if (settings.isExecStringEnabled)
-        MiuixArrowPreference(
+        miuixArrowPreference(
+          context: context,
           title: l10n.qspCommandLine,
-          insideMargin: rowMargin,
-          startAction: miuixSettingsIcon(context, 'memoryFunction'),
+          iconName: 'memoryFunction',
           onClick: () {
             Navigator.pop(context);
             ref.read(gameEngineProvider.notifier).showExecutor();
           },
         ),
-      MiuixArrowPreference(
+      miuixArrowPreference(
+        context: context,
         title: l10n.restartGame,
-        insideMargin: rowMargin,
-        startAction: miuixSettingsIcon(context, 'refresh'),
+        iconName: 'refresh',
         onClick: () {
           Navigator.pop(context);
           ref.read(gameEngineProvider.notifier).showRestartConfirmation();
@@ -97,6 +94,7 @@ class GameOptionsSheet extends ConsumerWidget {
     // One merged card for every option, the same shape the settings screen
     // uses, instead of a separate card per group.
     return SingleChildScrollView(
+      physics: const ClampingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
       child: MiuixSettingsGroup(
         children: [...primaryItems, ...advancedItems],

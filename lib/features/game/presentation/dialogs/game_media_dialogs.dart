@@ -135,6 +135,7 @@ class _GameExecutorDialogState extends State<GameExecutorDialog> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
                 child: Text(
                   widget.output.isEmpty ? l10n.noOutputYet : widget.output,
                   style: TextStyle(

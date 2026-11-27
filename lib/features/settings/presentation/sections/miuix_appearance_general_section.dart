@@ -84,11 +84,11 @@ class MiuixAppearanceSection extends StatelessWidget {
               miuixSliderPreference(
                 context: context,
                 title: '',
-                iconName: 'tune',
                 value: settings.navBarBlurPercent,
                 min: 10,
                 max: 100,
                 steps: 9,
+                snapToSteps: true,
                 valueText: '${settings.navBarBlurPercent.round()}%',
                 onChanged: notifier.setNavBarBlurPercent,
               ),

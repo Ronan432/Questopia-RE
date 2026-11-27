@@ -57,52 +57,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   bool _isHeaderVisible = true;
-  Timer? _reappearTimer;
-
-  /// Suppresses scroll handling while the header animation runs.
-  ///
-  /// Collapsing the header changes the body height, which changes the scroll
-  /// extent, which fires another scroll notification. Without this guard the two
-  /// feed each other and the bar flickers in and out.
-  bool _suppressScrollEvents = false;
-  Timer? _suppressTimer;
-
-  /// Hides the header while reading downwards, restores it the moment the user
-  /// scrolls back up, and never forces it back while the story sits at its end.
-  void _onScrollNotification(ScrollNotification notification) {
-    // Inner scrollables, such as the action list, must not drive the header.
-    if (notification.depth != 0 || _suppressScrollEvents) return;
-    if (notification is! ScrollUpdateNotification) return;
-
-    final delta = notification.scrollDelta ?? 0;
-    if (delta > 0.5) {
-      _setHeaderVisible(false);
-      _scheduleReappear(notification.metrics);
-    } else if (delta < -0.5) {
-      _reappearTimer?.cancel();
-      _setHeaderVisible(true);
-    }
-  }
-
-  void _setHeaderVisible(bool visible) {
-    if (_isHeaderVisible == visible) return;
-    _suppressScrollEvents = true;
-    setState(() => _isHeaderVisible = visible);
-    _suppressTimer?.cancel();
-    _suppressTimer = Timer(const Duration(milliseconds: 320), () {
-      _suppressScrollEvents = false;
-    });
-  }
-
-  /// Brings the header back after the reader stops, but leaves it hidden at the
-  /// very end of the story where the sudden pop used to look broken.
-  void _scheduleReappear(ScrollMetrics metrics) {
-    _reappearTimer?.cancel();
-    if (metrics.extentAfter <= 1) return;
-    _reappearTimer = Timer(const Duration(milliseconds: 1600), () {
-      if (mounted) _setHeaderVisible(true);
-    });
-  }
 
   /// Drives auto-scroll for the story pane.
   final ScrollController _storyScrollController = ScrollController();
@@ -193,8 +147,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   @override
   void dispose() {
-    _reappearTimer?.cancel();
-    _suppressTimer?.cancel();
     _storyScrollController.dispose();
     ref.read(gameEngineProvider.notifier).stopAutosave();
     WidgetsBinding.instance.removeObserver(this);
@@ -387,54 +339,48 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   onOptions: _showOptionsMenu,
                 )
               : null,
-          content: (padding) => NotificationListener<ScrollNotification>(
-            onNotification: (notification) {
-              _onScrollNotification(notification);
-              return false;
-            },
-            child: ExcludeSemantics(
-              child: Padding(
-                padding: padding,
-                child: MediaQuery.removePadding(
-                  context: context,
-                  removeTop: true,
-                  removeBottom: true,
-                  child: engineState.isLoading
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const MiuixCircularProgressIndicator(),
-                              const SizedBox(height: 16),
-                              MiuixText(l10n.loadingGameWorld),
-                            ],
-                          ),
-                        )
-                      : IndexedStack(
-                          index: _activeTab,
+          content: (padding) => ExcludeSemantics(
+            child: Padding(
+              padding: padding,
+              child: MediaQuery.removePadding(
+                context: context,
+                removeTop: true,
+                removeBottom: true,
+                child: engineState.isLoading
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            _buildStoryTab(
-                              context,
-                              mainHtml,
-                              engineState,
-                              engineNotifier,
-                              settings,
-                            ),
-                            _buildVarsTab(
-                              context,
-                              varsHtml,
-                              engineState,
-                              settings,
-                            ),
-                            _buildObjectsTab(
-                              context,
-                              engineState,
-                              engineNotifier,
-                              settings,
-                            ),
+                            const MiuixCircularProgressIndicator(),
+                            const SizedBox(height: 16),
+                            MiuixText(l10n.loadingGameWorld),
                           ],
                         ),
-                ),
+                      )
+                    : IndexedStack(
+                        index: _activeTab,
+                        children: [
+                          _buildStoryTab(
+                            context,
+                            mainHtml,
+                            engineState,
+                            engineNotifier,
+                            settings,
+                          ),
+                          _buildVarsTab(
+                            context,
+                            varsHtml,
+                            engineState,
+                            settings,
+                          ),
+                          _buildObjectsTab(
+                            context,
+                            engineState,
+                            engineNotifier,
+                            settings,
+                          ),
+                        ],
+                      ),
               ),
             ),
           ),

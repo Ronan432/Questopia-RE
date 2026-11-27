@@ -109,6 +109,7 @@ class GameMenuDialog extends StatelessWidget {
               )
             : ListView.builder(
                 shrinkWrap: true,
+                physics: const ClampingScrollPhysics(),
                 itemCount: items.length,
                 itemBuilder: (context, index) {
                   final cleanTitle = items[index]

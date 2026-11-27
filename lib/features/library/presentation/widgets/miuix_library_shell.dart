@@ -56,6 +56,22 @@ class MiuixLibraryShell extends ConsumerStatefulWidget {
 }
 
 class _MiuixLibraryShellState extends ConsumerState<MiuixLibraryShell> {
+  @override
+  void initState() {
+    super.initState();
+    _configureCollapse(widget.catalogScrollBehavior);
+    _configureCollapse(widget.settingsScrollBehavior);
+  }
+
+  /// Gives the custom header a fixed collapse distance so the search field
+  /// folds away over a comfortable amount of scroll instead of snapping on the
+  /// first few pixels.
+  void _configureCollapse(MiuixExitUntilCollapsedScrollBehavior behavior) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      behavior.state.heightOffsetLimit = -96;
+    });
+  }
+
   final GlobalKey _filterButtonKey = GlobalKey();
   bool _showFilterPopup = false;
   Rect _filterAnchorBounds = Rect.zero;
@@ -108,89 +124,70 @@ class _MiuixLibraryShellState extends ConsumerState<MiuixLibraryShell> {
               ),
             )
           : null,
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 240),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        transitionBuilder: (child, animation) {
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0.18, 0),
-                end: Offset.zero,
-              ).animate(animation),
-              child: child,
-            ),
-          );
-        },
-        child: widget.isSearchOpen
-            ? Padding(
-                key: ValueKey('collapsible_search_expanded_$title'),
-                padding: EdgeInsets.fromLTRB(16, topInset + 8, 16, 10),
-                child: _buildSearchField(l10n),
-              )
-            : Column(
-                key: ValueKey('collapsible_search_collapsed_$title'),
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  MiuixTopAppBar(
-                    title: title,
-                    largeTitle: title,
-                    scrollBehavior: scrollBehavior,
-                    color: Colors.transparent,
-                    actions: [
-                      ListenableBuilder(
-                        listenable: scrollBehavior.state,
-                        builder: (context, _) {
-                          final fraction =
-                              scrollBehavior.state.collapsedFraction;
-                          final iconOpacity =
-                              ((fraction - 0.35) / 0.45).clamp(0.0, 1.0);
-                          return IgnorePointer(
-                            ignoring: iconOpacity < 0.05,
-                            child: Opacity(
-                              opacity: iconOpacity,
-                              child: MiuixIconButton(
-                                minWidth: 36,
-                                minHeight: 36,
-                                onPressed: widget.onOpenSearch,
-                                child: _BoldSearchIcon(
-                                  color: colors.onSurface,
-                                  size: 22,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(16, topInset + 6, 16, 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AnimatedSize(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutCubic,
+              child: widget.isSearchOpen
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: SizedBox(
+                        height: 44,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: MiuixText(
+                                  title,
+                                  style: miuixTheme.textStyles.title3.copyWith(
+                                    color: colors.onSurface,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  ListenableBuilder(
-                    listenable: scrollBehavior.state,
-                    builder: (context, child) {
-                      final factor =
-                          (1.0 - scrollBehavior.state.collapsedFraction * 1.6)
-                              .clamp(0.0, 1.0);
-                      return ClipRect(
-                        child: Align(
-                          alignment: Alignment.topCenter,
-                          heightFactor: factor,
-                          child: Opacity(
-                            opacity: factor,
-                            child: child,
-                          ),
+                            MiuixIconButton(
+                              minWidth: 36,
+                              minHeight: 36,
+                              onPressed: widget.onOpenSearch,
+                              child: _BoldSearchIcon(
+                                color: colors.onSurface,
+                                size: 22,
+                              ),
+                            ),
+                          ],
                         ),
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-                      child: _buildSearchField(l10n),
+                      ),
                     ),
+            ),
+            ListenableBuilder(
+              listenable: scrollBehavior.state,
+              builder: (context, child) {
+                final fraction = widget.isSearchOpen
+                    ? 0.0
+                    : scrollBehavior.state.collapsedFraction;
+                final factor = (1.0 - fraction).clamp(0.0, 1.0);
+                return ClipRect(
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    heightFactor: factor,
+                    child: Opacity(opacity: factor, child: child),
                   ),
-                ],
-              ),
+                );
+              },
+              child: _buildSearchField(l10n),
+            ),
+          ],
+        ),
       ),
     );
   }
